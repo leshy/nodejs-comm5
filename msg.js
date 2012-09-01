@@ -17,18 +17,17 @@ var MakeObjReceiver = function(objclass) {
     }
 }
 
-
 function Msg(data) {
     var self = this;
     var queryidlen = 15
 
     Validator().Default({}).Children({
         meta: Validator().Default({}).Children({ 
-            queryid: Validator().Default(function () {return uuid.uuid(queryidlen)}).Length({maximum: 15, minimum:15}),
+            queryid: Validator().Default(function () {return uuid.uuid(queryidlen)}).Length({maximum: queryidlen, minimum: queryidlen}),
             timestamp: Validator().Default(function () {return new Date().getTime()})
         })
     }).feed(data,function (err,data) {
-        if (err) { throw err;return } 
+        if (err) { throw err;return }
         _.extend(self,data)
     })
 }
@@ -53,7 +52,6 @@ Msg.prototype.render = function() {
     return JSON.stringify(this.export())
 }
 
-
-
 var x = new Msg()
 console.log(x)
+
