@@ -1,4 +1,8 @@
 
+var SubscriptionMan = require('subscriptionman2').SubscriptionMan
+var Msg = require('./msg').Msg
+
+
 var MakeObjReceiver = function(objclass) {
     return function() {
         var args = toArray(arguments);
@@ -10,11 +14,16 @@ var MakeObjReceiver = function(objclass) {
 }
 
 
+var MsgSubscriptionMan = SubscriptionMan.extend4000({
+    msg: decorate(MakeObjReceiver(Msg), function(msg) {
+        return SubscriptionMan.prototype.msg.apply(this,arguments)
+    })
+})
 
 
 var MsgNode = Backbone.Model.extend4000(
     graph.GraphNode,
-    MsgSubscriptionManAsync,
+    MsgSubscriptionMan,
     {
         initialize: function () {
             
@@ -24,11 +33,3 @@ var MsgNode = Backbone.Model.extend4000(
 
 
 
-var x = new MsgNode()
-
-
-x.allow({ bla: true })
-
-
-
-x.subscribe( { bla: is("xxx").or( agdsgdsa  , asdgasgd  ) } ) 

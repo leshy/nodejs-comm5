@@ -52,6 +52,5 @@ Msg.prototype.render = function() {
     return JSON.stringify(this.export())
 }
 
-var x = new Msg()
-console.log(x)
 
+exports.Msg = Msg
