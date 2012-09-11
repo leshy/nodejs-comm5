@@ -1,3 +1,4 @@
+// to quote a bible: "the water monster is right, cat man, they are among us."
 var Backbone = require('backbone4000')
 var _ = require('underscore')
 var graph = require('graph')
@@ -5,7 +6,6 @@ var SubscriptionMan = require('subscriptionman2').SubscriptionMan
 var Msg = require('./msg').Msg
 var v = require('validator'); var Validator = v.Validator; var Select = v.Select
 var helpers = require('helpers')
-
 
 var MakeObjReceiver = function(objclass) {
     return function() {
@@ -17,15 +17,14 @@ var MakeObjReceiver = function(objclass) {
     }
 }
 
-
-
 var MsgNode = exports.MsgNode = Backbone.Model.extend4000(
     graph.GraphNode,
     SubscriptionMan,
     {
         initialize: function () {
-            
-            
+            this.subscribe({ meta: Validator({ replyto: true }) }, function (msg,reply,next,passthrough) {
+                passthrough()
+            })
         },
 
         connect: function () {
@@ -40,7 +39,7 @@ var MsgNode = exports.MsgNode = Backbone.Model.extend4000(
             var self = this;
 
             var wrap = function (msg,next) {
-                var pass = function () { self.msg(msg) }
+                var pass = function () { self.send(msg) }
                 callback(msg,msg.makereply(),next,pass)
             }
             
@@ -50,7 +49,16 @@ var MsgNode = exports.MsgNode = Backbone.Model.extend4000(
         msg: function (msg,callback) {
             //if msg.constructor BLA BLA
             return SubscriptionMan.prototype.msg.call(this,msg,callback)
+        },
+        
+        send: function (msg,callback) {
+            async.parallel(
+                this.getNodes(msg, function (node) {
+                    return function (callback) {
+                        var reply = node.msg(msg)
+                        reply.read(callback)
+                    }
+                }), callback )
         }
     })
-
 

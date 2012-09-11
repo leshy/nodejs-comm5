@@ -24,13 +24,25 @@ function Msg(data) {
     Validator().Default({}).Children({
         meta: Validator().Default({}).Children({ 
             queryid: Validator().Default(function () {return uuid.uuid(queryidlen)}).Length({maximum: queryidlen, minimum: queryidlen}),
-            timestamp: Validator().Default(function () {return new Date().getTime()})
+            timestamp: Validator().Default(function () {return new Date().getTime()}),
+            breadcrumbs: Validator().Default([]).Array(),
+            target: Validator().Default([]).Array()
         })
     }).feed(data,function (err,data) {
         if (err) { throw err;return }
         _.extend(self,data)
     })
 }
+
+Msg.prototype.enternode = function (node) {
+    breadcrumbs.push(node)
+    if (this.target.length) {
+        if (this.target.pop() != node) { 
+            throw "wtf, I'm taking a wrong path"
+        }
+    }
+}
+
 
 // creates an appropriate reply message for this message,
 // (populates _viral, queryid and such)
