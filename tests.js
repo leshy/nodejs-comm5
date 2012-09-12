@@ -1,31 +1,26 @@
 var comm = require('./index')
 var v = require('validator'); var Validator = v.Validator
 
+var stream = require('./msgstream')
 
 
 exports.Stream = {
+    
     Basic: function (test) {
-        var stream = require('./msgstream')
         var x = new stream.Stream()
         x.subscribe(true,function (msg) { test.done() })
         x.write({bla: 3})
     },
 
     Ending: function (test) {
-        var stream = require('./msgstream')
         var x = new stream.Stream()
         var messages = []
-
-        x.readone(function (msg,next) {
-            messages.push(msg)
-            next()
-        })
 
         x.read(function (msg) {
             messages.push(msg)
             
             if(!msg) { 
-                test.deepEqual(messages, [{msg: 1}, {msg: 1}, {msg: 2}, {msg: 'end' }, undefined])
+                test.deepEqual(messages, [{msg: 1}, {msg: 2}, {msg: 'end' }, undefined])
                 test.done() 
             }
         })
@@ -34,7 +29,61 @@ exports.Stream = {
         x.write({msg: 2})
         x.end({msg:"end"})
         
+    },
+
+
+    EndingEmpty: function (test) {
+        var x = new stream.Stream()
+        var messages = []
+
+        x.read(function (msg) {
+            messages.push(msg)
+            
+            if(!msg) { 
+                test.deepEqual(messages, [{msg: 1}, {msg: 2}, undefined])
+                test.done() 
+            }
+        })
+
+        x.write({msg: 1})
+        x.write({msg: 2})
+        x.end()
+        
+    },
+
+
+    Oneshot: function (test) {
+        var x = new stream.Stream()
+        var messages = []
+
+
+        x.readone(function (msg,next) {
+            messages.push(msg)
+            next()
+        })
+
+        test.equals(x.subscribers().length,1)
+        
+        x.write({msg: 1})
+        x.write({msg: 2})
+        
+        test.deepEqual(messages, [{msg: 1}])
+        test.equals(x.subscribers().length,0)
+        
+        x.readone(function (msg,next) {
+            messages.push(msg)
+            next()
+        })
+
+        x.end()
+
+        test.deepEqual(messages, [{msg: 1}, undefined ])
+        
+        
+        test.done()
+
     }
+
 }
 
 exports.MsgNode = {

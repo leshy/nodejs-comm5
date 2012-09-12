@@ -24,7 +24,7 @@ var Stream = exports.Stream = SubscriptionMan.extend4000({
         if (msg) { this.write(msg) }
         this.ended = true
         // send empty data to all subscribers letting them know that this stream is closed
-        _.map(this.subscribers(), function (subscriber) { subscriber.callback() }) 
+        _.map(this.subscribers(), function (subscriber) { subscriber.callback(undefined,function () {}) }) 
     },
     
     read: function (callback,pattern) {
@@ -61,6 +61,3 @@ var BufferStream = exports.BufferStream = SubscriptionMan.extend4000({
     }
 })
 
-
-var x = new Stream()
-x.write({bla: 3})
