@@ -1,19 +1,21 @@
 var comm = require('./index')
 var v = require('validator'); var Validator = v.Validator
 
-var stream = require('./msgstream')
-
 
 exports.Stream = {
+    setUp: function (callback) {
+        this.stream = require('./msgstream')
+        callback()
+    },
     
     Basic: function (test) {
-        var x = new stream.Stream()
+        var x = new this.stream.Stream()
         x.subscribe(true,function (msg) { test.done() })
         x.write({bla: 3})
     },
 
     Ending: function (test) {
-        var x = new stream.Stream()
+        var x = new this.stream.Stream()
         var messages = []
 
         x.read(function (msg) {
@@ -33,7 +35,7 @@ exports.Stream = {
 
 
     EndingEmpty: function (test) {
-        var x = new stream.Stream()
+        var x = new this.stream.Stream()
         var messages = []
 
         x.read(function (msg) {
@@ -53,7 +55,7 @@ exports.Stream = {
 
 
     Oneshot: function (test) {
-        var x = new stream.Stream()
+        var x = new this.stream.Stream()
         var messages = []
 
 
@@ -154,5 +156,3 @@ exports.MsgNode = {
         
     }
 }
-
-    //exports.BasicComm({})
