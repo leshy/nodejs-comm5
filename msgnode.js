@@ -2,7 +2,7 @@
 var Backbone = require('backbone4000')
 var _ = require('underscore')
 var graph = require('graph')
-var SubscriptionMan = require('subscriptionman2').SubscriptionMan
+var SubscriptionMan = require('subscriptionman').SubscriptionMan
 var Msg = require('./msg').Msg
 var v = require('validator'); var Validator = v.Validator; var Select = v.Select
 var helpers = require('helpers')
@@ -40,7 +40,9 @@ var MsgNode = exports.MsgNode = Backbone.Model.extend4000(
 
             var wrap = function (msg,next) {
                 var pass = function () { self.send(msg) }
-                callback(msg,msg.makereply(),next,pass)
+                var replyStream = msg.makereply()
+                callback(msg,replyStream,next,pass)
+                return replyStream
             }
             
             SubscriptionMan.prototype.subscribe.call(this,pattern,wrap,name)
