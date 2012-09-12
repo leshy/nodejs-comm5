@@ -1,8 +1,21 @@
 var comm = require('./index')
 var v = require('validator'); var Validator = v.Validator
 
+exports.Msg = {
+    setUp: function (callback) {
+        this.Msg = require('./msg').Msg
+        callback()
+    },
+    
+    Basic: function (test) {
+        var a = new this.Msg({bla : 3})
+        test.done()
+    }
 
-exports.Stream = {
+}
+
+
+exports.MsgStream = {
     setUp: function (callback) {
         this.stream = require('./msgstream')
         callback()
@@ -14,43 +27,45 @@ exports.Stream = {
         x.write({bla: 3})
     },
 
-    Ending: function (test) {
-        var x = new this.stream.Stream()
-        var messages = []
+    Ending: { 
+        full: function (test) {
+            var x = new this.stream.Stream()
+            var messages = []
 
-        x.read(function (msg) {
-            messages.push(msg)
+            x.read(function (msg) {
+                messages.push(msg)
+                
+                if(!msg) { 
+                    test.deepEqual(messages, [{msg: 1}, {msg: 2}, {msg: 'end' }, undefined])
+                    test.done() 
+                }
+            })
+
+            x.write({msg: 1})
+            x.write({msg: 2})
+            x.end({msg:"end"})
             
-            if(!msg) { 
-                test.deepEqual(messages, [{msg: 1}, {msg: 2}, {msg: 'end' }, undefined])
-                test.done() 
-            }
-        })
-
-        x.write({msg: 1})
-        x.write({msg: 2})
-        x.end({msg:"end"})
-        
-    },
+        },
 
 
-    EndingEmpty: function (test) {
-        var x = new this.stream.Stream()
-        var messages = []
+        empty: function (test) {
+            var x = new this.stream.Stream()
+            var messages = []
 
-        x.read(function (msg) {
-            messages.push(msg)
+            x.read(function (msg) {
+                messages.push(msg)
+                
+                if(!msg) { 
+                    test.deepEqual(messages, [{msg: 1}, {msg: 2}, undefined])
+                    test.done() 
+                }
+            })
+
+            x.write({msg: 1})
+            x.write({msg: 2})
+            x.end()
             
-            if(!msg) { 
-                test.deepEqual(messages, [{msg: 1}, {msg: 2}, undefined])
-                test.done() 
-            }
-        })
-
-        x.write({msg: 1})
-        x.write({msg: 2})
-        x.end()
-        
+        }
     },
 
 
