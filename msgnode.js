@@ -22,8 +22,30 @@ var MsgNode = exports.MsgNode = Backbone.Model.extend4000(
     SubscriptionMan,
     {
         initialize: function () {
-            this.subscribe({ meta: Validator({ replyto: true }) }, function (msg,reply,next,passthrough) {
-                passthrough()
+            var self = this
+            this.log({ meta: Validator({ replyto: true, path: Validator().Not("Array") }) },
+                     [ 'weirdness', 'msg', 'msgnode', 'core' ], 
+                     this.get('name') + " got replyto message but didn't get a path",
+                     { node: this.get('name') })
+            
+            this.subscribe({ meta: Validator({ replyto: true, path: "Array" }) }, function (msg,reply,next,passthrough) {
+                var nextnode = msg.meta.path.shift()
+
+                // magic!
+
+            })
+
+        },
+        
+        // used to request logging for specific message patterns
+        log: function (pattern,tags,msg,extras,logger) {
+            if (!pattern || !tags || !msg) { throw 'invalid arguments for log' }
+            if (!extras) { extras = {} }
+            
+            if (!logger && !(logger = this.get('logger'))) { console.warn ("log requested yet I don't have a logger"); return }
+            
+            this.subscribe(pattern, function () {
+                logger.msg(_.extend(extras,{ tags: tags, msg: msg }))
             })
         },
 
@@ -49,7 +71,7 @@ var MsgNode = exports.MsgNode = Backbone.Model.extend4000(
         },
 
         msg: function (msg,callback) {
-            //if msg.constructor BLA BLA
+            msg.meta.breadcrumbs.push(this)
             return SubscriptionMan.prototype.msg.call(this,msg,callback)
         },
         

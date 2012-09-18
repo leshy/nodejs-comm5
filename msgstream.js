@@ -2,7 +2,6 @@ var Backbone = require('backbone4000')
 var _ = require('underscore')
 var SubscriptionMan = require('subscriptionman').SubscriptionMan
 
-
 /*
 
 this one is simple..
@@ -26,7 +25,7 @@ var Stream = exports.Stream = SubscriptionMan.extend4000({
         // send empty data to all subscribers letting them know that this stream is closed
         _.map(this.subscribers(), function (subscriber) { subscriber.callback(undefined,function () {}) }) 
     },
-    
+
     read: function (callback,pattern) {
         if (!pattern) { pattern = true }
         return this.subscribe(pattern,callback)

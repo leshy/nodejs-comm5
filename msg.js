@@ -1,8 +1,9 @@
 var _ = require('underscore')
-var uuid = require('uuid')
 var decorators = require('decorators')
 var decorate = decorators.decorate
 var Validator = require('validator').Validator
+var Stream = require('./msgstream').Stream
+var helpers = require('helpers')
 
 // metadecorator for message receiving functions, 
 // it just subclasses a message class if it receives a plain dictionary
@@ -19,11 +20,11 @@ var MakeObjReceiver = function(objclass) {
 
 function Msg(data) {
     var self = this;
-    var queryidlen = 15
+    var idlen = 10
 
     Validator().Default({}).Children({
         meta: Validator().Default({}).Children({ 
-            queryid: Validator().Default(function () {return uuid.uuid(queryidlen)}).Length({maximum: queryidlen, minimum: queryidlen}),
+            id: Validator().Default(function () {return helpers.generateid(idlen)}).Length({maximum: idlen, minimum: idlen}),
             timestamp: Validator().Default(function () {return new Date().getTime()}),
             breadcrumbs: Validator().Default([]).Array(),
             target: Validator().Default([]).Array()
@@ -34,24 +35,14 @@ function Msg(data) {
     })
 }
 
-Msg.prototype.enternode = function (node) {
-    breadcrumbs.push(node)
-    if (this.target.length) {
-        if (this.target.pop() != node) { 
-            throw "wtf, I'm taking a wrong path"
-        }
-    }
+Msg.prototype.makereply = function () {
+    var replystream = new Stream()
+    var self = this
+    replystream.read(decorate(MakeObjReceiver(msg), function (msg) {
+        msg.meta.replyto = self.meta.id
+        msg.meta.path = helpers.copy(self.breadcrumbs).reverse()
+    }))
 }
-
-
-// creates an appropriate reply message for this message,
-// (populates _viral, queryid and such)
-Msg.prototype.makereply = decorate(MakeObjReceiver(Msg),function(msg) {
-    if (!msg) { return }
-    if (!msg.queryid) { msg.queryid = this.queryid }
-    msg._viral = _.extend(msg._viral,this._viral)
-    return msg
-})
 
 Msg.prototype.export = function() { 
     var data = _.clone(this)    
@@ -66,3 +57,8 @@ Msg.prototype.render = function() {
 
 
 exports.Msg = Msg
+
+
+var a = new Msg({bla: 3})
+
+
