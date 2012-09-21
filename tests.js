@@ -27,7 +27,7 @@ exports.MsgStream = {
         x.write({bla: 3})
     },
 
-    Linking: function (test) {
+    Chaining: function (test) {
         var a = new this.stream.Stream()
         var b = new this.stream.Stream()
         var c = new this.stream.Stream()
@@ -176,25 +176,32 @@ exports.MsgNode = {
           })
         */
 
-        n2.subscribe({ bla : true },function (msg,reply,next,passthrough) {
+        n1.subscribe({ bla : true },function (msg,reply,next) {
+//            console.log("GOT MSG",msg)
             reply.write({ response: 1 })
             reply.end({ response: 2 })
             next()
-            passthrough()
+            //passthrough()
         })
-
+        
+        /*
         n3.subscribe({ bla : true },function (msg,reply,next,passthrough) {
             console.log("N3 PASS")
         })
+        */
 
-
-        n1.subscribe({ response: true },function (msg,reply,next,passthrough) {
+        n1.subscribe({ response: true },function (msg,reply,next) {
             console.log("N1 response sub: ", msg)
+            //test.done()
         })
         
-        n1.msg({bla: 'hi?'}).read(function (msg,reply) {
+
+        var stream = n1.msg({bla: 'hi?'})
+        
+        stream.read(function (msg,reply) {
             console.log("N1 response cb: ",msg)
             test.done()
-        })
+        },{ response: 2})
+
     }
 }

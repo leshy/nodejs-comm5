@@ -20,14 +20,13 @@ var MakeObjReceiver = function(objclass) {
 
 function Msg(data) {
     var self = this;
-    var idlen = 10
+    var idlen = 15
 
     Validator().Default({}).Children({
         meta: Validator().Default({}).Children({ 
             id: Validator().Default(function () {return helpers.generateid(idlen)}).Length({maximum: idlen, minimum: idlen}),
             timestamp: Validator().Default(function () {return new Date().getTime()}),
-            breadcrumbs: Validator().Default([]).Array(),
-            target: Validator().Default([]).Array()
+            breadcrumbs: Validator().Default([]).Array()
         })
     }).feed(data,function (err,data) {
         if (err) { throw err;return }
@@ -35,13 +34,16 @@ function Msg(data) {
     })
 }
 
-Msg.prototype.makereply = function () {
+Msg.prototype.makeReplyStream = function () {
     var replystream = new Stream()
+    /*
     var self = this
-    replystream.read(decorate(MakeObjReceiver(msg), function (msg) {
+    replystream.read(function (msg) {
         msg.meta.replyto = self.meta.id
         msg.meta.path = helpers.copy(self.breadcrumbs).reverse()
-    }))
+    })
+    */
+    return replystream
 }
 
 Msg.prototype.export = function() { 
@@ -57,7 +59,6 @@ Msg.prototype.render = function() {
 
 
 exports.Msg = Msg
-
 
 var a = new Msg({bla: 3})
 

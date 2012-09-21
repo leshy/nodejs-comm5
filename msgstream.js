@@ -23,20 +23,37 @@ var Stream = exports.Stream = Backbone.Model.extend4000(
         initialize: function () {
             var self = this
             this.children.on('msg',function (msg) { self.msg(msg) })
+            this.children.on('end',this.endBroadcast.bind(this))
         },
 
         write: function (msg) {
-            if (this.ended) { throw "someone tryed to write to an ended stream" }
+            if (this._ended) { throw "you tryed to write to an ended stream" }
             this.msg(msg)
         },
         
         end: function (msg) {
             if (msg) { this.write(msg) }
-            this.ended = true
-            // send empty data to all subscribers letting them know that this stream is closed
-            _.map(this.subscribers(), function (subscriber) { subscriber.callback(undefined,function () {}) }) 
+            this._ended = true
+            this.endBroadcast()
+        },
+        
+        endBroadcast: function () {
+            if (this.ended()) { 
+                _.map(this.subscribers(), function (subscriber) { subscriber.callback(undefined,function () {}) })
+                this.trigger('end')                
+            }            
         },
 
+        ended: function () {
+            if (!this._ended) { return false }
+            
+            if (_.find(this.children.map(function (stream) { return stream.ended() }), function (val) { return val })) {
+                return false
+            } else {
+                return true
+            }
+        },
+        
         read: function (callback,pattern) {
             if (!pattern) { pattern = true }
             return this.subscribe(pattern,callback)
