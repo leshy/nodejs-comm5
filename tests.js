@@ -27,6 +27,39 @@ exports.MsgStream = {
         x.write({bla: 3})
     },
 
+    Linking: function (test) {
+        var a = new this.stream.Stream()
+        var b = new this.stream.Stream()
+        var c = new this.stream.Stream()
+        var d = new this.stream.Stream()
+
+        var messages = []
+        var messagesc = []
+
+        a.read(function (msg) {
+            messages.push(msg)
+        })
+
+
+        c.read(function (msg) {
+            messagesc.push(msg)
+        })
+
+
+        a.addchild(b)
+        a.addchild(c)
+        c.addchild(d)
+        
+        a.write({msg:1})
+        b.write({msg:2})
+        c.write({msg:3})
+        d.write({msg:4})
+        
+        test.deepEqual(messages,[{msg:1},{msg:2},{msg:3},{msg:4}])
+        test.deepEqual(messagesc,[{msg:3},{msg:4}])
+        test.done()
+    },
+
     Ending: { 
         full: function (test) {
             var x = new this.stream.Stream()
@@ -128,8 +161,6 @@ exports.MsgNode = {
     },
 
     BasicComm: function (test) {
-        test.done()
-        return
         var n1 = new comm.MsgNode({name: 'n1'})
         var n2 = new comm.MsgNode({name: 'n2'})
         var n3 = new comm.MsgNode({name: 'n3'})
@@ -161,13 +192,9 @@ exports.MsgNode = {
             console.log("N1 response sub: ", msg)
         })
         
-        n1.msg({bla: 'hi?'},function (response) {
-            response.read(function (msg,reply) {
-                console.log("N1 response cb: ",msg)
-                test.done()
-            })
+        n1.msg({bla: 'hi?'}).read(function (msg,reply) {
+            console.log("N1 response cb: ",msg)
+            test.done()
         })
-        
-        
     }
 }
