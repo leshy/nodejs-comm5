@@ -160,7 +160,32 @@ exports.MsgNode = {
         test.done()
     },
 
-    BasicComm: function (test) {
+    LocalComm: function (test) {
+        var n1 = new comm.MsgNode({name: 'n1'})
+
+        n1.subscribe({ bla : true },function (msg,reply,next) {
+            reply.write({ response: 1 })
+            reply.end({ response: 2 })
+            next()
+        })
+        
+        n1.subscribe({ response: true },function (msg,reply,next) {
+            console.log("N1 response sub: ", msg)
+        })        
+
+        var stream = n1.msg({bla: 'hi?'})
+        
+        stream.read(function (msg,reply) {
+            console.log("N1 response cb: ",msg)
+            test.done()
+        },{ response: 2})
+
+    },
+
+    RemoteComm: function (test) {
+        test.done()
+        return
+
         var n1 = new comm.MsgNode({name: 'n1'})
         var n2 = new comm.MsgNode({name: 'n2'})
         var n3 = new comm.MsgNode({name: 'n3'})
@@ -204,4 +229,5 @@ exports.MsgNode = {
         },{ response: 2})
 
     }
+
 }
