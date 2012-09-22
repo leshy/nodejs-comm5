@@ -46,7 +46,6 @@ var Stream = exports.Stream = Backbone.Model.extend4000(
 
         ended: function () {
             if (!this._ended) { return false }
-            
             if (_.find(this.children.map(function (stream) { return stream.ended() }), function (val) { return val })) {
                 return false
             } else {

@@ -60,15 +60,14 @@ var MsgNode = exports.MsgNode = Backbone.Model.extend4000(
         // add pass function to a callback
         subscribe: function (pattern,callback,name) {
             var self = this;
-            /*
-            var wrap = function (msg,next) {
-                var pass = function () { self.send(msg) }
-                var replyStream = msg.makereply()
-                callback(msg,replyStream,next,pass)
-                return replyStream
+            
+            // bake in a pass() call
+            function wrap (msg,reply,next) {
+                function pass () { this.transmit(msg) }
+                return callback(msg,reply,next,pass)
             }
-            */
-            SubscriptionMan.prototype.subscribe.call(this,pattern,callback,name)
+            
+            SubscriptionMan.prototype.subscribe.call(this,pattern,wrap,name)
         },
 
         msg: decorate(MakeObjReceiver(Msg), function (msg) {

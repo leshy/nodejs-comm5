@@ -20,8 +20,6 @@ exports.SubscriptionMan = SubscriptionMan.extend4000({
                                               ]
                                    }))
         
-        
-
         JoinedStream.end()
             
         if (!args.length) { return JoinedStream }
@@ -29,7 +27,7 @@ exports.SubscriptionMan = SubscriptionMan.extend4000({
         Select.apply(this, args)
 
         return JoinedStream
-    },
+    }
 })
 
 

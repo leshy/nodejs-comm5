@@ -201,7 +201,7 @@ exports.MsgNode = {
           })
         */
 
-        n1.subscribe({ bla : true },function (msg,reply,next) {
+        n1.subscribe({ bla : true },function (msg,reply,next,passthrough) {
 //            console.log("GOT MSG",msg)
             reply.write({ response: 1 })
             reply.end({ response: 2 })
