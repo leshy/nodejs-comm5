@@ -30,19 +30,20 @@ var MsgNode = exports.MsgNode = Backbone.Model.extend4000(
 
         initialize: function () {
             var self = this
-            /*
-            this.log({ meta: Validator({ replyto: true, path: Validator().Not("Array") }) },
+            this.messages = {}
+
+            this.logmsg({ meta: Validator({ replyto: true, path: Validator().Not("Array") }) },
                      [ 'weirdness', 'msg', 'msgnode', 'core' ], 
                      this.get('name') + " got replyto message but didn't get a path",
                      { node: this.get('name') })
-            */
 
+            // replies are allowed to pass through
             this.subscribe({ meta: Validator({ replyto: true, path: "Array"})}, function (msg,reply,next,transmit) { transmit(); next(); })
 
         },
         
         // used to request logging for specific message patterns
-        log: function (pattern,tags,msg,extras,logger) {
+        logmsg: function (pattern,tags,msg,extras,logger) {
             if (!pattern || !tags || !msg) { throw 'invalid arguments for log' }
             if (!extras) { extras = {} }
             
@@ -61,7 +62,14 @@ var MsgNode = exports.MsgNode = Backbone.Model.extend4000(
             })
         },
 
+        passthrough: function () { // allow all messages to pass through this node
+            this.subscribe(true,function (msg,reply,next,transmit) { reply.end(); transmit(); })
+        },
+
         msg: decorate(MakeObjReceiver(Msg), function (msg) {
+            
+            if (this.messages[msg.meta.id]) { return } else { this.messages[msg.meta.id] = true }
+
             var self = this
             var mainStream = new Stream()
             var _transmit = false
@@ -86,8 +94,8 @@ var MsgNode = exports.MsgNode = Backbone.Model.extend4000(
                 mainStream.end()
             })
             
-            SubscriptionMan.prototype.msg.call(this,msg,wrap)
-            
+            SubscriptionMan.prototype.msg.call(this,msg,wrap)            
+//            mainStream.on('end',function () { console.log("DELMESSAGE"); this.delmessage(msg)}.bind(this))
             return mainStream
         }),
 
@@ -100,10 +108,12 @@ var MsgNode = exports.MsgNode = Backbone.Model.extend4000(
                 return
             } else {
                 var replyStream = new Stream()
+                var lastnode = _.last(msg.meta.breadcrumbs)
                 async.parallel(
                     this.connections.map(function (node) {
                         return function (callback) {
-                            replyStream.addchild(node.msg(msg))
+                            var Stream = node.msg(msg)
+                            if (Stream) { replyStream.addchild(Stream) }
                             callback()
                         }
                     }))
@@ -112,4 +122,5 @@ var MsgNode = exports.MsgNode = Backbone.Model.extend4000(
             return replyStream
         }
     })
+
 
