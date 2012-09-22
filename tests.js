@@ -63,10 +63,11 @@ exports.Speed = function (test) {
     }
 }
 
-/*
 exports.Http = function (test) {
     var express = require('express');
-    app = express.createServer();
+    var http = require('./http')
+    var app = express.createServer();
+
 
     app.configure(function(){
         app.set('views', __dirname + '/views');
@@ -74,5 +75,22 @@ exports.Http = function (test) {
         app.use(express.bodyParser());
         app.use(express.methodOverride());
         app.use(express.cookieParser());
+        app.use(app.router);
+        app.use(express.static(__dirname + '/static'));
+    });
 
-*/
+    app.listen(8000);
+
+    var server = new http.HttpServer({express: app, name: "http"})
+    
+    var responder = new comm.MsgNode({name: "echo responder"})
+
+    responder.subscribe(true,function (msg,reply,next,pass) {
+        console.log("GOT MSG",msg)
+        reply.end(msg)
+    })
+
+    server.connect(responder)
+    
+    setTimeout(function () {},30000)
+}

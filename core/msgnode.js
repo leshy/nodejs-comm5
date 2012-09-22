@@ -67,12 +67,12 @@ var MsgNode = exports.MsgNode = Backbone.Model.extend4000(
         },
 
         msg: decorate(MakeObjReceiver(Msg), function (msg) {
-            
+
             if (this.messages[msg.meta.id]) { return } else { this.messages[msg.meta.id] = true }
 
             var self = this
             var mainStream = new Stream()
-            var _transmit = false
+            var _transmit = true
 
             msg.meta.breadcrumbs.push(this)
             
@@ -86,10 +86,10 @@ var MsgNode = exports.MsgNode = Backbone.Model.extend4000(
                 }
 
                 return wrapped
-
             }
 
             mainStream.on('children_end',function () {
+                console.log('children end',_transmit)
                 if (_transmit) { mainStream.addchild(self.send(msg)) } // this won't transmit a modified msg.. maybe. fixor?
                 mainStream.end()
             })
