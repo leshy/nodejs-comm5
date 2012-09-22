@@ -12,9 +12,16 @@ exports.BorderMan = function (test) {
     borderman.connect(n2)
 
     n2.subscribe({ bla : true, realm: Validator().String("testrealm") },function (msg,reply,next,transmit) {
+        next()
         reply.write({ response: 1 })
+        reply.end({ response: 2 })
+    })
+
+    n2.subscribe({ bla : true, realm: Validator().String("testrealm") },function (msg,reply,next,transmit) {
+        next()
         reply.end({ response: 'end' })
     })
+
 
     n1.subscribe(true, function (msg,reply,next,transmit) { transmit(); reply.end() })
 

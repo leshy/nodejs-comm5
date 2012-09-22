@@ -79,7 +79,7 @@ var MsgNode = exports.MsgNode = Backbone.Model.extend4000(
             function transmit () { _transmit = true }
             
             function wrap (f) {
-                function wrapped (msg,reply,next) {
+                function wrapped (msg,next) {
                     var replyStream = msg.makeReplyStream()
                     mainStream.addchild(replyStream)
                     setTimeout(function () { f(msg,replyStream,next,transmit) })
@@ -95,7 +95,7 @@ var MsgNode = exports.MsgNode = Backbone.Model.extend4000(
             })
             
             SubscriptionMan.prototype.msg.call(this,msg,wrap)            
-//            mainStream.on('end',function () { console.log("DELMESSAGE"); this.delmessage(msg)}.bind(this))
+            mainStream.on('end',function () { delete this.messages[msg.meta.id] }.bind(this))
             return mainStream
         }),
 
