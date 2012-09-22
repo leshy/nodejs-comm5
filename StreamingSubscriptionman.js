@@ -12,9 +12,11 @@ exports.SubscriptionMan = SubscriptionMan.extend4000({
                                        return [ matcher.validator, 
                                                 
                                                 function (msg,next) {
-                                                    var Stream = matcher.callback(msg,next)
+                                                    var Stream = msg.makeReplyStream()
                                                     JoinedStream.addchild(Stream)
-                                                }             
+                                                    setTimeout(function () { matcher.callback(msg,Stream,next) })
+                                                }
+
                                               ]
                                    }))
         
@@ -28,19 +30,6 @@ exports.SubscriptionMan = SubscriptionMan.extend4000({
 
         return JoinedStream
     },
-
-
-    // add pass function to a callback
-    subscribe: function (pattern,callback,name) {
-        var self = this;
-        var wrap = function (msg,next) {
-            var replyStream = msg.makeReplyStream()
-            setTimeout(function () {callback(msg,replyStream,next)})
-            return replyStream
-        }
-        
-        SubscriptionMan.prototype.subscribe.call(this,pattern,wrap,name)
-    }
 })
 
 
