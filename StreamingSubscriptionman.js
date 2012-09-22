@@ -6,17 +6,15 @@ var v = require('validator'); var Validator = v.Validator; var Select = v.Select
 exports.SubscriptionMan = SubscriptionMan.extend4000({
     msg: function (msg) {
         var JoinedStream = new Stream()
-
+        
         var args = _.flatten(_.map(_.values(this.patterns),
                                    function (matcher) { 
-                                       return [ matcher.validator, 
-                                                
+                                       return [ matcher.validator,
                                                 function (msg,next) {
-                                                    var Stream = msg.makeReplyStream()
                                                     JoinedStream.addchild(Stream)
-                                                    setTimeout(function () { matcher.callback(msg,Stream,next) })
+                                                    // settimeout is important.. it gives you time to bind on the reply stream
+                                                    setTimeout(function () { matcher.callback(msg,Stream,next) }) 
                                                 }
-
                                               ]
                                    }))
         

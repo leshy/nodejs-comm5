@@ -2,12 +2,14 @@
 var Backbone = require('backbone4000')
 var _ = require('underscore')
 var graph = require('graph')
-var SubscriptionMan = require('./StreamingSubscriptionman').SubscriptionMan
+var SubscriptionMan = require('subscriptionman').SubscriptionMan
 var Msg = require('./msg').Msg
+var Stream = require('./msgstream').Stream
 var v = require('validator'); var Validator = v.Validator; var Select = v.Select
 var helpers = require('helpers')
 var decorators = require('decorators')
 var decorate = decorators.decorate
+var async = require('async')
 
 var MakeObjReceiver = function(objclass) {
     return function() {
@@ -35,6 +37,8 @@ var MsgNode = exports.MsgNode = Backbone.Model.extend4000(
                      { node: this.get('name') })
             */
 
+            this.subscribe({ meta: Validator({ replyto: true, path: "Array"})}, function (msg,reply,next,transmit) { transmit(); next(); })
+
         },
         
         // used to request logging for specific message patterns
@@ -57,39 +61,55 @@ var MsgNode = exports.MsgNode = Backbone.Model.extend4000(
             })
         },
 
-        // add pass function to a callback
-        subscribe: function (pattern,callback,name) {
-            var self = this;
-            
-            // bake in a pass() call
-            function wrap (msg,reply,next) {
-                function pass () { this.transmit(msg) }
-                return callback(msg,reply,next,pass)
-            }
-            
-            SubscriptionMan.prototype.subscribe.call(this,pattern,wrap,name)
-        },
-
         msg: decorate(MakeObjReceiver(Msg), function (msg) {
+            var self = this
+            var mainStream = new Stream()
+            var _transmit = false
+
             msg.meta.breadcrumbs.push(this)
-            return SubscriptionMan.prototype.msg.call(this,msg)
+            
+            function transmit () { _transmit = true }
+            
+            function wrap (f) {
+                function wrapped (msg,reply,next) {
+                    var replyStream = msg.makeReplyStream()
+                    mainStream.addchild(replyStream)
+                    setTimeout(function () { f(msg,replyStream,next,transmit) })
+                }
+
+                return wrapped
+
+            }
+
+            mainStream.on('children_end',function () {
+                if (_transmit) { mainStream.addchild(self.send(msg)) } // this won't transmit a modified msg.. maybe. fixor?
+                mainStream.end()
+            })
+            
+            SubscriptionMan.prototype.msg.call(this,msg,wrap)
+            
+            return mainStream
         }),
-        
-        send: function (msg,callback) {
+
+        //ALLRIGHT!!!!!!!!!!!
+        send: function (msg) {
 
             // this message is a reply to something, we know exactly where to send it, don't broadcast it.
             if (msg.meta.replyto) { 
-                msg.meta.path.shift().msg(msg,callback)
+                var replyStream = msg.meta.path.shift().msg(msg,callback)
                 return
             } else {
+                var replyStream = new Stream()
                 async.parallel(
-                    this.getNodes(msg, function (node) {
+                    this.connections.map(function (node) {
                         return function (callback) {
-                            var reply = node.msg(msg)
-                            reply.read(callback)
+                            replyStream.addchild(node.msg(msg))
+                            callback()
                         }
-                    }), callback )
+                    }))
             }
+
+            return replyStream
         }
     })
 

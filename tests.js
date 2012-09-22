@@ -98,7 +98,50 @@ exports.MsgStream = {
             x.write({msg: 2})
             x.end()
             
+        },
+
+        children: function (test) {
+
+
+            var a = new this.stream.Stream({name: 'a'})
+            var b = new this.stream.Stream({name: 'b'})
+            var c = new this.stream.Stream({name: 'c'})
+            var d = new this.stream.Stream({name: 'd'})
+            
+            a.addchild(b)
+            a.addchild(c)
+            c.addchild(d)
+
+            var endings = []
+            
+            a.on('children_end', function () { endings.push('a children') })
+            a.on('end', function () { endings.push('a') })
+
+            b.on('children_end', function () { endings.push('b children') })
+            b.on('end', function () { endings.push('b') })
+
+            c.on('children_end', function () { endings.push('c children') })
+            c.on('end', function () { endings.push('c') })
+
+            d.on('children_end', function () { endings.push('d children') })
+            d.on('end', function () { endings.push('d') })
+            
+            a.write({msg:1})
+            b.write({msg:2})
+            c.write({msg:3})
+            d.write({msg:4})
+            
+            d.end()
+            c.end()
+            b.end()
+            a.end()
+            
+            test.deepEqual([ 'd', 'c children', 'c', 'b', 'a children', 'a' ],endings)
+
+            test.done()
         }
+
+        
     },
 
 
@@ -107,7 +150,7 @@ exports.MsgStream = {
         var messages = []
 
 
-        x.readone(function (msg,next) {
+        x.readOne(function (msg,next) {
             messages.push(msg)
             next()
         })
@@ -120,7 +163,7 @@ exports.MsgStream = {
         test.deepEqual(messages, [{msg: 1}])
         test.equals(x.subscribers().length,0)
         
-        x.readone(function (msg,next) {
+        x.readOne(function (msg,next) {
             messages.push(msg)
             next()
         })
@@ -128,7 +171,6 @@ exports.MsgStream = {
         x.end()
 
         test.deepEqual(messages, [{msg: 1}, undefined ])
-        
         
         test.done()
 
@@ -164,70 +206,45 @@ exports.MsgNode = {
         var n1 = new comm.MsgNode({name: 'n1'})
 
         n1.subscribe({ bla : true },function (msg,reply,next) {
+//            console.log("GOT",msg)
             reply.write({ response: 1 })
             reply.end({ response: 2 })
-            next()
+//            next()
         })
         
         n1.subscribe({ response: true },function (msg,reply,next) {
             console.log("N1 response sub: ", msg)
-        })        
+        })
 
         var stream = n1.msg({bla: 'hi?'})
         
-        stream.read(function (msg,reply) {
-            console.log("N1 response cb: ",msg)
+        stream.readOne(function (msg,reply) {
+            //console.log("N1 response cb: ",msg)
             test.done()
         },{ response: 2})
 
     },
 
     RemoteComm: function (test) {
-        test.done()
-        return
 
         var n1 = new comm.MsgNode({name: 'n1'})
         var n2 = new comm.MsgNode({name: 'n2'})
-        var n3 = new comm.MsgNode({name: 'n3'})
 
         n1.connect(n2)
-        n2.connect(n3)
 
-        /*
-          this breaks the test, why?
-          // this guy will just modify the message
-          n2.subscribe({ bla : true, test: Validator().Set("bla") }, function (msg,reply,next,passthrough) {
-          next()
-          })
-        */
-
-        n1.subscribe({ bla : true },function (msg,reply,next,passthrough) {
-//            console.log("GOT MSG",msg)
+        n2.subscribe({ bla : true },function (msg,reply,next) {
             reply.write({ response: 1 })
-            reply.end({ response: 2 })
-            next()
-            //passthrough()
+            reply.end({ response: 'end' })
         })
-        
-        /*
-        n3.subscribe({ bla : true },function (msg,reply,next,passthrough) {
-            console.log("N3 PASS")
-        })
-        */
 
-        n1.subscribe({ response: true },function (msg,reply,next) {
-            console.log("N1 response sub: ", msg)
-            //test.done()
-        })
-        
+        n1.subscribe(true, function (msg,reply,next,transmit) { transmit(); reply.end() })
 
         var stream = n1.msg({bla: 'hi?'})
         
-        stream.read(function (msg,reply) {
-            console.log("N1 response cb: ",msg)
+        stream.readOne(function (msg,reply) {
             test.done()
-        },{ response: 2})
+        },{ response: Validator().String('end')})
+
 
     }
-
 }

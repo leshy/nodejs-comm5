@@ -23,7 +23,15 @@ var Stream = exports.Stream = Backbone.Model.extend4000(
         initialize: function () {
             var self = this
             this.children.on('msg',function (msg) { self.msg(msg) })
-            this.children.on('end',this.endBroadcast.bind(this))
+            
+            this.children.on('add', function () {
+                if (!this.childrencounter) { this.childrencounter = 1 } else { this.childrencounter ++; }
+            }.bind(this) )
+            this.children.on('end',function () { 
+                this.childrencounter --;
+                if (!this.childrencounter) { this.trigger('children_end')}
+            }.bind(this))
+            
         },
 
         write: function (msg) {
@@ -40,25 +48,20 @@ var Stream = exports.Stream = Backbone.Model.extend4000(
         endBroadcast: function () {
             if (this.ended()) { 
                 _.map(this.subscribers(), function (subscriber) { subscriber.callback(undefined,function () {}) })
-                this.trigger('end')                
-            }            
-        },
-
-        ended: function () {
-            if (!this._ended) { return false }
-            if (_.find(this.children.map(function (stream) { return stream.ended() }), function (val) { return val })) {
-                return false
-            } else {
-                return true
+                this.trigger('end')
             }
         },
         
+        ended: function () {
+            if (this._ended && (!this.childrencounter)) { return true } else { return false }
+        },
+                
         read: function (callback,pattern) {
             if (!pattern) { pattern = true }
             return this.subscribe(pattern,callback)
         },
         
-        readone: function (callback,pattern) {
+        readOne: function (callback,pattern) {
             if (!pattern) { pattern = true }
             return this.oneshot(pattern,callback)
         }
