@@ -31,3 +31,48 @@ exports.BorderMan = function (test) {
     },{ response: Validator().String('end')})
 }
 
+exports.Speed = function (test) {
+    var n = 25
+    var n1 = new comm.MsgNode({name: 'n1'})
+    var borderman = new comm.BorderMan({name: 'borderman', realm: 'testrealm'})
+    var n2 = new comm.MsgNode({name: 'n2'})
+    
+    n1.connect(borderman)
+    borderman.connect(n2)
+
+    n2.subscribe({ bla : true, realm: Validator().String("testrealm") },function (msg,reply,next,transmit) {
+        next()
+        reply.write({ response: msg.bla })
+        reply.end({ response: msg.bla + 1 })
+    })
+
+    n2.subscribe({ bla : true, realm: Validator().String("testrealm") },function (msg,reply,next,transmit) {
+        next()
+        if (msg.bla == n) { 
+            test.done()
+        }
+        reply.end()
+    })
+
+    n1.subscribe(true, function (msg,reply,next,transmit) { transmit(); reply.end() })
+
+    var x = 0
+    while (x < n) {
+        x++
+        n1.msg({bla: x})
+    }
+}
+
+/*
+exports.Http = function (test) {
+    var express = require('express');
+    app = express.createServer();
+
+    app.configure(function(){
+        app.set('views', __dirname + '/views');
+        app.set('view engine', 'ejs');
+        app.use(express.bodyParser());
+        app.use(express.methodOverride());
+        app.use(express.cookieParser());
+
+*/
