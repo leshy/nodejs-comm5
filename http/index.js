@@ -22,12 +22,14 @@ var HttpServer = exports.HttpServer = Backbone.Model.extend4000(
             var self = this
             
             var app = this.get('express')
-
+            
             function requestToMsg(req,res,next) {
                 var from = req.socket.remoteAddress
                 if (from == "127.0.0.1") { if (req.headers['x-forwarded-for']) { from = req.headers['x-forwarded-for'] }}
 
                 var responseStream = self.msg({http: req.method, headers: req.headers, url: req.url, from: from})
+                
+                responseStream.end(function () { console.log("RESPONSESTREAM END"); res.end() })
                 
                 responseStream.read(function (msg) {
                     console.log('msg',msg)
@@ -40,12 +42,14 @@ var HttpServer = exports.HttpServer = Backbone.Model.extend4000(
             app.get  ('*', function () { requestToMsg.apply(this,arguments) })
             app.post ('*', function () { requestToMsg.apply(this,arguments) })
 
-            this.subscribe(true,function (msg,reply,next,transmit) { reply.end(); transmit(); })
-
-            this.logmsg(true,['http','request'],'http')
+            // warning, position of transmit next and reply.end seems to be relevant.. setTimeout is in order somewhere...
+            this.subscribe(true,function (msg,reply,next,transmit) {
+                self.log(['http','request'],msg.http + " " + msg.url)
+                transmit()
+                next()
+                reply.end()
+            })
         }
         
     })
-
-
 

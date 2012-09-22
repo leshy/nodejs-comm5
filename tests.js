@@ -85,8 +85,8 @@ exports.Http = function (test) {
     
     var responder = new comm.MsgNode({name: "echo responder"})
 
-    responder.subscribe(true,function (msg,reply,next,pass) {
-        console.log("GOT MSG",msg)
+    responder.subscribe(true,function (msg,reply,next,transmit) {
+        next()
         reply.end(msg)
     })
 

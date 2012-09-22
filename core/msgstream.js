@@ -27,6 +27,7 @@ var Stream = exports.Stream = Backbone.Model.extend4000(
             this.children.on('add', function () {
                 if (!this.childrencounter) { this.childrencounter = 1 } else { this.childrencounter ++; }
             }.bind(this) )
+            
             this.children.on('end',function () { 
                 this.childrencounter --;
                 if (!this.childrencounter) { this.trigger('children_end')}
