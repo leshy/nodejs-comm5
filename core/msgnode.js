@@ -3,23 +3,14 @@ var Backbone = require('backbone4000')
 var _ = require('underscore')
 var graph = require('graph')
 var SubscriptionMan = require('subscriptionman').SubscriptionMan
-var Msg = require('./msg').Msg
 var Stream = require('./msgstream').Stream
+var Msg = require('./msg')
 var v = require('validator'); var Validator = v.Validator; var Select = v.Select
 var helpers = require('helpers')
 var decorators = require('decorators')
 var decorate = decorators.decorate
 var async = require('async')
 
-var MakeObjReceiver = function(objclass) {
-    return function() {
-        var args = helpers.toArray(arguments);
-        var f = args.shift();
-        if ((!args.length) || (!args[0])) { f.apply(this,[]); return }
-        if (args[0].constructor != objclass) { args[0] = new objclass(args[0]) }
-        return f.apply(this,args)
-    }
-}
 
 var MsgNode = exports.MsgNode = Backbone.Model.extend4000(
     graph.GraphNode,
@@ -60,7 +51,7 @@ var MsgNode = exports.MsgNode = Backbone.Model.extend4000(
             this.subscribe(true,function (msg,reply,next,transmit) { reply.end(); transmit(); })
         },
 
-        msg: decorate(MakeObjReceiver(Msg), function (msg) {
+        msg: decorate(helpers.MakeObjReceiver(Msg.Msg), function (msg) {
             if (this.messages[msg.meta.id]) { return } else { this.messages[msg.meta.id] = true }
             this.log(['msg',9],'received message')
             var self = this

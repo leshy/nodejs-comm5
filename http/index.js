@@ -5,7 +5,7 @@ var helpers = require('helpers')
 
 var v = require('validator'); var Validator = v.Validator; var Select = v.Select
 
-var Msg = exports.Msg = require('../core/msg').Msg
+//var Msg = exports.Msg = require('../core/msg').Msg
 var MsgNode = exports.MsgNode = require('../core/msgnode').MsgNode
 
 
@@ -32,7 +32,7 @@ var HttpServer = exports.HttpServer = Backbone.Model.extend4000(
                 responseStream.set({name: 'httpresponse'})
                 responseStream.read(function (msg) {
                     if (!msg) { res.end() } else {
-                        res.write(JSON.stringify({ hello: msg.hello}))
+                        res.write(JSON.stringify(msg.render()) + "\n")
                     }
                 })
                 

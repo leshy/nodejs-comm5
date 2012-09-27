@@ -3,6 +3,11 @@ var _ = require('underscore')
 var SubscriptionMan = require('subscriptionman').SubscriptionMan
 var graph = require('graph')
 
+var decorators = require('decorators')
+var decorate = decorators.decorate
+var helpers = require('helpers')
+var Msg = require('./msg')
+
 /*
 
 this one is simple..
@@ -26,24 +31,29 @@ var Stream = exports.Stream = Backbone.Model.extend4000(
             
             this.children.on('add', function (child) {
                 if (!self.childrencounter) { self.childrencounter = 1 } else { self.childrencounter += 1; }
- //               console.log(self.get('name'),"CHILD ADDED", self.childrencounter, child.get('name'))
-//                child.on('end',function () { console.log("END",child.get('name'))  })
             })
             
             this.children.on('end',function (child) { 
-//                if (self.childrencounter == 0) { self.endBroadcast() }
                 self.childrencounter -= 1;
-//                console.log(self.get('name'),"CHILD DIED", self.childrencounter)
                 if (!self.childrencounter) { self.trigger('children_end')}
                 self.endBroadcast()
-            })
-            
+            })            
         },
-
-        write: function (msg) {
+/*
+        write: decorate(helpers.MakeObjReceiver(Msg.Msg),function (msg) {
+            if (!msg) { return }
             if (this._ended) { throw "you tryed to write to an ended stream" }
+            if (msg && (msg.constructor != Msg)) { msg = new Msg.Msg(msg) }
+            this.msg(msg)
+        }),
+*/
+        write: function (msg) {
+            if (!msg) { return }
+            if (this._ended) { throw "you tryed to write to an ended stream" }
+            if (msg && (msg.constructor != Msg)) { msg = new Msg.Msg(msg) }
             this.msg(msg)
         },
+
         
         end: function (msg) {
             if (msg) { this.write(msg) }

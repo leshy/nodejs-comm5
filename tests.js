@@ -86,8 +86,11 @@ exports.Http = function (test) {
     var responder = new comm.MsgNode({name: "echo"})
 
     responder.subscribe(true,function (msg,reply,next,transmit) {
-        next()
-        reply.end({hello: "world"})
+        try {
+            next()
+            reply.write({oh:'hi'})
+            reply.end({bla: '33'})
+        } catch(err) { console.log("ERR",err)} 
     })
 
     server.connect(responder)
