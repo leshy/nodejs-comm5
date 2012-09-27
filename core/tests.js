@@ -36,11 +36,13 @@ exports.MsgStream = {
         var messagesc = []
 
         a.read(function (msg) {
+            if (msg) { msg = msg.render() }
             messages.push(msg)
         })
 
 
         c.read(function (msg) {
+            if (msg) { msg = msg.render() }
             messagesc.push(msg)
         })
 
@@ -65,6 +67,7 @@ exports.MsgStream = {
             var messages = []
 
             x.read(function (msg) {
+                if (msg) { msg = msg.render() }
                 messages.push(msg)
                 
                 if(!msg) { 
@@ -85,6 +88,7 @@ exports.MsgStream = {
             var messages = []
 
             x.read(function (msg) {
+                if (msg) { msg = msg.render() }
                 messages.push(msg)
                 
                 if(!msg) { 
@@ -150,6 +154,7 @@ exports.MsgStream = {
 
 
         x.readOne(function (msg,next) {
+            if (msg) { msg = msg.render() }
             messages.push(msg)
             next()
         })
@@ -163,6 +168,7 @@ exports.MsgStream = {
         test.equals(x.subscribers().length,0)
         
         x.readOne(function (msg,next) {
+            if (msg) { msg = msg.render() }
             messages.push(msg)
             next()
         })
@@ -245,4 +251,6 @@ exports.MsgNode = {
         },{ response: Validator().String('end')})
     }
 }
+
+
 
