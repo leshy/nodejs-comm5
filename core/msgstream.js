@@ -26,16 +26,14 @@ var Stream = exports.Stream = Backbone.Model.extend4000(
             
             this.children.on('add', function (child) {
                 if (!self.childrencounter) { self.childrencounter = 1 } else { self.childrencounter += 1; }
-                console.log(self.get('name'),"CHILD ADDED", self.childrencounter, child.get('name'))
-                child.on('end',function () {
-                    console.log("END",child.get('name'))
-                })
+ //               console.log(self.get('name'),"CHILD ADDED", self.childrencounter, child.get('name'))
+//                child.on('end',function () { console.log("END",child.get('name'))  })
             })
             
             this.children.on('end',function (child) { 
 //                if (self.childrencounter == 0) { self.endBroadcast() }
                 self.childrencounter -= 1;
-                console.log(self.get('name'),"CHILD DIED", self.childrencounter)
+//                console.log(self.get('name'),"CHILD DIED", self.childrencounter)
                 if (!self.childrencounter) { self.trigger('children_end')}
                 self.endBroadcast()
             })
@@ -48,19 +46,15 @@ var Stream = exports.Stream = Backbone.Model.extend4000(
         },
         
         end: function (msg) {
-            console.log(this.get('name') + " END CALLED".green)
             if (msg) { this.write(msg) }
             this._ended = true
             this.endBroadcast()
         },
         
         endBroadcast: function () {
-            console.log(this.get('name') + " endbroadcast?")
             if (this.ended()) { 
-                console.log("yes".green)
                 _.map(this.subscribers(), function (subscriber) { subscriber.callback(undefined,function () {}) })
-            } else {
-                console.log("no".red)
+                this.trigger('end')
             }
         },
         

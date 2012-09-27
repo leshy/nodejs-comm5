@@ -65,29 +65,36 @@ var MsgNode = exports.MsgNode = Backbone.Model.extend4000(
             this.log(['msg',9],'received message')
             var self = this
             var mainStream = new Stream({name: "mainStream-" + this.get('name')})
+
             var _transmit = false
 
             msg.meta.breadcrumbs.push(this)
             
             function transmit () { _transmit = true }
             
+
+            var subscribersStream = new Stream({name: "subscribers-" + this.get('name')})
+            mainStream.addchild(subscribersStream)
+
             setTimeout(function () {
                 function wrap (f,name) {
                     function wrapped (msg,next) {
                         var replyStream = msg.makeReplyStream()
                         replyStream.set({name: self.get('name') + "-" + name})
 
-                        mainStream.addchild(replyStream) // it would be cool if replyStream was spawned in some kind of inactive state.
+                        subscribersStream.addchild(replyStream) // it would be cool if replyStream was spawned in some kind of inactive state.
                                                          // so that I don't need to explicitly .end() it if we don't want to send anything
                         f(msg,replyStream,next,transmit)
                     }
                     return wrapped
                 }
                 SubscriptionMan.prototype.msg.call(self,msg,wrap)
+                subscribersStream.end()
             })
+            
 
-            mainStream.on('children_end',function () {
-                self.log(['stream',9],'mainstream children end')
+            subscribersStream.on('end',function () {
+                self.log(['stream',9],'subscribers done')
                 if (_transmit) { 
                     self.log(['stream',9],'transmitting')
                     mainStream.addchild(self.send(msg)) // this won't transmit a modified msg.. maybe. fixor?
