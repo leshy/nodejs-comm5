@@ -31,14 +31,20 @@ var HttpServer = exports.HttpServer = Backbone.Model.extend4000(
                 
                 console.log("BINDING ON RESPONSESTREAM")
                 
+                responseStream.set({name: 'httpresponse'})
                 responseStream.read(function (msg) {
+                    console.log('http node sending',msg)
                     if (!msg) { res.end() } else {
                         res.write(JSON.stringify({ hello: msg.hello}))
                     }
                 })
                 
+                setTimeout(function () {
 
-                responseStream.on('end', function () { console.log("RESPONSESTREAM END"); res.end() })
+                    console.log(responseStream.ended(), responseStream._ended, responseStream.childrencounter)
+                },500)
+
+                responseStream.on('end', function () { res.end() })
 
                 console.log("DONE")
 

@@ -46,10 +46,9 @@ Msg.prototype.makeReplyStream = function () {
     return replystream
 }
 
-Msg.prototype.export = function() { 
-    var data = _.clone(this)    
-    delete data['_viral']
-    delete data['_meta']
+Msg.prototype.render = function() { 
+    var data = _.clone(this)
+    delete data['meta']
     return data
 }
 

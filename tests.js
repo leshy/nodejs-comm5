@@ -88,7 +88,7 @@ exports.Http = function (test) {
     responder.subscribe(true,function (msg,reply,next,transmit) {
         next()
         reply.end({hello: "world"})
-    },'reply')
+    })
 
     server.connect(responder)
     
