@@ -4,11 +4,9 @@ var decorators = require('decorators'); var decorate = decorators.decorate;
 var helpers = require('helpers')
 
 var v = require('validator'); var Validator = v.Validator; var Select = v.Select
+var core = exports.MsgNode = require('../core/'); var MsgNode = core.MsgNode; var Msg = core.Msg
 
-//var Msg = exports.Msg = require('../core/msg').Msg
-var MsgNode = exports.MsgNode = require('../core/msgnode').MsgNode
-
-
+var io = require('socket.io')
 
 // sets realm for a message to be this.attributes.realm, 
 // passes it to other potential local subscribers and broadcasts message to other nodes connected to this node
@@ -20,7 +18,6 @@ var HttpServer = exports.HttpServer = Backbone.Model.extend4000(
 
         initialize: function () {
             var self = this
-            
             var app = this.get('express')
             
             function requestToMsg(req,res,next) {
@@ -37,7 +34,6 @@ var HttpServer = exports.HttpServer = Backbone.Model.extend4000(
                 })
                 
                 responseStream.on('end', function () { res.end() })
-
             }
 
             app.get  ('*', function () { requestToMsg.apply(this,arguments) })
@@ -54,3 +50,29 @@ var HttpServer = exports.HttpServer = Backbone.Model.extend4000(
         
     })
 
+
+var WebsocketServer = exports.WebsocketServer = Backbone.Model.extend4000(
+    MsgNode,
+    v.ValidatedModel,
+    { 
+        validator: Validator({ express: "Object", root: Validator().Default("/") }),
+
+        initialize: function () {
+            var self = this
+            var app = this.get('express')
+            io.listen(app)
+
+            io.sockets.on('connection', function (socket) {
+                
+                socket.on('msg', function (msg) {
+                    msg = new Msg(msg)
+                    self.msg(msg).read(function (msg) {
+                        if (!msg) { 
+                            socket.emit('msg',msg)
+                        }
+                    })
+                });
+            });
+        }
+
+    })

@@ -4,13 +4,12 @@ var _ = require('underscore')
 var graph = require('graph')
 var SubscriptionMan = require('subscriptionman').SubscriptionMan
 var Stream = require('./msgstream').Stream
-var Msg = require('./msg')
+var Msg = require('./msg').Msg
 var v = require('validator'); var Validator = v.Validator; var Select = v.Select
 var helpers = require('helpers')
 var decorators = require('decorators')
 var decorate = decorators.decorate
 var async = require('async')
-
 
 var MsgNode = exports.MsgNode = Backbone.Model.extend4000(
     graph.GraphNode,
@@ -35,6 +34,7 @@ var MsgNode = exports.MsgNode = Backbone.Model.extend4000(
         },
         
         log: function (tags,msg,extras,logger) {
+            return
             if (!extras) { extras = {} }
             if (!logger && !(logger = this.get('logger'))) { console.log (String(new Date().getTime()).yellow + " " +  this.get('name').green, tags, msg); return }
             logger.msg(_.extend(extras,{ tags: tags, msg: msg }))
@@ -51,7 +51,7 @@ var MsgNode = exports.MsgNode = Backbone.Model.extend4000(
             this.subscribe(true,function (msg,reply,next,transmit) { reply.end(); transmit(); })
         },
 
-        msg: decorate(helpers.MakeObjReceiver(Msg.Msg), function (msg) {
+        msg: decorate(decorators.MakeObjReceiver(Msg), function (msg) {
             if (this.messages[msg.meta.id]) { return } else { this.messages[msg.meta.id] = true }
             this.log(['msg',9],'received message')
             var self = this
@@ -67,7 +67,7 @@ var MsgNode = exports.MsgNode = Backbone.Model.extend4000(
             var subscribersStream = new Stream({name: "subscribers-" + this.get('name')})
             mainStream.addchild(subscribersStream)
 
-            setTimeout(function () {
+            process.nextTick(function () {
                 function wrap (f,name) {
                     function wrapped (msg,next) {
                         var replyStream = msg.makeReplyStream()

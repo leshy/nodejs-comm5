@@ -1,6 +1,7 @@
 var comm = require('./core')
 var v = require('validator'); var Validator = v.Validator
-
+var helpers = require('helpers')
+var _ = require('underscore')
 
 exports.BorderMan = function (test) {
     
@@ -66,6 +67,7 @@ exports.Speed = function (test) {
 exports.Http = function (test) {
     var express = require('express');
     var http = require('./http')
+    var request = require('request')
     var app = express.createServer();
 
 
@@ -84,7 +86,7 @@ exports.Http = function (test) {
     var server = new http.HttpServer({express: app, name: "http"})
     
     var responder = new comm.MsgNode({name: "echo"})
-
+    
     responder.subscribe(true,function (msg,reply,next,transmit) {
         try {
             next()
@@ -92,10 +94,16 @@ exports.Http = function (test) {
             reply.end({bla: '33'})
         } catch(err) { console.log("ERR",err)} 
     })
+    
+    request('http://localhost:8000', function (error, response, body) {
+        if (!error && response.statusCode == 200) {
+            test.deepEqual(_.map(helpers.trim(body).split('\n'), function (string) { return JSON.parse(string)}), [ { oh: 'hi' }, { bla: '33' } ])
+            app.close()
+            test.done()
+        }
+    })
 
     server.connect(responder)
-    
-    setTimeout(function () {},30000)
 }
 
 

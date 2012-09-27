@@ -6,7 +6,11 @@ var graph = require('graph')
 var decorators = require('decorators')
 var decorate = decorators.decorate
 var helpers = require('helpers')
-var Msg = require('./msg')
+var Msg = require('./msg') // some kind of weirdness is going on with loading this module.. Msg is {} at this point but it gets loaded later? weeeird
+
+
+
+
 
 /*
 
