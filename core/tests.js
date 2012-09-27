@@ -11,7 +11,6 @@ exports.Msg = {
         var a = new this.Msg({bla : 3})
         test.done()
     }
-
 }
 
 

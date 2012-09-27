@@ -45,7 +45,7 @@ var MsgNode = exports.MsgNode = Backbone.Model.extend4000(
         
         log: function (tags,msg,extras,logger) {
             if (!extras) { extras = {} }
-            if (!logger && !(logger = this.get('logger'))) { console.log (tags,msg); return }
+            if (!logger && !(logger = this.get('logger'))) { console.log (String(new Date().getTime()).yellow + " " +  this.get('name').green, tags, msg); return }
             logger.msg(_.extend(extras,{ tags: tags, msg: msg }))
         },
 
@@ -61,13 +61,10 @@ var MsgNode = exports.MsgNode = Backbone.Model.extend4000(
         },
 
         msg: decorate(MakeObjReceiver(Msg), function (msg) {
-            
-            
-
             if (this.messages[msg.meta.id]) { return } else { this.messages[msg.meta.id] = true }
-
+            this.log(['msg',9],'received message')
             var self = this
-            var mainStream = new Stream()
+            var mainStream = new Stream({name: "mainStream-" + this.get('name')})
             var _transmit = false
 
             msg.meta.breadcrumbs.push(this)
@@ -75,40 +72,46 @@ var MsgNode = exports.MsgNode = Backbone.Model.extend4000(
             function transmit () { _transmit = true }
             
             setTimeout(function () {
-                function wrap (f) {
+                function wrap (f,name) {
                     function wrapped (msg,next) {
                         var replyStream = msg.makeReplyStream()
+                        replyStream.set({name: self.get('name') + "-" + name})
 
                         mainStream.addchild(replyStream) // it would be cool if replyStream was spawned in some kind of inactive state.
                                                          // so that I don't need to explicitly .end() it if we don't want to send anything
-
                         f(msg,replyStream,next,transmit)
                     }
                     return wrapped
                 }
-                
-                SubscriptionMan.prototype.msg.call(self,msg,wrap)            
-                
+                SubscriptionMan.prototype.msg.call(self,msg,wrap)
             })
 
             mainStream.on('children_end',function () {
-                if (_transmit) { mainStream.addchild(self.send(msg)) } // this won't transmit a modified msg.. maybe. fixor?
+                self.log(['stream',9],'mainstream children end')
+                if (_transmit) { 
+                    self.log(['stream',9],'transmitting')
+                    mainStream.addchild(self.send(msg)) // this won't transmit a modified msg.. maybe. fixor?
+                } else {
+                    self.log(['stream',9],'not transmitting.')
+                }
                 mainStream.end()
             })
 
-            mainStream.on('end',function () { console.log("mainstream end");delete this.messages[msg.meta.id] }.bind(this))
+            mainStream.on('end',function () { 
+                self.log(['stream',9],'mainstream end')
+                delete self.messages[msg.meta.id]
+            })
+
             return mainStream
         }),
 
-        // ALLRIGHT!!!!!!!!!!!
         send: function (msg) {
-
-            // this message is a reply to something, we know exactly where to send it, don't broadcast it.
             if (msg.meta.replyto) { 
+                // this message is a reply to something, we know exactly where to send it, don't broadcast it.
                 var replyStream = msg.meta.path.shift().msg(msg,callback)
                 return
             } else {
-                var replyStream = new Stream()
+                var replyStream = new Stream({name: "childrenStream-" + this.get('name')})
                 var lastnode = _.last(msg.meta.breadcrumbs)
                 async.parallel(
                     this.connections.map(function (node) {
@@ -118,6 +121,7 @@ var MsgNode = exports.MsgNode = Backbone.Model.extend4000(
                             callback()
                         }
                     }))
+                replyStream.end()
             }
             return replyStream
         }

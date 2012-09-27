@@ -24,14 +24,21 @@ var Stream = exports.Stream = Backbone.Model.extend4000(
             var self = this
             this.children.on('msg',function (msg) { self.msg(msg) })
             
-            this.children.on('add', function () {
-                if (!this.childrencounter) { this.childrencounter = 1 } else { this.childrencounter ++; }
-            }.bind(this) )
+            this.children.on('add', function (child) {
+                if (!self.childrencounter) { self.childrencounter = 1 } else { self.childrencounter += 1; }
+                console.log(self.get('name'),"CHILD ADDED", self.childrencounter, child.get('name'))
+                child.on('end',function () {
+                    console.log("END",child.get('name'))
+                })
+            })
             
-            this.children.on('end',function () { 
-                this.childrencounter --;
-                if (!this.childrencounter) { this.trigger('children_end')}
-            }.bind(this))
+            this.children.on('end',function (child) { 
+//                if (self.childrencounter == 0) { self.endBroadcast() }
+                self.childrencounter -= 1;
+                console.log(self.get('name'),"CHILD DIED", self.childrencounter)
+                if (!self.childrencounter) { self.trigger('children_end')}
+                self.endBroadcast()
+            })
             
         },
 
@@ -41,15 +48,19 @@ var Stream = exports.Stream = Backbone.Model.extend4000(
         },
         
         end: function (msg) {
+            console.log(this.get('name') + " END CALLED".green)
             if (msg) { this.write(msg) }
             this._ended = true
             this.endBroadcast()
         },
         
         endBroadcast: function () {
+            console.log(this.get('name') + " endbroadcast?")
             if (this.ended()) { 
+                console.log("yes".green)
                 _.map(this.subscribers(), function (subscriber) { subscriber.callback(undefined,function () {}) })
-                this.trigger('end')
+            } else {
+                console.log("no".red)
             }
         },
         
@@ -68,28 +79,4 @@ var Stream = exports.Stream = Backbone.Model.extend4000(
         }
     })
 
-
-
-// if there are no subscriptions bufferstream will fill its internal buffer until someone is subscribed, then it will flush.
-var BufferStream = exports.BufferStream = SubscriptionMan.extend4000({
-    bufferadd: function (msg) {
-        var self = this
-        
-        if (!this.bladder) { 
-            this.bladder = [] 
-            this.oneshot('subscribe',function () { self.emptybladder() })
-        }
-        this.bladder.push(msg)
-    },
-
-    emptybladder: function () {
-        if (!this.bladder) { throw "I have no buffer man" }
-        while (this.bladder.length) { Stream.prototype.write.call(this,this.bladder.shift()) }
-        delete this.bladder
-    },
-    
-    write: function (msg) {
-        if (!this.subscribers()) { this.bladderadd(msg) } else { Stream.prototype.write.call(this,msg) }
-    }
-})
 

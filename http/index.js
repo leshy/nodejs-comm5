@@ -29,14 +29,24 @@ var HttpServer = exports.HttpServer = Backbone.Model.extend4000(
 
                 var responseStream = self.msg({http: req.method, headers: req.headers, url: req.url, from: from})
                 
-                responseStream.end(function () { console.log("RESPONSESTREAM END"); res.end() })
+                console.log("BINDING ON RESPONSESTREAM")
                 
+                responseStream.set({name: 'httpresponse'})
                 responseStream.read(function (msg) {
-                    console.log('msg',msg)
+                    console.log('http node sending',msg)
                     if (!msg) { res.end() } else {
-                        res.write(JSON.stringify({headers: msg.headers, url: msg.url, method: msg.method}))
+                        res.write(JSON.stringify({ hello: msg.hello}))
                     }
                 })
+                
+                setTimeout(function () {
+                    console.log(responseStream.ended(), responseStream._ended, responseStream.childrencounter)
+                },500)
+
+                responseStream.on('end', function () { console.log("RESPONSESTREAM END"); res.end() })
+
+                console.log("DONE")
+
             }
 
             app.get  ('*', function () { requestToMsg.apply(this,arguments) })
@@ -48,7 +58,7 @@ var HttpServer = exports.HttpServer = Backbone.Model.extend4000(
                 transmit()
                 next()
                 reply.end()
-            })
+            },'log')
         }
         
     })

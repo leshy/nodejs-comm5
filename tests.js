@@ -83,14 +83,17 @@ exports.Http = function (test) {
 
     var server = new http.HttpServer({express: app, name: "http"})
     
-    var responder = new comm.MsgNode({name: "echo responder"})
+    var responder = new comm.MsgNode({name: "echo"})
 
     responder.subscribe(true,function (msg,reply,next,transmit) {
         next()
-        reply.end(msg)
-    })
+        reply.end({hello: "world"})
+    },'reply')
 
     server.connect(responder)
     
     setTimeout(function () {},30000)
 }
+
+
+
