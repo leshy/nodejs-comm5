@@ -51,7 +51,7 @@ var MsgNode = exports.MsgNode = Backbone.Model.extend4000(
 
         msg: decorate(decorators.MakeObjReceiver(Msg), function (msg) {
             if (this.messages[msg.meta.id]) { return } else { this.messages[msg.meta.id] = true }
-            //this.log(['msg',9],'received message')
+            //this.log(['msg',9],'received message ' + JSON.stringify(msg.render()))
             var self = this
             
             var mainStream = new (this.get('stream'))({name: "mainStream-" + this.get('name')})

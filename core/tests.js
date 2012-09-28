@@ -46,7 +46,6 @@ exports.MsgStream = {
             messagesc.push(msg)
         })
 
-
         a.addchild(b)
         a.addchild(c)
         c.addchild(d)
@@ -216,7 +215,7 @@ exports.MsgNode = {
         })
         
         n1.subscribe({ response: true },function (msg,reply,next) {
-            console.log("N1 response sub: ", msg)
+            //console.log("N1 response sub: ".red, msg)
         })
 
         var stream = n1.msg({bla: 'hi?'})
@@ -274,12 +273,6 @@ exports.MsgNode = {
                   })
         */
         
-        n2.subscribe( true ,function (msg,reply,next,transmit) {
-            reply.end()
-            msg.kirac = 3
-            next(msg)
-        })
-
         n2.subscribe({ bla: true },function (msg,reply,next,transmit) {
             reply.write({ response: 'n2' })
             reply.end()
