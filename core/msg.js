@@ -46,9 +46,10 @@ Msg.prototype.makeReplyStream = function () {
     return replystream
 }
 
+
 Msg.prototype.render = function() { 
-    var data = _.clone(this)
-    delete data['meta']
+    data = {}
+    _.map(this,function (value,name) { if (name != "meta") { data[name] = value} })
     return data
 }
 

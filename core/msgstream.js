@@ -31,17 +31,20 @@ var Stream = exports.Stream = Backbone.Model.extend4000(
     {
         initialize: function () {
             var self = this
+            this._untouched = true
+            this.write = this.write.bind(this)
+
             this.children.on('msg',function (msg) { self.msg(msg) })
             
             this.children.on('add', function (child) {
                 if (!self.childrencounter) { self.childrencounter = 1 } else { self.childrencounter += 1; }
             })
             
-            this.children.on('end',function (child) { 
+            this.children.on('end', function (child) { 
                 self.childrencounter -= 1;
                 if (!self.childrencounter) { self.trigger('children_end')}
                 self.endBroadcast()
-            })            
+            })
         },
 /*
         write: decorate(helpers.MakeObjReceiver(Msg.Msg),function (msg) {
@@ -51,14 +54,22 @@ var Stream = exports.Stream = Backbone.Model.extend4000(
             this.msg(msg)
         }),
 */
+        touch: function () {
+            this._untouched = false
+        },
+
         write: function (msg) {
             if (!msg) { return }
+            this._untouched = false
             if (this._ended) { throw "you tryed to write to an ended stream" }
             if (msg && (msg.constructor != Msg)) { msg = new Msg.Msg(msg) }
             this.msg(msg)
         },
 
-        
+//        msg: function (msg) {  
+//            SubscriptionMan.prototype.msg.apply(this,arguments)
+//        },
+
         end: function (msg) {
             if (msg) { this.write(msg) }
             this._ended = true
@@ -86,5 +97,6 @@ var Stream = exports.Stream = Backbone.Model.extend4000(
             return this.oneshot(pattern,callback)
         }
     })
+
 
 

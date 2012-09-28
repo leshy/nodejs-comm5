@@ -178,9 +178,7 @@ exports.MsgStream = {
         test.deepEqual(messages, [{msg: 1}, undefined ])
         
         test.done()
-
     }
-
 }
 
 exports.MsgNode = {
@@ -211,10 +209,10 @@ exports.MsgNode = {
         var n1 = new comm.MsgNode({name: 'n1'})
 
         n1.subscribe({ bla : true },function (msg,reply,next) {
-//            console.log("GOT",msg)
+            //            console.log("GOT",msg)
             reply.write({ response: 1 })
             reply.end({ response: 2 })
-//            next()
+            //            next()
         })
         
         n1.subscribe({ response: true },function (msg,reply,next) {
@@ -249,6 +247,58 @@ exports.MsgNode = {
         stream.readOne(function (msg,reply) {
             test.done()
         },{ response: Validator().String('end')})
+    },
+
+
+
+    MsgModification: function (test) {
+
+        var n1 = new comm.MsgNode({name: 'n1'})
+        var n2 = new comm.MsgNode({name: 'n2'})
+        var n3 = new comm.MsgNode({name: 'n2'})
+
+        n1.connect(n2)
+        n2.connect(n3)
+
+        /*        
+                  n2.outputhook(true, function (msg,reply,next) {
+                  msg.kirac = 3
+                  reply.end(msg)
+                  next()
+                  })
+
+                  n2.inputhook(true, function (msg,reply,next) {
+                  msg.input = 666
+                  reply.end(msg)
+                  next()
+                  })
+        */
+        
+        n2.subscribe( true ,function (msg,reply,next,transmit) {
+            reply.end()
+            msg.kirac = 3
+            next(msg)
+        })
+
+        n2.subscribe({ bla: true },function (msg,reply,next,transmit) {
+            reply.write({ response: 'n2' })
+            reply.end()
+            next()
+            transmit()
+        })
+
+        n3.subscribe({ bla : true },function (msg,reply,next,transmit) {
+            reply.write({ response: "n3" })
+            reply.end({ response: 'n3end' })
+        })
+
+        n1.subscribe(true, function (msg,reply,next,transmit) { transmit(); reply.end() })
+        var stream = n1.msg({bla: 'hi?'})
+        
+        stream.read(function (msg,reply) {
+            console.log(">>>".green,msg)
+            if (!msg) { test.done() }
+        })
     }
 }
 
