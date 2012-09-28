@@ -66,7 +66,7 @@ exports.Speed = function (test) {
 
 exports.Http = function (test) {
     var express = require('express');
-    var http = require('./http')
+    var http = require('./serverside/http')
     var request = require('request')
     var app = express.createServer();
 
