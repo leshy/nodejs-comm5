@@ -59,7 +59,10 @@ var MsgNode = exports.MsgNode = Backbone.Model.extend4000(
 
             msg.meta.breadcrumbs.push(this)
             
-            function transmit () { _transmit = true }
+            function transmit (newmsg) { 
+                if (!newmsg) { newmsg = msg }
+                _transmit = newmsg
+            }
             
             var subscribersStream = new Stream({name: "subscribers-" + this.get('name')})
             mainStream.addchild(subscribersStream)
@@ -82,7 +85,7 @@ var MsgNode = exports.MsgNode = Backbone.Model.extend4000(
             
             subscribersStream.on('end',function () {
                 if (_transmit) { 
-                    mainStream.addchild(self.send(msg))
+                    mainStream.addchild(self.send(_transmit))
                 }
                 mainStream.end()
             })

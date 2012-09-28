@@ -203,7 +203,7 @@ exports.MsgNode = {
 
         test.done()
     },
-
+    
     LocalComm: function (test) {
         var n1 = new comm.MsgNode({name: 'n1'})
 
@@ -224,9 +224,8 @@ exports.MsgNode = {
             //console.log("N1 response cb: ",msg)
             test.done()
         },{ response: 2})
-
     },
-
+    
     RemoteComm: function (test) {
 
         var n1 = new comm.MsgNode({name: 'n1'})
@@ -248,9 +247,8 @@ exports.MsgNode = {
             test.done()
         },{ response: Validator().String('end')})
     },
-
-
-
+    
+    
     MsgModification: function (test) {
 
         var n1 = new comm.MsgNode({name: 'n1'})
@@ -277,12 +275,13 @@ exports.MsgNode = {
         n2.subscribe({ bla: true },function (msg,reply,next,transmit) {
             reply.write({ response: 'n2' })
             reply.end()
-            next()
-            transmit()
+            msg.insert = 666
+            next(msg)
+            transmit(msg)
         })
 
         n3.subscribe({ bla : true },function (msg,reply,next,transmit) {
-            test.deepEqual({ bla: 'hi?'}, msg.render())
+            test.deepEqual({ bla: 'hi?', insert: 666}, msg.render())
             
             reply.write({ response: "n3" })
             reply.end({ response: 'n3end' })
