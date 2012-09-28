@@ -235,6 +235,7 @@ exports.MsgNode = {
         n1.connect(n2)
 
         n2.subscribe({ bla : true },function (msg,reply,next,transmit) {
+            test.deepEqual({ bla: 'hi?' },msg.render())
             reply.write({ response: 1 })
             reply.end({ response: 'end' })
         })
@@ -281,13 +282,18 @@ exports.MsgNode = {
         })
 
         n3.subscribe({ bla : true },function (msg,reply,next,transmit) {
+            test.deepEqual({ bla: 'hi?'}, msg.render())
+            
             reply.write({ response: "n3" })
             reply.end({ response: 'n3end' })
         })
 
         n1.subscribe(true, function (msg,reply,next,transmit) { transmit(); reply.end() })
         var stream = n1.msg({bla: 'hi?'})
-        
+
+        stream.readOne(function (msg) {
+            test.deepEqual({ response: 'n2'}, msg.render())
+        })
         stream.read(function (msg,reply) {
             console.log(">>>".green,msg)
             if (!msg) { test.done() }
