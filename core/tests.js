@@ -230,58 +230,68 @@ exports.MsgNode = {
 
         var n1 = new comm.MsgNode({name: 'n1'})
         var n2 = new comm.MsgNode({name: 'n2'})
-
+        var messages = []
         n1.connect(n2)
 
         n2.subscribe({ bla : true },function (msg,reply,next,transmit) {
+            messages.push({node: 'n2', msg: msg.render()})
             test.deepEqual({ bla: 'hi?' },msg.render())
             reply.write({ response: 1 })
             reply.end({ response: 'end' })
         })
 
-        n1.subscribe(true, function (msg,reply,next,transmit) { transmit(); reply.end() })
+        n1.subscribe(true, function (msg,reply,next,transmit) { 
+            messages.push({node: 'n1', msg: msg.render()})
+            transmit(); 
+            reply.end() 
+        })
 
         var stream = n1.msg({bla: 'hi?'})
         
         stream.readOne(function (msg,reply) {
+            test.deepEqual([ { node: 'n1', msg: { bla: 'hi?' } },  { node: 'n2', msg: { bla: 'hi?' } } ],messages)
             test.done()
         },{ response: Validator().String('end')})
     },
     
     
-    MsgModification: function (test) {
+    MsgModificationIn: function (test) {
 
         var n1 = new comm.MsgNode({name: 'n1'})
         var n2 = new comm.MsgNode({name: 'n2'})
         var n3 = new comm.MsgNode({name: 'n2'})
+        var n4 = new comm.MsgNode({name: 'n2'})
 
         n1.connect(n2)
         n2.connect(n3)
+        n3.connect(n4)
 
-        /*        
-                  n2.outputhook(true, function (msg,reply,next) {
-                  msg.kirac = 3
-                  reply.end(msg)
-                  next()
-                  })
+        messages = []
 
-                  n2.inputhook(true, function (msg,reply,next) {
-                  msg.input = 666
-                  reply.end(msg)
-                  next()
-                  })
-        */
-        
         n2.subscribe({ bla: true },function (msg,reply,next,transmit) {
+            messages.push({ node: 'n2', hook: 1, msg: msg.render()})
             reply.write({ response: 'n2' })
             reply.end()
-            msg.insert = 666
+            msg.insert1 = 666
             next(msg)
+        })
+
+        n2.subscribe({ bla: true },function (msg,reply,next,transmit) {
+            messages.push({ node: 'n2', hook: 2, msg: msg.render()})
+            reply.end()
+            transmit()
+        })
+
+        n3.subscribe({ bla: true },function (msg,reply,next,transmit) {
+            messages.push({ node: 'n3', hook: 1, msg: msg.render()})
+            reply.write({ response: 'n3' })
+            reply.end()
+            msg.insert2 = 777
             transmit(msg)
         })
 
-        n3.subscribe({ bla : true },function (msg,reply,next,transmit) {
-            test.deepEqual({ bla: 'hi?', insert: 666}, msg.render())
+        n4.subscribe({ bla : true },function (msg,reply,next,transmit) {
+            messages.push({ node: 'n4', hook: 1, msg: msg.render()})
             
             reply.write({ response: "n3" })
             reply.end({ response: 'n3end' })
@@ -293,9 +303,16 @@ exports.MsgNode = {
         stream.readOne(function (msg) {
             test.deepEqual({ response: 'n2'}, msg.render())
         })
+
         stream.read(function (msg,reply) {
-            console.log(">>>".green,msg)
-            if (!msg) { test.done() }
+            if (!msg) { 
+                test.deepEqual( [ { node: 'n2', hook: 1, msg: { bla: 'hi?' } },
+                                  { node: 'n2', hook: 2, msg: { bla: 'hi?', insert1: 666 } },
+                                  { node: 'n3', hook: 1, msg: { bla: 'hi?', insert1: 666 } },
+                                  { node: 'n4', hook: 1, msg: { bla: 'hi?', insert1: 666, insert2: 777 } } ],
+                                messages)
+                
+                test.done() }
         })
     }
 }
