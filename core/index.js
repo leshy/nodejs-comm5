@@ -28,3 +28,63 @@ var BorderMan = exports.BorderMan = Backbone.Model.extend4000(
 
 
 
+
+var ServerMan = exports.ServerMan = Backbone.Model.extend4000(
+    MsgNode,
+    v.ValidatedModel,
+    {
+        validator: Validator({ protocol: Validator(true),
+                               options: Validator().Default({}).Object() }),
+                               
+        
+        initialize: function () {
+            this.server = this.get('protocol')
+            this.server.start(this.get('options'))
+            
+            this.server.connection(function (connection) {
+                
+            })
+        }
+    })
+
+
+var ConnectionMan = exports.ConnectionMan = Backbone.Model.extend4000(
+    MsgNode,
+    v.ValidatedModel,
+    {
+        initialize: function () {
+            
+            var streams = {}
+            var self = this
+
+            this.subscribe(true,function (msg,reply,next,transmit) {
+                var txmsg = msg.render()
+                txmsg.meta = { id: msg.meta.id }
+                self.tx(txmsg)
+                streams[id] = reply
+            })
+            
+            this.connection.rx(function (msg) { 
+                if (msg.meta.replyto) {
+                    streams[msg.meta.replyto].write(msg)
+                } else {
+                    var stream = this.msg(msg)
+                    stream.read(function (msg) {
+                        if (!msg) { return } 
+                        connection.tx(msg)
+                    })
+                }
+                
+            })
+        },
+
+        msg: function () {
+            
+
+        }
+        
+        
+        
+        
+        
+    })

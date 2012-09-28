@@ -32,15 +32,17 @@ exports.BorderMan = function (test) {
     },{ response: Validator().String('end')})
 }
 
-exports.Speed = function (test) {
-    var n = 25
+exports.SpeedLeak = function (test) {
+    var n = 100
     var n1 = new comm.MsgNode({name: 'n1'})
     var borderman = new comm.BorderMan({name: 'borderman', realm: 'testrealm'})
     var n2 = new comm.MsgNode({name: 'n2'})
-    
+    var firstmem = process.memoryUsage().rss
+    var memlog = []
+
     n1.connect(borderman)
     borderman.connect(n2)
-
+    
     n2.subscribe({ bla : true, realm: Validator().String("testrealm") },function (msg,reply,next,transmit) {
         next()
         reply.write({ response: msg.bla })
@@ -50,6 +52,8 @@ exports.Speed = function (test) {
     n2.subscribe({ bla : true, realm: Validator().String("testrealm") },function (msg,reply,next,transmit) {
         next()
         if (msg.bla == n) { 
+            console.log('mem:'.green,_.last(memlog))
+            test.equals(false, (_.last(memlog) < 50000))
             test.done()
         }
         reply.end()
@@ -61,7 +65,13 @@ exports.Speed = function (test) {
     while (x < n) {
         x++
         n1.msg({bla: x})
+        var mem = process.memoryUsage().rss
+        memlog.push(mem - firstmem)
+        lastmem = mem
     }
+    
+    
+
 }
 
 exports.Http = function (test) {
