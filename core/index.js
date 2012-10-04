@@ -26,9 +26,6 @@ var BorderMan = exports.BorderMan = Backbone.Model.extend4000(
         }
     })
 
-
-
-
 var ServerMan = exports.ServerMan = Backbone.Model.extend4000(
     MsgNode,
     v.ValidatedModel,
@@ -46,7 +43,6 @@ var ServerMan = exports.ServerMan = Backbone.Model.extend4000(
             })
         }
     })
-
 
 var ConnectionMan = exports.ConnectionMan = Backbone.Model.extend4000(
     MsgNode,
@@ -80,11 +76,7 @@ var ConnectionMan = exports.ConnectionMan = Backbone.Model.extend4000(
 
         msg: function () {
             
-
-        }
-        
-        
-        
-        
-        
+        }        
     })
+
+

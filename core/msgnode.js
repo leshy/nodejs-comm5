@@ -112,4 +112,3 @@ var MsgNode = exports.MsgNode = Backbone.Model.extend4000(
     })
 
 
-
