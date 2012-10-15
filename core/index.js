@@ -53,7 +53,6 @@ var ConnectionMan = exports.ConnectionMan = Backbone.Model.extend4000(
             var self = this
             
             this.subscribe(true,function (msg,reply,next,transmit) {
-
                 if (received[msg.meta.id]) {
                     reply.end(); next(); return
                 }

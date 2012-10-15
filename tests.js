@@ -119,41 +119,38 @@ exports.Http = function (test) {
 
 exports.Nssocket = function (test) {
 
+    var s = require('./serverside/nssocketWrapper')
 
-    var nssocket = require('nssocket')
-    var nssocketWrapper = require('./serverside/nssocket').nssocketWrapper
-
-    var server = nssocket.createServer(function (socket) {
-        var ServerNode = new nssocketWrapper({ name: "servernode", realm: "bla", socket: socket})
-
-        ServerNode.subscribe(true,function (msg,reply,next,transmit) {
+    var ServerNode = new s.nssocketServer({ realm: 'tcp', port: 6785 })
+    
+    ServerNode.newClient(function (client) {
+        client.subscribe(true,function (msg,reply,next,transmit) {
             reply.write({pong: 1})
             reply.end({pong: 2})
         })
-
+        
     })
     
     
-    server.listen(6785);
+    ServerNode.listen(6785);
 
-    var outbound = new nssocket.NsSocket();
     
-    outbound.connect(6785);
+    var ClientNode = new s.nssocketClient({ realm: 'tcp'});
     
-    var ClientNode = new nssocketWrapper({ name: "clientnode", realm: "bla", socket: outbound})
-
     messages = []
+
     ClientNode.msg({bla: 333}).read(function (msg,reply) {
         if (msg) { 
             messages.push(msg.pong)
         } else {
             test.deepEqual([1,2],messages)
-            //server.end()
-            outbound.end()
-            //server.destroy()
+            ClientNode.end()
+            ServerNode.end()
             test.done()
         }
     })
+
+    ClientNode.connect('localhost',6785);
 
 }
 
