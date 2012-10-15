@@ -8,6 +8,8 @@ var core = exports.MsgNode = require('../core/'); var MsgNode = core.MsgNode; va
 
 var io = require('socket.io')
 
+var WebsocketWrapper = require('../sharedside/websocket').WebsocketWrapper
+
 // sets realm for a message to be this.attributes.realm, 
 // passes it to other potential local subscribers and broadcasts message to other nodes connected to this node
 var HttpServer = exports.HttpServer = Backbone.Model.extend4000(
@@ -47,32 +49,28 @@ var HttpServer = exports.HttpServer = Backbone.Model.extend4000(
                 reply.end()
             },'log')
         }
-        
     })
 
- 
+
+
+
+
+
 var WebsocketServer = exports.WebsocketServer = Backbone.Model.extend4000(
     MsgNode,
     v.ValidatedModel,
     { 
-        validator: Validator({ express: "Object", root: Validator().Default("/") }),
-
-        initialize: function () {
+        validator: Validator({ 
+            realm: "String",
+            express: "Object"
+        }),
+        
+        listen: function (ClientCallback) {
             var self = this
-            var app = this.get('express')
-            io.listen(app)
+            io.listen(this.get('express'))
 
             io.sockets.on('connection', function (socket) {
-                
-                socket.on('msg', function (msg) {
-                    msg = new Msg(msg)
-                    self.msg(msg).read(function (msg) {
-                        if (!msg) { 
-                            socket.emit('msg',msg)
-                        }
-                    })
-                });
-            });
+                ClientCallback(new WebsocketWrapper({socket: socket, realm: self.get('realm') }))
+            })
         }
-
     })
