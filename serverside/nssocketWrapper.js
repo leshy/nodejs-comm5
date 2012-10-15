@@ -27,51 +27,57 @@ var nssocketWrapper = exports.nssocketWrapper = core.ConnectionMan.extend4000({
 
 
 
-var nssocketServer = exports.nssocketServer = core.MsgNode.extend4000({
-    validator: Validator({ 
-        realm: "String",
-        port: "Number"
-    }),
-    
-    newClient: function (callback) {
-        var self = this
-        this.server = nssocket.createServer(function (socket) {
-            callback(new nssocketWrapper({ realm: self.get('realm'), socket: socket}))
-        })
-    },
+var nssocketServer = exports.nssocketServer = Backbone.Model.extend4000(
+    MsgNode,
+    v.ValidatedModel,
+    {
+        validator: Validator({ 
+            realm: "String",
+            port: "Number"
+        }),
+        
+        newClient: function (callback) {
+            var self = this
+            this.server = nssocket.createServer(function (socket) {
+                callback(new nssocketWrapper({ realm: self.get('realm'), socket: socket}))
+            })
+        },
 
-    listen: function (port) {
-        this.server.listen(port || this.get('port'))
-    },
+        listen: function (port) {
+            this.server.listen(port || this.get('port'))
+        },
 
-    end: function () {
-        this.del()
-    }
-    
-})
+        end: function () {
+            this.del()
+        }
+        
+    })
 
-var nssocketClient = exports.nssocketClient = core.MsgNode.extend4000({
-    validator: Validator({ 
-        realm: "String"
-    }),
+var nssocketClient = exports.nssocketClient = Backbone.Model.extend4000(
+    MsgNode,
+    v.ValidatedModel,
+    {
+        validator: Validator({ 
+            realm: "String"
+        }),
 
-    initialize: function () {
-        this.subscribe(true, function (msg,reply,next,transmit) {
-            reply.end()
-            next()
-            transmit()
-        })
-    },
+        initialize: function () {
+            this.subscribe(true, function (msg,reply,next,transmit) {
+                reply.end()
+                next()
+                transmit()
+            })
+        },
 
-    connect: function (host,port) {
-        var socket  = new nssocket.NsSocket()
-        socket.connect(host,port)
-        var client = new nssocketWrapper({ realm: this.get('realm'), socket: socket})
-        this.addconnection(client)
-    },
+        connect: function (host,port) {
+            var socket  = new nssocket.NsSocket()
+            socket.connect(host,port)
+            var client = new nssocketWrapper({ realm: this.get('realm'), socket: socket})
+            this.addconnection(client)
+        },
 
-    end: function () {
-        this.del()
-    }
-})
+        end: function () {
+            this.del()
+        }
+    })
 
