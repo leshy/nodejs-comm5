@@ -36,15 +36,15 @@ var nssocketServer = exports.nssocketServer = Backbone.Model.extend4000(
             port: "Number"
         }),
         
-        newClient: function (callback) {
+
+        listen: function (ClientCallback) {
             var self = this
             this.server = nssocket.createServer(function (socket) {
-                callback(new nssocketWrapper({ realm: self.get('realm'), socket: socket}))
+                ClientCallback(new nssocketWrapper({ realm: self.get('realm'), socket: socket}))
             })
-        },
 
-        listen: function (port) {
-            this.server.listen(port || this.get('port'))
+            this.server.listen(this.get('port'))
+            
         },
 
         end: function () {

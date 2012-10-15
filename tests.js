@@ -123,7 +123,7 @@ exports.Nssocket = function (test) {
 
     var ServerNode = new s.nssocketServer({ realm: 'tcp', port: 6785 })
     
-    ServerNode.newClient(function (client) {
+    ServerNode.listen(function (client) {
         client.subscribe(true,function (msg,reply,next,transmit) {
             reply.write({pong: 1})
             reply.end({pong: 2})
@@ -132,8 +132,6 @@ exports.Nssocket = function (test) {
     })
     
     
-    ServerNode.listen(6785);
-
     
     var ClientNode = new s.nssocketClient({ realm: 'tcp'});
     
