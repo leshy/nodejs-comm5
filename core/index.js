@@ -8,8 +8,6 @@ var v = require('validator'); var Validator = v.Validator; var Select = v.Select
 var Msg = exports.Msg = require('./msg').Msg
 var MsgNode = exports.MsgNode = require('./msgnode').MsgNode
 
-
-
 // sets realm for a message to be this.attributes.realm, 
 // passes it to other potential local subscribers and broadcasts message to other nodes connected to this node
 var BorderMan = exports.BorderMan = Backbone.Model.extend4000(
@@ -37,12 +35,12 @@ var ServerMan = exports.ServerMan = Backbone.Model.extend4000(
         initialize: function () {
             this.server = this.get('protocol')
             this.server.start(this.get('options'))
-            
             this.server.connection(function (connection) {
                 
             })
         }
     })
+
 
 var ConnectionMan = exports.ConnectionMan = Backbone.Model.extend4000(
     MsgNode,
@@ -50,33 +48,45 @@ var ConnectionMan = exports.ConnectionMan = Backbone.Model.extend4000(
     {
         initialize: function () {
             
+            var received = {}
             var streams = {}
             var self = this
-
+            
             this.subscribe(true,function (msg,reply,next,transmit) {
+
+                if (received[msg.meta.id]) {
+                    reply.end(); next(); return
+                }
+
                 var txmsg = msg.render()
                 txmsg.meta = { id: msg.meta.id }
-                self.tx(txmsg)
-                streams[id] = reply
+                streams[msg.meta.id] = reply // when I receive replies write them here
+                self.tx(txmsg) // send the message
             })
             
-            this.connection.rx(function (msg) { 
+            this.rx(function (msg) { 
+                msg = new Msg(msg)
                 if (msg.meta.replyto) {
                     streams[msg.meta.replyto].write(msg)
+                } else if (msg.meta.end) {
+                    streams[msg.meta.end].end()
                 } else {
-                    var stream = this.msg(msg)
-                    stream.read(function (msg) {
-                        if (!msg) { return } 
-                        connection.tx(msg)
+                    received[msg.meta.id] = true
+                    
+                    var stream = self.msg(msg)
+                    
+                    stream.read(function (replymsg) {
+                        if (!replymsg) { delete received[msg.meta.id]; 
+                                         self.tx( { meta: { end: msg.meta.id }} ); 
+                                         return 
+                                       }
+                        replymsg.meta.replyto = msg.meta.id
+                        self.tx(replymsg)
                     })
                 }
-                
             })
-        },
 
-        msg: function () {
-            
-        }        
+        }
     })
 
 

@@ -97,7 +97,6 @@ var MsgNode = exports.MsgNode = Backbone.Model.extend4000(
 
         send: function (msg) {
             var replyStream = new Stream({name: "childrenStream-" + this.get('name')})
-            var lastnode = _.last(msg.meta.breadcrumbs)
             async.parallel(
                 this.connections.map(function (node) {
                     return function (callback) {
