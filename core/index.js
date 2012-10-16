@@ -8,6 +8,9 @@ var v = require('validator'); var Validator = v.Validator; var Select = v.Select
 var Msg = exports.Msg = require('./msg').Msg
 var MsgNode = exports.MsgNode = require('./msgnode').MsgNode
 
+exports.MsgReply = function (reply) { return function (err,data) { reply.write({ err: err, data: data  })} }
+exports.MsgReplyEnd = function (reply) { return function (err,data) { reply.end({ err: err, data: data  })} }
+
 // sets realm for a message to be this.attributes.realm, 
 // passes it to other potential local subscribers and broadcasts message to other nodes connected to this node
 var BorderMan = exports.BorderMan = Backbone.Model.extend4000(
