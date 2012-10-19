@@ -8,7 +8,7 @@ var core = exports.MsgNode = require('../core/'); var MsgNode = core.MsgNode; va
 
 var io = require('socket.io')
 
-var WebsocketWrapper = require('../sharedside/websocket').WebsocketWrapper
+var WebsocketWrapper = require('../shared/websocket').WebsocketWrapper
 
 // sets realm for a message to be this.attributes.realm, 
 // passes it to other potential local subscribers and broadcasts message to other nodes connected to this node

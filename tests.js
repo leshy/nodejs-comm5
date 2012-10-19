@@ -151,3 +151,11 @@ exports.Nssocket = function (test) {
 }
 
 
+
+
+exports.mongo = function (test) {
+    require('serverside/mongodb')
+    
+    
+    
+}

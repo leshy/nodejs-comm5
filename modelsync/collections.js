@@ -1,19 +1,19 @@
 (function() {
-  var BSON, Backbone, CollectionAbsLayer, CollectionExposer, Msg, MsgNode, RemoteCollection, Select, Validator, async, core, decorate, decorators, helpers, v, _;
+  var Backbone, CollectionAbsLayer, CollectionExposer, Msg, MsgNode, RemoteCollection, Select, SubscriptionMan, Validator, async, core, decorate, decorators, helpers, v, _;
   var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
   Backbone = require('backbone');
   _ = require('underscore');
   decorators = require('decorators');
   decorate = decorators.decorate;
   async = require('async');
-  BSON = require('mongodb').BSONPure;
   helpers = require('helpers');
-  v = require('validator');
-  Validator = v.Validator;
-  Select = v.Select;
+  Validator = require('validator2-extras');
+  v = Validator.v;
+  Select = Validator.Select;
   core = require('../core/');
   MsgNode = core.MsgNode;
   Msg = core.Msg;
+  SubscriptionMan = require('subscriptionman').SubscriptionMan;
   CollectionAbsLayer = exports.CollectionAbsLayer = Backbone.Model.extend4000({
     create: function(data) {
       return true;
@@ -28,8 +28,8 @@
       return true;
     }
   });
-  RemoteCollection = Backbone.Model.extend4000(CollectionAbsLayer, v.ValidatedModel, MsgNode, {
-    validator: Validator({
+  RemoteCollection = Backbone.Model.extend4000(CollectionAbsLayer, Validator.ValidatedModel, MsgNode, {
+    validator: v({
       name: "String"
     }),
     create: function(data) {
@@ -61,11 +61,12 @@
     initialize: function() {
       var name;
       name = this.get('name');
+      this.subscriptions = new SubscriptionMan();
       this.subscribe({
         collection: name,
         create: "Object"
       }, __bind(function(msg, reply, next, transmit) {
-        return this.create(msg.create, core.msgReplyEnd(reply));
+        return this.create(msg.create, core.callbackMsgEnd(reply));
       }, this));
       this.subscribe({
         collection: name,
@@ -92,10 +93,10 @@
           }
         }, this));
       }, this));
-      return this.subscribe({
+      this.subscribe({
         collection: name,
         filter: "Object",
-        limits: Validator().Default({}).Object()
+        limits: v().Default({}).Object()
       }, __bind(function(msg, reply, next, transmit) {
         return this.filter(msg.filter).each(__bind(function(entry) {
           if (entry != null) {
@@ -105,6 +106,10 @@
           }
         }, this));
       }, this));
+      return this.subscribe({
+        collection: name,
+        subscribe: "Object"
+      }, __bind(function(msg, reply, next, transmit) {}, this));
     }
   });
 }).call(this);
