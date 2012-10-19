@@ -3,7 +3,8 @@ var Backbone = require('backbone4000');
 var decorators = require('decorators'); var decorate = decorators.decorate;
 var helpers = require('helpers')
 
-var v = require('validator'); var Validator = v.Validator; var Select = v.Select
+var v = require('validator2-extras'); 
+var Validator = v.v;
 
 var Msg = exports.Msg = require('./msg').Msg
 var MsgNode = exports.MsgNode = require('./msgnode').MsgNode

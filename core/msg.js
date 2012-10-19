@@ -1,7 +1,7 @@
 var _ = require('underscore')
 var decorators = require('decorators')
 var decorate = decorators.decorate
-var Validator = require('validator').Validator
+var Validator = require('validator2-extras').Validator
 var Stream = require('./msgstream').Stream
 var helpers = require('helpers')
 
@@ -22,11 +22,11 @@ function Msg(data) {
     var self = this;
     var idlen = 15
 
-    Validator().Default({}).Children({
-        meta: Validator().Default({}).Children({ 
-            id: Validator().Default(function () {return helpers.generateid(idlen)}).Length({maximum: idlen, minimum: idlen}),
-            timestamp: Validator().Default(function () {return new Date().getTime()}),
-            breadcrumbs: Validator().Default([]).Array()
+    new Validator().Default({}).Children({
+        meta: new Validator().Default({}).Children({ 
+            id: new Validator().Default(function () {return helpers.generateid(idlen)}).Length({maximum: idlen, minimum: idlen}),
+            timestamp: new Validator().Default(function () {return new Date().getTime()}),
+            breadcrumbs: new Validator().Default([]).Array()
         })
     }).feed(data,function (err,data) {
         if (err) { throw err;return }

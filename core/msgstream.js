@@ -2,15 +2,10 @@ var Backbone = require('backbone4000')
 var _ = require('underscore')
 var SubscriptionMan = require('subscriptionman').SubscriptionMan
 var graph = require('graph')
-
 var decorators = require('decorators')
 var decorate = decorators.decorate
 var helpers = require('helpers')
-var Msg = require('./msg') // some kind of weirdness is going on with loading this module.. Msg is {} at this point but it gets loaded later? weeeird
-
-
-
-
+var Msg = require('./msg')
 
 /*
 
@@ -66,10 +61,6 @@ var Stream = exports.Stream = Backbone.Model.extend4000(
             this.msg(msg)
         },
 
-//        msg: function (msg) {  
-//            SubscriptionMan.prototype.msg.apply(this,arguments)
-//        },
-
         end: function (msg) {
             if (msg) { this.write(msg) }
             this._ended = true
@@ -95,7 +86,10 @@ var Stream = exports.Stream = Backbone.Model.extend4000(
         readOne: function (callback,pattern) {
             if (!pattern) { pattern = true }
             return this.oneshot(pattern,callback)
-        }
+        },
+
+        each: function (callback) { this.read(callback) }
+
     })
 
 

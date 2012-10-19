@@ -5,7 +5,7 @@ var graph = require('graph')
 var SubscriptionMan = require('subscriptionman').SubscriptionMan
 var Stream = require('./msgstream').Stream
 var Msg = require('./msg').Msg
-var v = require('validator'); var Validator = v.Validator; var Select = v.Select
+var v = require('validator2-extras'); var Validator = v.v;
 var helpers = require('helpers')
 var decorators = require('decorators')
 var decorate = decorators.decorate

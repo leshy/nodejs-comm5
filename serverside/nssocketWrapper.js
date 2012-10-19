@@ -3,7 +3,7 @@ var Backbone = require('backbone4000');
 var decorators = require('decorators'); var decorate = decorators.decorate;
 var helpers = require('helpers')
 
-var v = require('validator'); var Validator = v.Validator; var Select = v.Select
+var v = require('validator2-extras'); var Validator = v.v; var Select = v.Select
 var core = require('../core/'); var MsgNode = core.MsgNode; var Msg = core.Msg
 
 var nssocket = require('nssocket')
@@ -11,7 +11,7 @@ var nssocket = require('nssocket')
 var nssocketWrapper = exports.nssocketWrapper = core.ConnectionMan.extend4000({    
     validator: Validator({ 
         realm: "String",
-        socket: "Object"
+        socket: "Instance"
     }),
     
     tx: function (msgstring) {

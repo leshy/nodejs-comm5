@@ -1,5 +1,5 @@
 var comm = require('./core')
-var v = require('validator'); var Validator = v.Validator
+var v = require('validator2-extras'); var Validator = v.Validator
 var helpers = require('helpers')
 var _ = require('underscore')
 
@@ -12,13 +12,13 @@ exports.BorderMan = function (test) {
     n1.connect(borderman)
     borderman.connect(n2)
 
-    n2.subscribe({ bla : true, realm: Validator().String("testrealm") },function (msg,reply,next,transmit) {
+    n2.subscribe({ bla : true, realm: new Validator().String("testrealm") },function (msg,reply,next,transmit) {
         next()
         reply.write({ response: 1 })
         reply.end({ response: 2 })
     })
 
-    n2.subscribe({ bla : true, realm: Validator().String("testrealm") },function (msg,reply,next,transmit) {
+    n2.subscribe({ bla : true, realm: new Validator().String("testrealm") },function (msg,reply,next,transmit) {
         next()
         reply.end({ response: 'end' })
     })
@@ -29,7 +29,7 @@ exports.BorderMan = function (test) {
     var stream = n1.msg({bla: 'hi?'})
     stream.readOne(function (msg,reply) {
         test.done()
-    },{ response: Validator().String('end')})
+    },{ response: new Validator().String('end')})
 }
 
 exports.SpeedLeak = function (test) {
@@ -43,13 +43,13 @@ exports.SpeedLeak = function (test) {
     n1.connect(borderman)
     borderman.connect(n2)
     
-    n2.subscribe({ bla : true, realm: Validator().String("testrealm") },function (msg,reply,next,transmit) {
+    n2.subscribe({ bla : true, realm: true },function (msg,reply,next,transmit) {
         next()
         reply.write({ response: msg.bla })
         reply.end({ response: msg.bla + 1 })
     })
 
-    n2.subscribe({ bla : true, realm: Validator().String("testrealm") },function (msg,reply,next,transmit) {
+    n2.subscribe({ bla : true, realm: true },function (msg,reply,next,transmit) {
         next()
         if (msg.bla == n) { 
             console.log('mem:'.green,_.last(memlog))
@@ -104,7 +104,7 @@ exports.Http = function (test) {
             reply.end({bla: '33'})
         } catch(err) { console.log("ERR",err)} 
     })
-    
+
     request('http://localhost:8000', function (error, response, body) {
         if (!error && response.statusCode == 200) {
             test.deepEqual(_.map(helpers.trim(body).split('\n'), function (string) { return JSON.parse(string)}), [ { oh: 'hi' }, { bla: '33' } ])
@@ -130,9 +130,7 @@ exports.Nssocket = function (test) {
         })
         
     })
-    
-    
-    
+        
     var ClientNode = new s.nssocketClient({ realm: 'tcp'});
     
     messages = []
