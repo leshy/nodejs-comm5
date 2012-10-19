@@ -1,5 +1,5 @@
 var comm = require('./index')
-var v = require('validator'); var Validator = v.Validator
+var v = require('validator2-extras'); var Validator = v.v
 
 exports.Msg = {
     setUp: function (callback) {
