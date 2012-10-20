@@ -24,7 +24,7 @@
     update: function(pattern, data) {
       return true;
     },
-    filter: function(pattern, limits) {
+    find: function(pattern, limits) {
       return true;
     }
   });
@@ -50,10 +50,10 @@
         remove: pattern
       });
     },
-    filter: function(pattern, limits) {
+    find: function(pattern, limits) {
       return this.send({
         collection: this.get('name'),
-        filter: pattern
+        find: pattern
       });
     }
   });
@@ -72,7 +72,7 @@
         collection: name,
         remove: "Object"
       }, __bind(function(msg, reply, next, transmit) {
-        return this.filter(msg.filter).each(__bind(function(entry) {
+        return this.find(msg.find).each(__bind(function(entry) {
           if (entry != null) {
             return entry.remove();
           } else {
@@ -85,7 +85,7 @@
         update: "Object",
         data: "Object"
       }, __bind(function(msg, reply, next, transmit) {
-        return this.filter(msg.filter).each(__bind(function(entry) {
+        return this.find(msg.find).each(__bind(function(entry) {
           if (entry != null) {
             return entry.update(data);
           } else {
@@ -95,10 +95,10 @@
       }, this));
       this.subscribe({
         collection: name,
-        filter: "Object",
+        find: "Object",
         limits: v().Default({}).Object()
       }, __bind(function(msg, reply, next, transmit) {
-        return this.filter(msg.filter).each(__bind(function(entry) {
+        return this.find(msg.find, msg.limits, __bind(function(entry) {
           if (entry != null) {
             return reply.write(entry);
           } else {
