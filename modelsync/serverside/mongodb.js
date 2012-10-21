@@ -1,12 +1,13 @@
 (function() {
-  var BSON, MongoCollection, Select, Validator, collections, v;
+  var BSON, Backbone, MongoCollection, MongoCollectionNode, Select, Validator, collections, v;
   var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
   BSON = require('mongodb').BSONPure;
   Validator = require('validator2-extras');
   v = Validator.v;
   Select = Validator.Select;
   collections = require('../collections');
-  MongoCollection = exports.MongoCollection = collections.CollectionAbsLayer.extend4000({
+  Backbone = require('backbone4000');
+  MongoCollection = exports.MongoCollection = Backbone.Model.extend4000({
     validator: v({
       db: 'instance',
       collection: v().or('string', 'instance')
@@ -14,19 +15,24 @@
     initialize: function() {
       this.collection = this.get('collection');
       if (this.collection.constructor === String) {
-        return this.get('db').collection(this.collection, __bind(function(err, collection) {
+        this.get('db').collection(this.collection, __bind(function(err, collection) {
           return this.set({
             collection: this.collection = collection
           });
         }, this));
+      }
+      if (!this.get('name')) {
+        return this.set({
+          name: this.collection.collectionName
+        });
       }
     },
     create: function(entry, callback) {
       return this.collection.insert(entry, function(err, data) {
         if ((data != null ? data[0]._id : void 0)) {
           data = String(data[0]._id);
-          return callback(err, data);
         }
+        return callback(err, data);
       });
     },
     fixpattern: function(pattern) {
@@ -54,4 +60,5 @@
       return this.collection.update(this.fixpattern(pattern), update, callback);
     }
   });
+  MongoCollectionNode = exports.MongoCollectionNode = MongoCollection.extend4000(collections.CollectionExposer);
 }).call(this);

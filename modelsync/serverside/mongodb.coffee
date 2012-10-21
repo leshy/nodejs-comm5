@@ -1,17 +1,22 @@
 BSON = require('mongodb').BSONPure
 Validator = require 'validator2-extras'; v = Validator.v; Select = Validator.Select
 collections = require '../collections'
+Backbone = require 'backbone4000'
 
-
-MongoCollection = exports.MongoCollection = collections.CollectionAbsLayer.extend4000
+MongoCollection = exports.MongoCollection = Backbone.Model.extend4000
     validator: v( db: 'instance', collection: v().or('string','instance') )
     
     initialize: ->
         @collection = @get('collection')
         if @collection.constructor is String then @get('db').collection @collection, (err,collection) => @set { collection: @collection = collection }
-        
-    create: (entry,callback) -> 
-        @collection.insert(entry,(err,data) -> if (data?[0]._id) then data = String(data[0]._id); callback err, data)
+
+        if not @get 'name' then @set { name: @collection.collectionName };
+
+    create: (entry,callback) ->
+        @collection.insert(entry,(err,data) ->
+            if (data?[0]._id)
+                data = String(data[0]._id);
+            callback err, data)
         
     # replaces a potential string id with BSON.ObjectID
     fixpattern: (pattern) ->
@@ -27,3 +32,10 @@ MongoCollection = exports.MongoCollection = collections.CollectionAbsLayer.exten
 
     update: (pattern,update,callback) ->
         @collection.update @fixpattern(pattern), update, callback
+
+
+MongoCollectionNode = exports.MongoCollectionNode = MongoCollection.extend4000 collections.CollectionExposer
+
+
+
+    

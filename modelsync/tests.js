@@ -1,5 +1,7 @@
 (function() {
+  var _;
   var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
+  _ = require('underscore');
   exports.mongo = {
     setUp: function(callback) {
       this.mongoC = require('./serverside/mongodb');
@@ -7,13 +9,15 @@
       this.db = new this.mongo.Db('testdb', new this.mongo.Server('localhost', 27017), {
         safe: true
       });
-      this.db.open(function() {
-        return callback();
-      });
+      this.db.open(callback);
       return this.c = new this.mongoC.MongoCollection({
         db: this.db,
         collection: 'test'
       });
+    },
+    tearDown: function(callback) {
+      this.db.close();
+      return callback();
     },
     create: function(test) {
       return this.c.create({
@@ -107,6 +111,93 @@
     tearDown: function(callback) {
       this.db.close();
       return callback();
+    }
+  };
+  exports.mongoNode = {
+    setUp: function(callback) {
+      this.mongoC = require('./serverside/mongodb');
+      this.mongo = require('mongodb');
+      this.db = new this.mongo.Db('testdb', new this.mongo.Server('localhost', 27017), {
+        safe: true
+      });
+      this.c = new this.mongoC.MongoCollectionNode({
+        db: this.db,
+        collection: 'test'
+      });
+      return this.db.open(callback);
+    },
+    tearDown: function(callback) {
+      this.db.close();
+      return callback();
+    },
+    create: function(test) {
+      var response;
+      response = this.c.msg({
+        collection: 'test',
+        create: {
+          bla: 3
+        }
+      });
+      return response.read(function(msg) {
+        if (msg) {
+          return console.log(msg.data);
+        } else {
+          return test.done();
+        }
+      });
+    },
+    find: function(test) {
+      var response;
+      response = this.c.msg({
+        collection: 'test',
+        find: {
+          bla: 3
+        }
+      });
+      return response.read(function(msg) {
+        if (msg) {
+          return console.log(msg.data);
+        } else {
+          return test.done();
+        }
+      });
+    },
+    update_raw: function(test) {
+      var response;
+      response = this.c.msg({
+        collection: 'test',
+        update: {
+          bla: 3
+        },
+        data: {
+          bla: 4
+        },
+        raw: true
+      });
+      return response.read(function(msg) {
+        if (msg) {
+          return console.log(msg.data);
+        } else {
+          return test.done();
+        }
+      });
+    },
+    remove_raw: function(test) {
+      var response;
+      response = this.c.msg({
+        collection: 'test',
+        remove: {
+          bla: 3
+        },
+        raw: true
+      });
+      return response.read(function(msg) {
+        if (msg) {
+          return console.log(msg.data);
+        } else {
+          return test.done();
+        }
+      });
     }
   };
 }).call(this);

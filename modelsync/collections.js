@@ -1,7 +1,7 @@
 (function() {
-  var Backbone, CollectionAbsLayer, CollectionExposer, Msg, MsgNode, RemoteCollection, Select, SubscriptionMan, Validator, async, core, decorate, decorators, helpers, v, _;
+  var Backbone, CollectionExposer, Msg, MsgNode, RemoteCollection, Select, SubscriptionMan, Validator, async, core, decorate, decorators, helpers, v, _;
   var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
-  Backbone = require('backbone');
+  Backbone = require('backbone4000');
   _ = require('underscore');
   decorators = require('decorators');
   decorate = decorators.decorate;
@@ -14,21 +14,14 @@
   MsgNode = core.MsgNode;
   Msg = core.Msg;
   SubscriptionMan = require('subscriptionman').SubscriptionMan;
-  CollectionAbsLayer = exports.CollectionAbsLayer = Backbone.Model.extend4000({
-    create: function(data) {
-      return true;
-    },
-    remove: function(pattern) {
-      return true;
-    },
-    update: function(pattern, data) {
-      return true;
-    },
-    find: function(pattern, limits) {
-      return true;
-    }
-  });
-  RemoteCollection = Backbone.Model.extend4000(CollectionAbsLayer, Validator.ValidatedModel, MsgNode, {
+  /*
+  CollectionAbsLayer = exports.CollectionAbsLayer = Backbone.Model.extend4000
+      create: (data) -> console.log 'not implemented'
+      remove: (pattern) -> console.log 'not implemented'
+      update: (pattern,data) -> console.log 'not implemented'
+      find: (pattern,limits) -> console.log 'not implemented'
+  */
+  RemoteCollection = Backbone.Model.extend4000(Validator.ValidatedModel, MsgNode, {
     validator: v({
       name: "String"
     }),
@@ -58,6 +51,9 @@
     }
   });
   CollectionExposer = exports.CollectionExposer = MsgNode.extend4000({
+    defaults: {
+      name: void 0
+    },
     initialize: function() {
       var name;
       name = this.get('name');
@@ -67,6 +63,20 @@
         create: "Object"
       }, __bind(function(msg, reply, next, transmit) {
         return this.create(msg.create, core.callbackMsgEnd(reply));
+      }, this));
+      this.subscribe({
+        collection: name,
+        remove: "Object",
+        raw: true
+      }, __bind(function(msg, reply, next, transmit) {
+        return this.remove(msg.remove, core.callbackMsgEnd(reply));
+      }, this));
+      this.subscribe({
+        collection: name,
+        update: "Object",
+        data: "Object"
+      }, __bind(function(msg, reply, next, transmit) {
+        return this.update(msg.update, msg.data, core.callbackMsgEnd(reply));
       }, this));
       this.subscribe({
         collection: name,
@@ -100,9 +110,12 @@
       }, __bind(function(msg, reply, next, transmit) {
         return this.find(msg.find, msg.limits, __bind(function(entry) {
           if (entry != null) {
-            return reply.write(entry);
+            return reply.write({
+              data: entry,
+              err: void 0
+            });
           } else {
-            return reply.end;
+            return reply.end();
           }
         }, this));
       }, this));
