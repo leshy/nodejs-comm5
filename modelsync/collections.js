@@ -16,37 +16,49 @@
   SubscriptionMan = require('subscriptionman').SubscriptionMan;
   /*
   CollectionAbsLayer = exports.CollectionAbsLayer = Backbone.Model.extend4000
-      create: (data) -> console.log 'not implemented'
-      remove: (pattern) -> console.log 'not implemented'
-      update: (pattern,data) -> console.log 'not implemented'
-      find: (pattern,limits) -> console.log 'not implemented'
+      create: (entry,callback) -> console.log 'not implemented'
+      remove: (pattern,callback) -> console.log 'not implemented'
+      update: (pattern,data,callback) -> console.log 'not implemented'
+      find: (pattern,limits,callback) -> console.log 'not implemented'
   */
-  RemoteCollection = Backbone.Model.extend4000(Validator.ValidatedModel, MsgNode, {
+  RemoteCollection = exports.RemoteCollection = Backbone.Model.extend4000(Validator.ValidatedModel, MsgNode, {
     validator: v({
       name: "String"
     }),
-    create: function(data) {
-      return this.send({
+    create: function(entry, callback) {
+      return core.msgCallback(this.send({
         collection: this.get('name'),
-        create: data
-      });
+        create: entry
+      }), callback);
     },
-    remove: function(pattern) {
-      return this.send({
+    remove: function(pattern, callback) {
+      return core.msgCallback(this.send({
         collection: this.get('name'),
-        remove: pattern
-      });
+        remove: pattern,
+        raw: true
+      }), callback);
     },
-    update: function(pattern, data) {
-      return this.send({
+    update: function(pattern, data, callback) {
+      return core.msgCallback(this.send({
         collection: this.get('name'),
-        remove: pattern
-      });
+        update: pattern,
+        data: data,
+        raw: true
+      }), callback);
     },
-    find: function(pattern, limits) {
-      return this.send({
+    find: function(pattern, limits, callback) {
+      var reply;
+      reply = this.send({
         collection: this.get('name'),
-        find: pattern
+        find: pattern,
+        limits: limits
+      });
+      return reply.read(function(msg) {
+        if (msg) {
+          return callback(msg.data);
+        } else {
+          return callback();
+        }
       });
     }
   });
@@ -122,7 +134,9 @@
       return this.subscribe({
         collection: name,
         subscribe: "Object"
-      }, __bind(function(msg, reply, next, transmit) {}, this));
+      }, __bind(function(msg, reply, next, transmit) {
+        return true;
+      }, this));
     }
   });
 }).call(this);

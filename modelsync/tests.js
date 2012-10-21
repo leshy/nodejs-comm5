@@ -60,7 +60,7 @@
       return this.c.create({
         bla: 3
       }, __bind(function(err, id) {
-        if ((typeof data !== "undefined" && data !== null) && (err != null)) {
+        if ((id != null) && (err != null)) {
           return test.fail();
         } else {
           return this.c.remove({
@@ -139,9 +139,7 @@
         }
       });
       return response.read(function(msg) {
-        if (msg) {
-          return console.log(msg.data);
-        } else {
+        if (!msg) {
           return test.done();
         }
       });
@@ -155,9 +153,7 @@
         }
       });
       return response.read(function(msg) {
-        if (msg) {
-          return console.log(msg.data);
-        } else {
+        if (!msg) {
           return test.done();
         }
       });
@@ -175,9 +171,7 @@
         raw: true
       });
       return response.read(function(msg) {
-        if (msg) {
-          return console.log(msg.data);
-        } else {
+        if (!msg) {
           return test.done();
         }
       });
@@ -192,12 +186,128 @@
         raw: true
       });
       return response.read(function(msg) {
-        if (msg) {
-          return console.log(msg.data);
-        } else {
+        if (!msg) {
           return test.done();
         }
       });
+    }
+  };
+  exports.mongoRemote = {
+    setUp: function(callback) {
+      var realcollection;
+      this.mongoC = require('./serverside/mongodb');
+      this.collections = require('./collections');
+      this.mongo = require('mongodb');
+      this.db = new this.mongo.Db('testdb', new this.mongo.Server('localhost', 27017), {
+        safe: true
+      });
+      realcollection = new this.mongoC.MongoCollectionNode({
+        db: this.db,
+        collection: 'test'
+      });
+      this.c = new this.collections.RemoteCollection({
+        db: this.db,
+        collection: 'test'
+      });
+      realcollection.connect(this.c);
+      return this.db.open(callback);
+    },
+    tearDown: function(callback) {
+      this.db.close();
+      return callback();
+    },
+    create: function(test) {
+      return this.c.create({
+        bla: 3
+      }, function(err, data) {
+        if ((data != null) && !(err != null)) {
+          this.created = data;
+          return test.done();
+        } else {
+          return test.fail();
+        }
+      });
+    },
+    find: function(test) {
+      var found;
+      found = false;
+      this.c.create({
+        bla: 3
+      }, function(err, data) {
+        if ((data != null) && !(err != null)) {
+          this.created = data;
+          return test.done();
+        } else {
+          return test.fail();
+        }
+      });
+      return this.c.find({
+        bla: 3
+      }, {}, function(entry) {
+        if (String(entry != null ? entry._id : void 0) === this.created) {
+          found = true;
+        }
+        if (!(entry != null)) {
+          test.equals(found, true);
+          return test.done();
+        }
+      });
+    },
+    remove: function(test) {
+      return this.c.create({
+        bla: 3
+      }, __bind(function(err, id) {
+        if ((id != null) && (err != null)) {
+          return test.fail("didn't get anything");
+        } else {
+          return this.c.remove({
+            id: id
+          }, function(err, data) {
+            test.equals(data, 1);
+            return test.done();
+          });
+        }
+      }, this));
+    },
+    update: function(test) {
+      return this.c.create({
+        bla: 3
+      }, __bind(function(err, id) {
+        if ((id != null) && (err != null)) {
+          return test.fail();
+        } else {
+          return this.c.update({
+            id: id
+          }, {
+            bla: 4,
+            blu: 5
+          }, __bind(function(err, data) {
+            var found;
+            found = false;
+            return this.c.find({
+              id: id
+            }, {}, __bind(function(data) {
+              if (data && data.bla === 4 && data.blu === 5) {
+                found = true;
+              } else {
+                false;
+              }
+              if (!(data != null)) {
+                test.equals(found, true);
+                return this.c.remove({
+                  id: id
+                }, function() {
+                  return test.done();
+                });
+              }
+            }, this));
+          }, this));
+        }
+      }, this));
+    },
+    tearDown: function(callback) {
+      this.db.close();
+      return callback();
     }
   };
 }).call(this);

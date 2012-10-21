@@ -11,19 +11,21 @@ SubscriptionMan = require('subscriptionman').SubscriptionMan
 
 ###
 CollectionAbsLayer = exports.CollectionAbsLayer = Backbone.Model.extend4000
-    create: (data) -> console.log 'not implemented'
-    remove: (pattern) -> console.log 'not implemented'
-    update: (pattern,data) -> console.log 'not implemented'
-    find: (pattern,limits) -> console.log 'not implemented'
+    create: (entry,callback) -> console.log 'not implemented'
+    remove: (pattern,callback) -> console.log 'not implemented'
+    update: (pattern,data,callback) -> console.log 'not implemented'
+    find: (pattern,limits,callback) -> console.log 'not implemented'
 ###
 
 # talks to the collection that's away, pretends to be local
-RemoteCollection = Backbone.Model.extend4000 Validator.ValidatedModel, MsgNode,
+RemoteCollection = exports.RemoteCollection = Backbone.Model.extend4000 Validator.ValidatedModel, MsgNode,
     validator: v(name: "String")
-    create: (data) -> @send( collection: @get('name'), create: data )
-    remove: (pattern) -> @send( collection: @get('name'), remove: pattern )
-    update: (pattern,data) -> @send( collection: @get('name'), remove: pattern )
-    find: (pattern,limits) -> @send( collection: @get('name'), find: pattern )
+    create: (entry,callback) -> core.msgCallback @send( collection: @get('name'), create: entry ), callback
+    remove: (pattern,callback) -> core.msgCallback @send( collection: @get('name'), remove: pattern, raw: true ), callback
+    update: (pattern,data,callback) -> core.msgCallback @send( collection: @get('name'), update: pattern, data: data, raw: true ), callback
+    find: (pattern,limits,callback) ->
+        reply = @send( collection: @get('name'), find: pattern, limits: limits )
+        reply.read (msg) -> if msg then callback(msg.data) else callback()
 
 # exposes collectionAbsLayer with messages
 CollectionExposer = exports.CollectionExposer = MsgNode.extend4000
@@ -31,7 +33,6 @@ CollectionExposer = exports.CollectionExposer = MsgNode.extend4000
     initialize: ->
         name = @get 'name'
         @subscriptions = new SubscriptionMan()
-        
         
         # create
         @subscribe { collection: name, create: "Object" },
@@ -63,5 +64,5 @@ CollectionExposer = exports.CollectionExposer = MsgNode.extend4000
 
         # subscribe to specific model changes/broadcasts
         @subscribe { collection: name, subscribe: "Object" },
-            (msg,reply,next,transmit) => 
+            (msg,reply,next,transmit) => true
 
