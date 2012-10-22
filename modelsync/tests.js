@@ -310,4 +310,88 @@
       return callback();
     }
   };
+  exports.RemoteModel = {
+    defineModel: function(test) {
+      var instance, mixin, newmodel, remotemodel;
+      remotemodel = require('./remotemodel');
+      mixin = new remotemodel.RemoteModelMixin();
+      newmodel = mixin.defineModel('bla1', {
+        initialize: function() {
+          return true;
+        }
+      });
+      instance = new newmodel();
+      test.equals(instance.get('type'), 'bla1');
+      return test.done();
+    },
+    findModels: function(test) {
+      var mixin, newmodel1, newmodel2, remotemodel, res;
+      remotemodel = require('./remotemodel');
+      mixin = new remotemodel.RemoteModelMixin();
+      newmodel1 = mixin.defineModel('bla1', {
+        hi: function() {
+          return 'bla1';
+        }
+      });
+      newmodel2 = mixin.defineModel('bla2', {
+        hi: function() {
+          return 'bla2';
+        }
+      });
+      mixin.find = function(pattern, limits, callback) {
+        callback({
+          type: 'bla1',
+          kkk: 1
+        });
+        callback({
+          type: 'bla1',
+          kkk: 2
+        });
+        callback({
+          type: 'bla2',
+          kkk: 3
+        });
+        callback({
+          type: 'bla1',
+          kkk: 4
+        });
+        return callback();
+      };
+      res = [];
+      return mixin.findModels({}, {}, function(model) {
+        if (model != null) {
+          return res.push([model.get('type'), model.hi()]);
+        } else {
+          test.deepEqual([['bla1', 'bla1'], ['bla1', 'bla1'], ['bla2', 'bla2'], ['bla1', 'bla1']], res);
+          return test.done();
+        }
+      });
+    }
+  };
+  /*
+  exports.EverythingTogether =
+      setUp: (callback) ->
+          @mongoC = require './serverside/mongodb'
+          @collections = require './collections'
+          @mongo = require 'mongodb'
+          @db = new @mongo.Db('testdb',new @mongo.Server('localhost',27017), {safe: true });
+          
+          realcollection = new @mongoC.MongoCollectionNode { db: @db, collection: 'test' }
+          @c = new @collections.RemoteCollection { db: @db, name: 'test' }
+  
+          realcollection.connect @c
+          
+          @db.open callback
+          
+      tearDown: (callback) ->
+          @db.close()
+          callback()
+  
+      defineModel: (test) ->
+          @c.defineModel
+  
+  
+      
+  
+  */
 }).call(this);

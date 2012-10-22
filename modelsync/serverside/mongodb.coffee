@@ -9,7 +9,6 @@ MongoCollection = exports.MongoCollection = Backbone.Model.extend4000
     initialize: ->
         @collection = @get('collection')
         if @collection.constructor is String then @get('db').collection @collection, (err,collection) => @set { collection: @collection = collection }
-
         if not @get 'name' then @set { name: @collection.collectionName };
 
     create: (entry,callback) ->
@@ -33,9 +32,5 @@ MongoCollection = exports.MongoCollection = Backbone.Model.extend4000
     update: (pattern,update,callback) ->
         @collection.update @fixpattern(pattern), update, callback
 
-
 MongoCollectionNode = exports.MongoCollectionNode = MongoCollection.extend4000 collections.CollectionExposer
 
-
-
-    

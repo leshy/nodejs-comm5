@@ -14,17 +14,18 @@
   MsgNode = core.MsgNode;
   Msg = core.Msg;
   SubscriptionMan = require('subscriptionman').SubscriptionMan;
-  /*
-  CollectionAbsLayer = exports.CollectionAbsLayer = Backbone.Model.extend4000
-      create: (entry,callback) -> console.log 'not implemented'
-      remove: (pattern,callback) -> console.log 'not implemented'
-      update: (pattern,data,callback) -> console.log 'not implemented'
-      find: (pattern,limits,callback) -> console.log 'not implemented'
-  */
   RemoteCollection = exports.RemoteCollection = Backbone.Model.extend4000(Validator.ValidatedModel, MsgNode, {
     validator: v({
       name: "String"
     }),
+    resolveModel: function(entry) {
+      var tmp;
+      if (this.models.length === 1) {
+        return this.models[0];
+      } else if (entry.type && (tmp = this.models[entry.type])) {
+        return tmp;
+      }
+    },
     create: function(entry, callback) {
       return core.msgCallback(this.send({
         collection: this.get('name'),
@@ -133,7 +134,8 @@
       }, this));
       return this.subscribe({
         collection: name,
-        subscribe: "Object"
+        subscribe: "Object",
+        tags: "Array"
       }, __bind(function(msg, reply, next, transmit) {
         return true;
       }, this));
