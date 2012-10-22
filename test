@@ -1,2 +1,3 @@
 nodeunit core/tests.js
+nodeunit modelsync/tests.coffee
 nodeunit tests.js

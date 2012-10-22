@@ -11,6 +11,7 @@ var MsgNode = exports.MsgNode = require('./msgnode').MsgNode
 
 exports.callbackMsg = function (reply) { return function (err,data) { reply.write({ err: err, data: data  })} }
 exports.callbackMsgEnd = function (reply) { return function (err,data) { reply.end({ err: err, data: data  })} }
+exports.msgCallback = function (reply,callback) { reply.readOne(function (msg) { callback(msg.err,msg.data) }) }
 
 // sets realm for a message to be this.attributes.realm, 
 // passes it to other potential local subscribers and broadcasts message to other nodes connected to this node
