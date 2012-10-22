@@ -8,14 +8,16 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
     
     initialize: ->
         @collection = @get 'collection'
-        @unset 'collection' # I want to keep only things to save in my attributes.. this might change later when I introduce permissions...
         @when 'id', => @collection.subscribe { id: @id }
 
+    export: (realm) ->
+        return _.omit(@attributes,'collection')
+    
     flush: (callback) ->
         if not id = @get 'id'
-            @collection.create @attributes, (err,id) => @set 'id', id; callback()
+            @collection.create @export('store'), (err,id) => @set 'id', id; callback()
         else
-            @collection.update {id: id}, @attributes, callback
+            @collection.update {id: id}, @export('store'), callback
 
     remove: (callback) ->
         if id = @get 'id' then @collection.remove {id: id}, callback else callback()

@@ -13,24 +13,26 @@
     }),
     initialize: function() {
       this.collection = this.get('collection');
-      this.unset('collection');
       return this.when('id', __bind(function() {
         return this.collection.subscribe({
           id: this.id
         });
       }, this));
     },
+    "export": function(realm) {
+      return _.omit(this.attributes, 'collection');
+    },
     flush: function(callback) {
       var id;
       if (!(id = this.get('id'))) {
-        return this.collection.create(this.attributes, __bind(function(err, id) {
+        return this.collection.create(this["export"]('store'), __bind(function(err, id) {
           this.set('id', id);
           return callback();
         }, this));
       } else {
         return this.collection.update({
           id: id
-        }, this.attributes, callback);
+        }, this["export"]('store'), callback);
       }
     },
     remove: function(callback) {

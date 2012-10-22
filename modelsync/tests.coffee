@@ -187,7 +187,6 @@ exports.EverythingTogether =
             test.equals Boolean(instance1.get 'id'), true
             instance1.set { somethingelse: 667 }
             instance1.flush =>
-
                 found = false
                 @c.findModels {somethingelse: 667},{},(instance2) =>
                     
@@ -196,16 +195,14 @@ exports.EverythingTogether =
                     else
                         found = true
                         test.equals instance2.get('everythingtogether'), 666
-                        id = instance2.get 'id'
+                        test.deepEqual instance2.export('store'), instance1.export('store')
+                        test.deepEqual _.omit(instance2.export('store'), 'id'), {type: 'bla1', everythingtogether: 666, somethingelse: 667 }
+                        test.equals instance2.get('id').constructor, String
                         
-                        found2 = false
+                        id = instance2.get 'id'
                         
                         instance2.remove ->                 
                             @c.findModels { id: id }, (model) =>
                                 if (model) then test.fail() else false
 
 
-
-    
-
-    

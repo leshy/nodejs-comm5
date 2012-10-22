@@ -435,7 +435,7 @@
           return this.c.findModels({
             somethingelse: 667
           }, {}, __bind(function(instance2) {
-            var found2, id;
+            var id;
             if (!instance2) {
               if (found) {
                 return test.done();
@@ -445,8 +445,14 @@
             } else {
               found = true;
               test.equals(instance2.get('everythingtogether'), 666);
+              test.deepEqual(instance2["export"]('store'), instance1["export"]('store'));
+              test.deepEqual(_.omit(instance2["export"]('store'), 'id'), {
+                type: 'bla1',
+                everythingtogether: 666,
+                somethingelse: 667
+              });
+              test.equals(instance2.get('id').constructor, String);
               id = instance2.get('id');
-              found2 = false;
               return instance2.remove(function() {
                 return this.c.findModels({
                   id: id

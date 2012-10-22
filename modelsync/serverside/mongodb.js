@@ -37,7 +37,7 @@
         return callback(err, data);
       });
     },
-    fixpattern: function(pattern) {
+    patternIn: function(pattern) {
       var _ref;
       if (pattern.id != null) {
         pattern._id = pattern.id;
@@ -48,18 +48,28 @@
       }
       return pattern;
     },
+    patternOut: function(pattern) {
+      if (!(pattern != null)) {
+        return pattern;
+      }
+      if (pattern._id != null) {
+        pattern.id = String(pattern._id);
+        delete pattern._id;
+      }
+      return pattern;
+    },
     find: function(pattern, limits, callback) {
-      return this.collection.find(this.fixpattern(pattern), limits, function(err, cursor) {
-        return cursor.each(function(err, entry) {
-          return callback(entry);
-        });
-      });
+      return this.collection.find(this.patternIn(pattern), limits, __bind(function(err, cursor) {
+        return cursor.each(__bind(function(err, entry) {
+          return callback(this.patternOut(entry));
+        }, this));
+      }, this));
     },
     remove: function(pattern, callback) {
-      return this.collection.remove(this.fixpattern(pattern), callback);
+      return this.collection.remove(this.patternIn(pattern), callback);
     },
     update: function(pattern, update, callback) {
-      return this.collection.update(this.fixpattern(pattern), update, callback);
+      return this.collection.update(this.patternIn(pattern), update, callback);
     }
   });
   MongoCollectionNode = exports.MongoCollectionNode = MongoCollection.extend4000(collections.CollectionExposer);

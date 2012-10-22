@@ -20,20 +20,24 @@ MongoCollection = exports.MongoCollection = Backbone.Model.extend4000
             callback err, data)
         
     # replaces a potential string id with BSON.ObjectID
-    fixpattern: (pattern) ->
-        #pattern = _.extend({},pattern)
+    patternIn: (pattern) ->
         if pattern.id? then pattern._id = pattern.id; delete pattern.id
         if pattern._id?.constructor is String then pattern._id = new BSON.ObjectID(pattern._id)
         pattern
+
+    patternOut: (pattern) ->
+        if not pattern? then return pattern
+        if pattern._id? then pattern.id = String(pattern._id); delete pattern._id
+        pattern
             
     find: (pattern,limits,callback) ->
-        @collection.find @fixpattern(pattern), limits, (err,cursor) -> cursor.each (err,entry) -> callback entry
+        @collection.find @patternIn(pattern), limits, (err,cursor) => cursor.each (err,entry) => callback @patternOut(entry)
 
     remove: (pattern,callback) ->
-        @collection.remove @fixpattern(pattern), callback
+        @collection.remove @patternIn(pattern), callback
 
     update: (pattern,update,callback) ->
-        @collection.update @fixpattern(pattern), update, callback
+        @collection.update @patternIn(pattern), update, callback
 
 MongoCollectionNode = exports.MongoCollectionNode = MongoCollection.extend4000 collections.CollectionExposer
 
