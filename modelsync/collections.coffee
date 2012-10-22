@@ -20,7 +20,8 @@ CollectionAbsLayer = exports.CollectionAbsLayer = Backbone.Model.extend4000
 # talks to the collection that's away, pretends to be local
 RemoteCollection = exports.RemoteCollection = Backbone.Model.extend4000 Validator.ValidatedModel, MsgNode,
     validator: v(name: "String")
-    create: (entry,callback) -> core.msgCallback @send( collection: @get('name'), create: entry ), callback
+    create: (entry,callback) ->
+        core.msgCallback @send( collection: @get('name'), create: entry ), callback
     remove: (pattern,callback) -> core.msgCallback @send( collection: @get('name'), remove: pattern, raw: true ), callback
     update: (pattern,data,callback) -> core.msgCallback @send( collection: @get('name'), update: pattern, data: data, raw: true ), callback
     find: (pattern,limits,callback) ->

@@ -3,3 +3,4 @@ remotemodel = require 'remotemodel'
 
 exports.RemoteModel = remotemodel.RemoteModel
 exports.RemoteCollection = collections.RemoteCollection
+

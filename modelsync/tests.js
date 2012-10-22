@@ -207,7 +207,7 @@
       });
       this.c = new this.collections.RemoteCollection({
         db: this.db,
-        collection: 'test'
+        name: 'test'
       });
       realcollection.connect(this.c);
       return this.db.open(callback);

@@ -18,7 +18,7 @@ exports.mongo =
     find: (test) ->
         found = false
         @c.create {bla: 3}, (err,data) -> if data? and not err? then @created = data; test.done() else test.fail()
-        @c.find {bla:3}, {}, (entry) ->
+        @c.find {bla: 3}, {}, (entry) ->
             if String(entry?._id) is @created then found = true
             if not entry? then test.equals(found,true); test.done()
 
@@ -30,7 +30,7 @@ exports.mongo =
         @c.create {bla: 3}, (err,id) => if data? and err? then test.fail() else
             @c.update {id: id}, { bla: 4, blu: 5 }, (err,data) =>
                 found = false
-                @c.find {id: id}, {}, (data) =>
+                @c.find { id: id }, {}, (data) =>
                     if data and data.bla is 4 and data.blu is 5 then found = true else false
                     if not data? then test.equals(found,true); @c.remove( {id: id}, -> test.done())
                 
@@ -73,8 +73,6 @@ exports.mongoNode =
             if not msg then test.done()
 
         
-
-
 exports.mongoRemote =
     setUp: (callback) ->
         @mongoC = require './serverside/mongodb'
@@ -83,7 +81,7 @@ exports.mongoRemote =
         @db = new @mongo.Db('testdb',new @mongo.Server('localhost',27017), {safe: true });
         
         realcollection = new @mongoC.MongoCollectionNode { db: @db, collection: 'test' }
-        @c = new @collections.RemoteCollection { db: @db, collection: 'test' }
+        @c = new @collections.RemoteCollection { db: @db, name: 'test' }
 
         realcollection.connect @c
         
@@ -95,7 +93,7 @@ exports.mongoRemote =
     
     create: (test) ->
         @c.create {bla: 3}, (err,data) -> if data? and not err? then @created = data; test.done() else test.fail()
-            
+                        
     find: (test) ->
         found = false
         @c.create {bla: 3}, (err,data) -> if data? and not err? then @created = data; test.done() else test.fail()
