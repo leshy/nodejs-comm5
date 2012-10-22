@@ -1,5 +1,5 @@
 (function() {
-  var Backbone, CollectionExposer, Msg, MsgNode, RemoteCollection, Select, SubscriptionMan, Validator, async, core, decorate, decorators, helpers, v, _;
+  var Backbone, CollectionExposer, Msg, MsgNode, RemoteCollection, RemoteModel, Select, SubscriptionMan, Validator, async, core, decorate, decorators, helpers, v, _;
   var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
   Backbone = require('backbone4000');
   _ = require('underscore');
@@ -14,7 +14,8 @@
   MsgNode = core.MsgNode;
   Msg = core.Msg;
   SubscriptionMan = require('subscriptionman').SubscriptionMan;
-  RemoteCollection = exports.RemoteCollection = Backbone.Model.extend4000(Validator.ValidatedModel, MsgNode, {
+  RemoteModel = require('./remotemodel');
+  RemoteCollection = exports.RemoteCollection = Backbone.Model.extend4000(RemoteModel.ModelMixin, Validator.ValidatedModel, MsgNode, {
     validator: v({
       name: "String"
     }),

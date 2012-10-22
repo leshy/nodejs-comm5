@@ -1,11 +1,8 @@
 (function() {
-  var Backbone, RemoteModel, RemoteModelMixin, Select, Validator, async, decorate, decorators, helpers, v, _;
-  var __slice = Array.prototype.slice, __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
+  var Backbone, ModelMixin, RemoteModel, Select, Validator, helpers, v, _;
+  var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; }, __slice = Array.prototype.slice;
   Backbone = require('backbone4000');
   _ = require('underscore');
-  decorators = require('decorators');
-  decorate = decorators.decorate;
-  async = require('async');
   helpers = require('helpers');
   Validator = require('validator2-extras');
   v = Validator.v;
@@ -15,10 +12,39 @@
       collection: 'instance'
     }),
     initialize: function() {
-      return this.collection = this.get('collection');
+      this.collection = this.get('collection');
+      this.unset('collection');
+      return this.when('id', __bind(function() {
+        return this.collection.subscribe({
+          id: this.id
+        });
+      }, this));
+    },
+    flush: function(callback) {
+      var id;
+      if (!(id = this.get('id'))) {
+        return this.collection.create(this.attributes, __bind(function(err, id) {
+          this.set('id', id);
+          return callback();
+        }, this));
+      } else {
+        return this.collection.update({
+          id: id
+        }, this.attributes, callback);
+      }
+    },
+    remove: function(callback) {
+      var id;
+      if (id = this.get('id')) {
+        return this.collection.remove({
+          id: id
+        }, callback);
+      } else {
+        return callback();
+      }
     }
   });
-  RemoteModelMixin = exports.RemoteModelMixin = Backbone.Model.extend4000({
+  ModelMixin = exports.ModelMixin = Backbone.Model.extend4000({
     initialize: function() {
       return this.models = {};
     },

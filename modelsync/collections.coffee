@@ -9,12 +9,12 @@ Validator = require 'validator2-extras'; v = Validator.v; Select = Validator.Sel
 
 core = require '../core/'; MsgNode = core.MsgNode; Msg = core.Msg
 SubscriptionMan = require('subscriptionman').SubscriptionMan
-#RemoteModel = require ('remotemodel').RemoteModel
+RemoteModel = require './remotemodel'
 
 
 
 # talks to the collection that's away, pretends to be local
-RemoteCollection = exports.RemoteCollection = Backbone.Model.extend4000 Validator.ValidatedModel, MsgNode,
+RemoteCollection = exports.RemoteCollection = Backbone.Model.extend4000 RemoteModel.ModelMixin, Validator.ValidatedModel, MsgNode,
     validator: v(name: "String")
 
     resolveModel: (entry) ->

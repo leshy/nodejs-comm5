@@ -2,6 +2,7 @@ BSON = require('mongodb').BSONPure
 Validator = require 'validator2-extras'; v = Validator.v; Select = Validator.Select
 collections = require '../collections'
 Backbone = require 'backbone4000'
+_ = require 'underscore'
 
 MongoCollection = exports.MongoCollection = Backbone.Model.extend4000
     validator: v( db: 'instance', collection: v().or('string','instance') )
@@ -12,6 +13,7 @@ MongoCollection = exports.MongoCollection = Backbone.Model.extend4000
         if not @get 'name' then @set { name: @collection.collectionName };
 
     create: (entry,callback) ->
+        entry = _.extend({}, entry) # mongodb api will automatically append _.id to this dict, I want to avoid this..
         @collection.insert(entry,(err,data) ->
             if (data?[0]._id)
                 data = String(data[0]._id);
@@ -19,6 +21,7 @@ MongoCollection = exports.MongoCollection = Backbone.Model.extend4000
         
     # replaces a potential string id with BSON.ObjectID
     fixpattern: (pattern) ->
+        #pattern = _.extend({},pattern)
         if pattern.id? then pattern._id = pattern.id; delete pattern.id
         if pattern._id?.constructor is String then pattern._id = new BSON.ObjectID(pattern._id)
         pattern

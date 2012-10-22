@@ -120,10 +120,10 @@ exports.mongoRemote =
     
 
 
-exports.RemoteModel =
+exports.ModelMixin =
     defineModel: (test) ->
         remotemodel = require './remotemodel'
-        mixin = new remotemodel.RemoteModelMixin()
+        mixin = new remotemodel.ModelMixin()
         newmodel = mixin.defineModel('bla1',{ initialize: -> true })
 
         instance = new newmodel()
@@ -133,7 +133,7 @@ exports.RemoteModel =
 
     findModels: (test) ->
         remotemodel = require './remotemodel'
-        mixin = new remotemodel.RemoteModelMixin()
+        mixin = new remotemodel.ModelMixin()
         newmodel1 = mixin.defineModel 'bla1',{ hi: -> 'bla1' }
         newmodel2 = mixin.defineModel 'bla2',{ hi: -> 'bla2' }
 
@@ -152,7 +152,6 @@ exports.RemoteModel =
                 test.deepEqual( [ [ 'bla1', 'bla1' ], [ 'bla1', 'bla1' ], [ 'bla2', 'bla2' ], [ 'bla1', 'bla1' ] ], res)
                 test.done()
 
-###
 exports.EverythingTogether =
     setUp: (callback) ->
         @mongoC = require './serverside/mongodb'
@@ -172,9 +171,41 @@ exports.EverythingTogether =
         callback()
 
     defineModel: (test) ->
-        @c.defineModel
+        newmodel1 = @c.defineModel 'bla1',{ hi: -> 'bla1' }
+        newmodel2 = @c.defineModel 'bla2',{ hi: -> 'bla2' }
+        
+        test.equals @c.resolveModel({ type: 'bla2' }), newmodel2
+        test.done()
+
+    flush: (test) ->
+        newmodel1 = @c.defineModel 'bla1',{ hi: -> 'bla1' }
+        newmodel2 = @c.defineModel 'bla2',{ hi: -> 'bla2' }
+
+        instance1 = new newmodel1 { everythingtogether: 666 }
+        
+        instance1.flush =>
+            test.equals Boolean(instance1.get 'id'), true
+            instance1.set { somethingelse: 667 }
+            instance1.flush =>
+
+                found = false
+                @c.findModels {somethingelse: 667},{},(instance2) =>
+                    
+                    if not instance2
+                        if found then test.done() else test.fail()
+                    else
+                        found = true
+                        test.equals instance2.get('everythingtogether'), 666
+                        id = instance2.get 'id'
+                        
+                        found2 = false
+                        
+                        instance2.remove ->                 
+                            @c.findModels { id: id }, (model) =>
+                                if (model) then test.fail() else false
+
 
 
     
 
-###
+    

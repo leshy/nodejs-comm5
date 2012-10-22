@@ -310,11 +310,11 @@
       return callback();
     }
   };
-  exports.RemoteModel = {
+  exports.ModelMixin = {
     defineModel: function(test) {
       var instance, mixin, newmodel, remotemodel;
       remotemodel = require('./remotemodel');
-      mixin = new remotemodel.RemoteModelMixin();
+      mixin = new remotemodel.ModelMixin();
       newmodel = mixin.defineModel('bla1', {
         initialize: function() {
           return true;
@@ -327,7 +327,7 @@
     findModels: function(test) {
       var mixin, newmodel1, newmodel2, remotemodel, res;
       remotemodel = require('./remotemodel');
-      mixin = new remotemodel.RemoteModelMixin();
+      mixin = new remotemodel.ModelMixin();
       newmodel1 = mixin.defineModel('bla1', {
         hi: function() {
           return 'bla1';
@@ -368,30 +368,100 @@
       });
     }
   };
-  /*
-  exports.EverythingTogether =
-      setUp: (callback) ->
-          @mongoC = require './serverside/mongodb'
-          @collections = require './collections'
-          @mongo = require 'mongodb'
-          @db = new @mongo.Db('testdb',new @mongo.Server('localhost',27017), {safe: true });
-          
-          realcollection = new @mongoC.MongoCollectionNode { db: @db, collection: 'test' }
-          @c = new @collections.RemoteCollection { db: @db, name: 'test' }
-  
-          realcollection.connect @c
-          
-          @db.open callback
-          
-      tearDown: (callback) ->
-          @db.close()
-          callback()
-  
-      defineModel: (test) ->
-          @c.defineModel
-  
-  
-      
-  
-  */
+  exports.EverythingTogether = {
+    setUp: function(callback) {
+      var realcollection;
+      this.mongoC = require('./serverside/mongodb');
+      this.collections = require('./collections');
+      this.mongo = require('mongodb');
+      this.db = new this.mongo.Db('testdb', new this.mongo.Server('localhost', 27017), {
+        safe: true
+      });
+      realcollection = new this.mongoC.MongoCollectionNode({
+        db: this.db,
+        collection: 'test'
+      });
+      this.c = new this.collections.RemoteCollection({
+        db: this.db,
+        name: 'test'
+      });
+      realcollection.connect(this.c);
+      return this.db.open(callback);
+    },
+    tearDown: function(callback) {
+      this.db.close();
+      return callback();
+    },
+    defineModel: function(test) {
+      var newmodel1, newmodel2;
+      newmodel1 = this.c.defineModel('bla1', {
+        hi: function() {
+          return 'bla1';
+        }
+      });
+      newmodel2 = this.c.defineModel('bla2', {
+        hi: function() {
+          return 'bla2';
+        }
+      });
+      test.equals(this.c.resolveModel({
+        type: 'bla2'
+      }), newmodel2);
+      return test.done();
+    },
+    flush: function(test) {
+      var instance1, newmodel1, newmodel2;
+      newmodel1 = this.c.defineModel('bla1', {
+        hi: function() {
+          return 'bla1';
+        }
+      });
+      newmodel2 = this.c.defineModel('bla2', {
+        hi: function() {
+          return 'bla2';
+        }
+      });
+      instance1 = new newmodel1({
+        everythingtogether: 666
+      });
+      return instance1.flush(__bind(function() {
+        test.equals(Boolean(instance1.get('id')), true);
+        instance1.set({
+          somethingelse: 667
+        });
+        return instance1.flush(__bind(function() {
+          var found;
+          found = false;
+          return this.c.findModels({
+            somethingelse: 667
+          }, {}, __bind(function(instance2) {
+            var found2, id;
+            if (!instance2) {
+              if (found) {
+                return test.done();
+              } else {
+                return test.fail();
+              }
+            } else {
+              found = true;
+              test.equals(instance2.get('everythingtogether'), 666);
+              id = instance2.get('id');
+              found2 = false;
+              return instance2.remove(function() {
+                return this.c.findModels({
+                  id: id
+                }, __bind(function(model) {
+                  if (model) {
+                    return test.fail();
+                  } else {
+                    return false;
+                  }
+                }, this));
+              });
+            }
+          }, this));
+        }, this));
+      }, this));
+    }
+  };
 }).call(this);

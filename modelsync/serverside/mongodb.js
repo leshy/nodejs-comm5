@@ -1,5 +1,5 @@
 (function() {
-  var BSON, Backbone, MongoCollection, MongoCollectionNode, Select, Validator, collections, v;
+  var BSON, Backbone, MongoCollection, MongoCollectionNode, Select, Validator, collections, v, _;
   var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
   BSON = require('mongodb').BSONPure;
   Validator = require('validator2-extras');
@@ -7,6 +7,7 @@
   Select = Validator.Select;
   collections = require('../collections');
   Backbone = require('backbone4000');
+  _ = require('underscore');
   MongoCollection = exports.MongoCollection = Backbone.Model.extend4000({
     validator: v({
       db: 'instance',
@@ -28,6 +29,7 @@
       }
     },
     create: function(entry, callback) {
+      entry = _.extend({}, entry);
       return this.collection.insert(entry, function(err, data) {
         if ((data != null ? data[0]._id : void 0)) {
           data = String(data[0]._id);
