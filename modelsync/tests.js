@@ -314,7 +314,8 @@
   exports.ModelMixin =
       defineModel: (test) ->
           remotemodel = require './remotemodel'
-          mixin = new remotemodel.ModelMixin()
+          collections = require './collections'
+          mixin = new collections.ModelMixin()
           newmodel = mixin.defineModel('bla1',{ initialize: -> true })
   
           instance = new newmodel()
@@ -324,7 +325,8 @@
   
       findModels: (test) ->
           remotemodel = require './remotemodel'
-          mixin = new remotemodel.ModelMixin()
+          collections = require './collections'
+          mixin = new collections.ModelMixin()
           newmodel1 = mixin.defineModel 'bla1',{ hi: -> 'bla1' }
           newmodel2 = mixin.defineModel 'bla2',{ hi: -> 'bla2' }
   

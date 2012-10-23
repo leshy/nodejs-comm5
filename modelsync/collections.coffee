@@ -5,30 +5,11 @@ async = require 'async'
 helpers = require 'helpers'
 Validator = require 'validator2-extras'; v = Validator.v; Select = Validator.Select
 
-
 core = require '../core/'; MsgNode = core.MsgNode; Msg = core.Msg
-RemoteModel = require './remotemodel'
-
-
-
-# talks to the collection that's away, pretends to be local
-RemoteCollection = exports.RemoteCollection = Backbone.Model.extend4000 RemoteModel.ModelMixin, RemoteModel.SubscriptionMixin, Validator.ValidatedModel, MsgNode,
-    validator: v(name: "String")
-
-    resolveModel: (entry) ->
-        if @models.length is 1 then @models[0] else if entry.type and tmp = @models[entry.type] then return tmp
-            
-    create: (entry,callback) -> core.msgCallback @send( collection: @get('name'), create: entry ), callback
+RemoteModel = require('./remotemodel').RemoteModel
+SubscriptionMan = require('subscriptionman').SubscriptionMan
     
-    remove: (pattern,callback) -> core.msgCallback @send( collection: @get('name'), remove: pattern, raw: true ), callback
-    
-    update: (pattern,data,callback) -> core.msgCallback @send( collection: @get('name'), update: pattern, data: data, raw: true ), callback
-    
-    find: (pattern,limits,callback) ->
-        reply = @send( collection: @get('name'), find: pattern, limits: limits )
-        reply.read (msg) -> if msg then callback(msg.data) else callback()
-    
-# exposes collectionAbsLayer with messages
+# exposes a collection with a standard interface to comm5 messaging layer
 CollectionExposer = exports.CollectionExposer = MsgNode.extend4000
     defaults: { name: undefined }
     initialize: ->
@@ -63,7 +44,80 @@ CollectionExposer = exports.CollectionExposer = MsgNode.extend4000
         
         # subscribe to specific model changes/broadcasts
         @subscribe { collection: name, subscribe: "Object", tags: "Array" },
-            (msg,reply,next,transmit) => true
+            (msg,reply,next,transmit) =>
+                @subscribe msg.subscribe, (event) =>
+                    reply.write(event)
             
 
 
+# this can be mixed into a RemoteCollection or Collection itself, it adds findModel method that automatically instantiates propper models for query results
+ModelMixin = exports.ModelMixin = Backbone.Model.extend4000
+    initialize: ->
+        @models = {}
+                
+    defineModel: (name,superclasses...,definition) ->
+        if not definition.defaults? then definition.defaults = {}
+        definition.defaults.collection = this
+        definition.defaults.type = name
+        @models[name] = RemoteModel.extend4000.apply RemoteModel, helpers.push(superclasses,definition)
+        
+    resolveModel: (entry) ->
+        if @models.length is 1 then return @models[0]
+        if (entry.type) then return @models[entry.type]
+   
+    findModels: (pattern,limits,callback) ->
+        @find pattern,limits,(entry) =>
+            if not entry? then callback() else callback(new (@resolveModel(entry))(entry))
+
+
+
+# provides subscribe and unsubscribe methods for collection events (like model changes)
+# remotemodels automatically subscribe to those events to update themselves with remote changes,
+# if the collection offers the option
+SubscriptionMixin = exports.SubscriptionMixin = Backbone.Model.extend4000
+#    superValidator: v({ create: 'function'
+#                        update: 'function'
+#                        remove: 'function' })
+                        
+    initialize: ->
+        @subscriptions = new SubscriptionMan()
+        
+    create: (entry,callback) ->        
+        @_super 'create',entry,callback
+        @subscriptions.msg {action: 'create', entry: entry }
+        
+    update: (pattern,update,callback) ->
+        @_super 'update',pattern,update,callback
+        @subscriptions.msg {action: 'update', pattern: pattern, update: update }
+        
+    remove: (pattern,callback) ->
+        @_super 'remove',pattern,callback
+        @subscriptions.msg {action: 'remove', pattern: pattern}
+                
+    subscribe: (pattern,name,callback) ->
+        @subscriptions.subscribe { pattern: pattern }, callback, name
+        
+    unsubscribe: ->
+        true
+
+
+
+
+
+# transparently talks to the collection that's away via the messaging system,
+# has the same interface as local collections
+RemoteCollection = exports.RemoteCollection = Backbone.Model.extend4000 ModelMixin, SubscriptionMixin, Validator.ValidatedModel, MsgNode,
+    validator: v(name: "String")
+
+    resolveModel: (entry) ->
+        if @models.length is 1 then @models[0] else if entry.type and tmp = @models[entry.type] then return tmp
+            
+    create: (entry,callback) -> core.msgCallback @send( collection: @get('name'), create: entry ), callback
+    
+    remove: (pattern,callback) -> core.msgCallback @send( collection: @get('name'), remove: pattern, raw: true ), callback
+    
+    update: (pattern,data,callback) -> core.msgCallback @send( collection: @get('name'), update: pattern, data: data, raw: true ), callback
+    
+    find: (pattern,limits,callback) ->
+        reply = @send( collection: @get('name'), find: pattern, limits: limits )
+        reply.read (msg) -> if msg then callback(msg.data) else callback()

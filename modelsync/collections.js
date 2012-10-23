@@ -1,6 +1,6 @@
 (function() {
-  var Backbone, CollectionExposer, Msg, MsgNode, RemoteCollection, RemoteModel, Select, Validator, async, core, decorate, decorators, helpers, v, _;
-  var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
+  var Backbone, CollectionExposer, ModelMixin, Msg, MsgNode, RemoteCollection, RemoteModel, Select, SubscriptionMan, SubscriptionMixin, Validator, async, core, decorate, decorators, helpers, v, _;
+  var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; }, __slice = Array.prototype.slice;
   Backbone = require('backbone4000');
   _ = require('underscore');
   decorators = require('decorators');
@@ -13,56 +13,8 @@
   core = require('../core/');
   MsgNode = core.MsgNode;
   Msg = core.Msg;
-  RemoteModel = require('./remotemodel');
-  RemoteCollection = exports.RemoteCollection = Backbone.Model.extend4000(RemoteModel.ModelMixin, RemoteModel.SubscriptionMixin, Validator.ValidatedModel, MsgNode, {
-    validator: v({
-      name: "String"
-    }),
-    resolveModel: function(entry) {
-      var tmp;
-      if (this.models.length === 1) {
-        return this.models[0];
-      } else if (entry.type && (tmp = this.models[entry.type])) {
-        return tmp;
-      }
-    },
-    create: function(entry, callback) {
-      return core.msgCallback(this.send({
-        collection: this.get('name'),
-        create: entry
-      }), callback);
-    },
-    remove: function(pattern, callback) {
-      return core.msgCallback(this.send({
-        collection: this.get('name'),
-        remove: pattern,
-        raw: true
-      }), callback);
-    },
-    update: function(pattern, data, callback) {
-      return core.msgCallback(this.send({
-        collection: this.get('name'),
-        update: pattern,
-        data: data,
-        raw: true
-      }), callback);
-    },
-    find: function(pattern, limits, callback) {
-      var reply;
-      reply = this.send({
-        collection: this.get('name'),
-        find: pattern,
-        limits: limits
-      });
-      return reply.read(function(msg) {
-        if (msg) {
-          return callback(msg.data);
-        } else {
-          return callback();
-        }
-      });
-    }
-  });
+  RemoteModel = require('./remotemodel').RemoteModel;
+  SubscriptionMan = require('subscriptionman').SubscriptionMan;
   CollectionExposer = exports.CollectionExposer = MsgNode.extend4000({
     defaults: {
       name: void 0
@@ -136,8 +88,126 @@
         subscribe: "Object",
         tags: "Array"
       }, __bind(function(msg, reply, next, transmit) {
-        return true;
+        return this.subscribe(msg.subscribe, __bind(function(event) {
+          return reply.write(event);
+        }, this));
       }, this));
+    }
+  });
+  ModelMixin = exports.ModelMixin = Backbone.Model.extend4000({
+    initialize: function() {
+      return this.models = {};
+    },
+    defineModel: function() {
+      var definition, name, superclasses, _i;
+      name = arguments[0], superclasses = 3 <= arguments.length ? __slice.call(arguments, 1, _i = arguments.length - 1) : (_i = 1, []), definition = arguments[_i++];
+      if (!(definition.defaults != null)) {
+        definition.defaults = {};
+      }
+      definition.defaults.collection = this;
+      definition.defaults.type = name;
+      return this.models[name] = RemoteModel.extend4000.apply(RemoteModel, helpers.push(superclasses, definition));
+    },
+    resolveModel: function(entry) {
+      if (this.models.length === 1) {
+        return this.models[0];
+      }
+      if (entry.type) {
+        return this.models[entry.type];
+      }
+    },
+    findModels: function(pattern, limits, callback) {
+      return this.find(pattern, limits, __bind(function(entry) {
+        if (!(entry != null)) {
+          return callback();
+        } else {
+          return callback(new (this.resolveModel(entry))(entry));
+        }
+      }, this));
+    }
+  });
+  SubscriptionMixin = exports.SubscriptionMixin = Backbone.Model.extend4000({
+    initialize: function() {
+      return this.subscriptions = new SubscriptionMan();
+    },
+    create: function(entry, callback) {
+      this._super('create', entry, callback);
+      return this.subscriptions.msg({
+        action: 'create',
+        entry: entry
+      });
+    },
+    update: function(pattern, update, callback) {
+      this._super('update', pattern, update, callback);
+      return this.subscriptions.msg({
+        action: 'update',
+        pattern: pattern,
+        update: update
+      });
+    },
+    remove: function(pattern, callback) {
+      this._super('remove', pattern, callback);
+      return this.subscriptions.msg({
+        action: 'remove',
+        pattern: pattern
+      });
+    },
+    subscribe: function(pattern, name, callback) {
+      return this.subscriptions.subscribe({
+        pattern: pattern
+      }, callback, name);
+    },
+    unsubscribe: function() {
+      return true;
+    }
+  });
+  RemoteCollection = exports.RemoteCollection = Backbone.Model.extend4000(ModelMixin, SubscriptionMixin, Validator.ValidatedModel, MsgNode, {
+    validator: v({
+      name: "String"
+    }),
+    resolveModel: function(entry) {
+      var tmp;
+      if (this.models.length === 1) {
+        return this.models[0];
+      } else if (entry.type && (tmp = this.models[entry.type])) {
+        return tmp;
+      }
+    },
+    create: function(entry, callback) {
+      return core.msgCallback(this.send({
+        collection: this.get('name'),
+        create: entry
+      }), callback);
+    },
+    remove: function(pattern, callback) {
+      return core.msgCallback(this.send({
+        collection: this.get('name'),
+        remove: pattern,
+        raw: true
+      }), callback);
+    },
+    update: function(pattern, data, callback) {
+      return core.msgCallback(this.send({
+        collection: this.get('name'),
+        update: pattern,
+        data: data,
+        raw: true
+      }), callback);
+    },
+    find: function(pattern, limits, callback) {
+      var reply;
+      reply = this.send({
+        collection: this.get('name'),
+        find: pattern,
+        limits: limits
+      });
+      return reply.read(function(msg) {
+        if (msg) {
+          return callback(msg.data);
+        } else {
+          return callback();
+        }
+      });
     }
   });
 }).call(this);

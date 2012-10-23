@@ -1,6 +1,6 @@
 (function() {
-  var Backbone, ModelMixin, RemoteModel, Select, SubscriptionMan, SubscriptionMixin, Validator, decorate, decorators, helpers, v, _;
-  var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; }, __slice = Array.prototype.slice;
+  var Backbone, RemoteModel, Select, Validator, decorate, decorators, helpers, v, _;
+  var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
   Backbone = require('backbone4000');
   _ = require('underscore');
   helpers = require('helpers');
@@ -9,7 +9,6 @@
   Select = Validator.Select;
   decorators = require('decorators');
   decorate = decorators.decorate;
-  SubscriptionMan = require('subscriptionman').SubscriptionMan;
   RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000({
     validator: v({
       collection: 'instance'
@@ -60,58 +59,6 @@
       } else {
         return callback();
       }
-    }
-  });
-  ModelMixin = exports.ModelMixin = Backbone.Model.extend4000({
-    initialize: function() {
-      return this.models = {};
-    },
-    defineModel: function() {
-      var definition, name, superclasses, _i;
-      name = arguments[0], superclasses = 3 <= arguments.length ? __slice.call(arguments, 1, _i = arguments.length - 1) : (_i = 1, []), definition = arguments[_i++];
-      if (!(definition.defaults != null)) {
-        definition.defaults = {};
-      }
-      definition.defaults.collection = this;
-      definition.defaults.type = name;
-      return this.models[name] = RemoteModel.extend4000.apply(RemoteModel, helpers.push(superclasses, definition));
-    },
-    resolveModel: function(entry) {
-      if (this.models.length === 1) {
-        return this.models[0];
-      }
-      if (entry.type) {
-        return this.models[entry.type];
-      }
-    },
-    findModels: function(pattern, limits, callback) {
-      return this.find(pattern, limits, __bind(function(entry) {
-        if (!(entry != null)) {
-          return callback();
-        } else {
-          return callback(new (this.resolveModel(entry))(entry));
-        }
-      }, this));
-    }
-  });
-  SubscriptionMixin = exports.SubscriptionMixin = Backbone.Model.extend4000({
-    initialize: function() {
-      return this.subscriptions = new SubscriptionMan();
-    },
-    create: function(entry, callback) {
-      return this._super('create', [entry, callback]);
-    },
-    update: function(pattern, update, callback) {
-      return this._super('update', [pattern, update, callback]);
-    },
-    remove: function(pattern, callback) {
-      return this._super('remove', [pattern, callback]);
-    },
-    subscribe: function() {
-      return true;
-    },
-    unsubscribe: function() {
-      return true;
     }
   });
 }).call(this);
