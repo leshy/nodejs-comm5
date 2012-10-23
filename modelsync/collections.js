@@ -94,6 +94,49 @@
       }, this));
     }
   });
+  SubscriptionMixin = exports.SubscriptionMixin = Backbone.Model.extend4000({
+    superValidator: v({
+      create: 'function',
+      update: 'function',
+      remove: 'function'
+    }),
+    initialize: function() {
+      return this.subscriptions = new SubscriptionMan();
+    },
+    create: function(entry, callback) {
+      this._super('create', entry, callback);
+      return this.subscriptions.msg({
+        action: 'create',
+        entry: entry
+      });
+    },
+    update: function(pattern, update, callback) {
+      this._super('update', pattern, update, callback);
+      return this.subscriptions.msg({
+        action: 'update',
+        pattern: pattern,
+        update: update
+      });
+    },
+    remove: function(pattern, callback) {
+      this._super('remove', pattern, callback);
+      return this.subscriptions.msg({
+        action: 'remove',
+        pattern: pattern
+      });
+    },
+    subscribechanges: function(pattern, callback, name) {
+      return this.subscriptions.subscribe({
+        pattern: pattern
+      }, function(changes, next) {
+        callback(changes);
+        return next();
+      });
+    },
+    unsubscribe: function() {
+      return true;
+    }
+  });
   ModelMixin = exports.ModelMixin = Backbone.Model.extend4000({
     initialize: function() {
       return this.models = {};
@@ -124,41 +167,6 @@
           return callback(new (this.resolveModel(entry))(entry));
         }
       }, this));
-    }
-  });
-  SubscriptionMixin = exports.SubscriptionMixin = Backbone.Model.extend4000({
-    initialize: function() {
-      return this.subscriptions = new SubscriptionMan();
-    },
-    create: function(entry, callback) {
-      this._super('create', entry, callback);
-      return this.subscriptions.msg({
-        action: 'create',
-        entry: entry
-      });
-    },
-    update: function(pattern, update, callback) {
-      this._super('update', pattern, update, callback);
-      return this.subscriptions.msg({
-        action: 'update',
-        pattern: pattern,
-        update: update
-      });
-    },
-    remove: function(pattern, callback) {
-      this._super('remove', pattern, callback);
-      return this.subscriptions.msg({
-        action: 'remove',
-        pattern: pattern
-      });
-    },
-    subscribe: function(pattern, name, callback) {
-      return this.subscriptions.subscribe({
-        pattern: pattern
-      }, callback, name);
-    },
-    unsubscribe: function() {
-      return true;
     }
   });
   RemoteCollection = exports.RemoteCollection = Backbone.Model.extend4000(ModelMixin, SubscriptionMixin, Validator.ValidatedModel, MsgNode, {

@@ -10,20 +10,27 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
     
     initialize: ->
         @collection = @get 'collection'
-        @when 'id', =>
-            @collection.subscribe { id: @id }
-            @on 'change', @changed
+        @when 'id', (id) =>
+            @collection.subscribechanges { id: id }, @remoteChange.bind(@)
+            #@on 'change', @changed
 
-    changed: (model,data) -> @flush()
+    remoteChange: (change) -> 
+        switch change.action
+            
+            when 'update' then console.log("SETTING",@get('bla'), change.update); @set change.update, { silent: true }
+        
+    changed: (model,data) -> true #@flush()
 
     export: (realm) -> _.omit(@attributes,'collection')
 
     update: (data) -> @set(data)
-        
-    flush: decorate( decorators.MakeDecorator_Throttle({ throttletime: 1 }), (callback) -> @flushnow(callback) )
+    
+    # simplified for now, will reintroduce when done with model syncing
+    #flush: decorate( decorators.MakeDecorator_Throttle({ throttletime: 1 }), (callback) -> @flushnow(callback) )
+    flush: (callback) -> @flushnow(callback)
 
     flushnow: (callback) ->
-        if not id = @get 'id' then @collection.create @export('store'), (err,id) => @set 'id', id; callback()
+        if not id = @get 'id' then @collection.create @export('store'), (err,id) => @set 'id', id; callback(err,id)
         else @collection.update {id: id}, @export('store'), callback
 
     remove: (callback) ->

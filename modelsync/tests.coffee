@@ -1,4 +1,5 @@
 _ = require 'underscore'
+wait = (time,f) -> setTimeout(f,time)
 
 exports.mongo =
     setUp: (callback) ->
@@ -152,7 +153,34 @@ exports.ModelMixin =
                 test.deepEqual( [ [ 'bla1', 'bla1' ], [ 'bla1', 'bla1' ], [ 'bla2', 'bla2' ], [ 'bla1', 'bla1' ] ], res)
                 test.done()
 ###
-# 
+
+
+exports.AutoModelSync =
+    setUp: (callback) ->
+        @mongoC = require './serverside/mongodb'
+        @collections = require './collections'
+        @mongo = require 'mongodb'
+        @db = new @mongo.Db('testdb',new @mongo.Server('localhost',27017), {safe: true });
+        
+        @c = new @mongoC.MongoCollectionNode { db: @db, collection: 'test' }
+        
+        @db.open callback
+        
+    tearDown: (callback) ->
+        @db.close()
+        callback()
+
+    remoteModelUpdates: (test) ->
+        newmodel1 = @c.defineModel 'bla2',{ hi: -> 'bla2' }
+        instance1 = new newmodel1 { something: 999 }
+        instance1.flush (err,id) =>
+            @c.findModels {id: id },{},(instance2) =>
+                if instance2
+                    instance1.set { bla: 3 }
+                    instance1.flush (err,id) =>
+                        console.log(instance2.get 'bla'); test.done()
+        
+
 exports.EverythingTogether =
     setUp: (callback) ->
         @mongoC = require './serverside/mongodb'
@@ -205,5 +233,3 @@ exports.EverythingTogether =
                         instance2.remove ->                 
                             @c.findModels { id: id }, (model) =>
                                 if (model) then test.fail() else false
-
-

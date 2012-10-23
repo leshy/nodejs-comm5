@@ -15,15 +15,23 @@
     }),
     initialize: function() {
       this.collection = this.get('collection');
-      return this.when('id', __bind(function() {
-        this.collection.subscribe({
-          id: this.id
-        });
-        return this.on('change', this.changed);
+      return this.when('id', __bind(function(id) {
+        return this.collection.subscribechanges({
+          id: id
+        }, this.remoteChange.bind(this));
       }, this));
     },
+    remoteChange: function(change) {
+      switch (change.action) {
+        case 'update':
+          console.log("SETTING", this.get('bla'), change.update);
+          return this.set(change.update, {
+            silent: true
+          });
+      }
+    },
     changed: function(model, data) {
-      return this.flush();
+      return true;
     },
     "export": function(realm) {
       return _.omit(this.attributes, 'collection');
@@ -31,17 +39,15 @@
     update: function(data) {
       return this.set(data);
     },
-    flush: decorate(decorators.MakeDecorator_Throttle({
-      throttletime: 1
-    }), function(callback) {
+    flush: function(callback) {
       return this.flushnow(callback);
-    }),
+    },
     flushnow: function(callback) {
       var id;
       if (!(id = this.get('id'))) {
         return this.collection.create(this["export"]('store'), __bind(function(err, id) {
           this.set('id', id);
-          return callback();
+          return callback(err, id);
         }, this));
       } else {
         return this.collection.update({

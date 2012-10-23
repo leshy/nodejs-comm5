@@ -39,6 +39,7 @@
     },
     patternIn: function(pattern) {
       var _ref;
+      pattern = _.extend({}, pattern);
       if (pattern.id != null) {
         pattern._id = pattern.id;
         delete pattern.id;
@@ -52,6 +53,7 @@
       if (!(pattern != null)) {
         return pattern;
       }
+      pattern = _.extend({}, pattern);
       if (pattern._id != null) {
         pattern.id = String(pattern._id);
         delete pattern._id;
@@ -61,6 +63,7 @@
     find: function(pattern, limits, callback) {
       return this.collection.find(this.patternIn(pattern), limits, __bind(function(err, cursor) {
         return cursor.each(__bind(function(err, entry) {
+          console.log(">>", entry);
           return callback(this.patternOut(entry));
         }, this));
       }, this));
@@ -72,5 +75,5 @@
       return this.collection.update(this.patternIn(pattern), update, callback);
     }
   });
-  MongoCollectionNode = exports.MongoCollectionNode = MongoCollection.extend4000(collections.CollectionExposer);
+  MongoCollectionNode = exports.MongoCollectionNode = MongoCollection.extend4000(collections.ModelMixin, collections.SubscriptionMixin, collections.CollectionExposer);
 }).call(this);

@@ -50,6 +50,37 @@ CollectionExposer = exports.CollectionExposer = MsgNode.extend4000
             
 
 
+# provides subscribe and unsubscribe methods for collection events (like model changes)
+# remotemodels automatically subscribe to those events to update themselves with remote changes,
+# if the collection offers the option
+SubscriptionMixin = exports.SubscriptionMixin = Backbone.Model.extend4000
+    superValidator: v { create: 'function', update: 'function', remove: 'function' }
+                       
+    initialize: ->
+        @subscriptions = new SubscriptionMan()
+        
+    create: (entry,callback) ->        
+        @_super 'create',entry,callback
+        @subscriptions.msg {action: 'create', entry: entry }
+        
+    update: (pattern,update,callback) ->
+        @_super 'update',pattern,update,callback
+        @subscriptions.msg {action: 'update', pattern: pattern, update: update }
+        
+    remove: (pattern,callback) ->
+        @_super 'remove',pattern,callback
+        @subscriptions.msg {action: 'remove', pattern: pattern}
+
+    subscribechanges: (pattern,callback,name) ->
+        #console.log('got subscribe request for',pattern,callback)
+        @subscriptions.subscribe { pattern: pattern }, (changes,next) -> callback(changes); next()
+        
+    unsubscribe: ->
+        true
+
+
+
+
 # this can be mixed into a RemoteCollection or Collection itself, it adds findModel method that automatically instantiates propper models for query results
 ModelMixin = exports.ModelMixin = Backbone.Model.extend4000
     initialize: ->
@@ -71,41 +102,7 @@ ModelMixin = exports.ModelMixin = Backbone.Model.extend4000
 
 
 
-# provides subscribe and unsubscribe methods for collection events (like model changes)
-# remotemodels automatically subscribe to those events to update themselves with remote changes,
-# if the collection offers the option
-SubscriptionMixin = exports.SubscriptionMixin = Backbone.Model.extend4000
-#    superValidator: v({ create: 'function'
-#                        update: 'function'
-#                        remove: 'function' })
-                        
-    initialize: ->
-        @subscriptions = new SubscriptionMan()
-        
-    create: (entry,callback) ->        
-        @_super 'create',entry,callback
-        @subscriptions.msg {action: 'create', entry: entry }
-        
-    update: (pattern,update,callback) ->
-        @_super 'update',pattern,update,callback
-        @subscriptions.msg {action: 'update', pattern: pattern, update: update }
-        
-    remove: (pattern,callback) ->
-        @_super 'remove',pattern,callback
-        @subscriptions.msg {action: 'remove', pattern: pattern}
-                
-    subscribe: (pattern,name,callback) ->
-        @subscriptions.subscribe { pattern: pattern }, callback, name
-        
-    unsubscribe: ->
-        true
-
-
-
-
-
-# transparently talks to the collection that's away via the messaging system,
-# has the same interface as local collections
+# has the same interface as local collections but it transparently talks to the remote collectionExposer via the messaging system,
 RemoteCollection = exports.RemoteCollection = Backbone.Model.extend4000 ModelMixin, SubscriptionMixin, Validator.ValidatedModel, MsgNode,
     validator: v(name: "String")
 

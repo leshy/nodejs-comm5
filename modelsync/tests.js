@@ -1,7 +1,10 @@
 (function() {
-  var _;
+  var wait, _;
   var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
   _ = require('underscore');
+  wait = function(time, f) {
+    return setTimeout(f, time);
+  };
   exports.mongo = {
     setUp: function(callback) {
       this.mongoC = require('./serverside/mongodb');
@@ -345,6 +348,51 @@
                   test.deepEqual( [ [ 'bla1', 'bla1' ], [ 'bla1', 'bla1' ], [ 'bla2', 'bla2' ], [ 'bla1', 'bla1' ] ], res)
                   test.done()
   */
+  exports.AutoModelSync = {
+    setUp: function(callback) {
+      this.mongoC = require('./serverside/mongodb');
+      this.collections = require('./collections');
+      this.mongo = require('mongodb');
+      this.db = new this.mongo.Db('testdb', new this.mongo.Server('localhost', 27017), {
+        safe: true
+      });
+      this.c = new this.mongoC.MongoCollectionNode({
+        db: this.db,
+        collection: 'test'
+      });
+      return this.db.open(callback);
+    },
+    tearDown: function(callback) {
+      this.db.close();
+      return callback();
+    },
+    remoteModelUpdates: function(test) {
+      var instance1, newmodel1;
+      newmodel1 = this.c.defineModel('bla2', {
+        hi: function() {
+          return 'bla2';
+        }
+      });
+      instance1 = new newmodel1({
+        something: 999
+      });
+      return instance1.flush(__bind(function(err, id) {
+        return this.c.findModels({
+          id: id
+        }, {}, __bind(function(instance2) {
+          if (instance2) {
+            instance1.set({
+              bla: 3
+            });
+            return instance1.flush(__bind(function(err, id) {
+              console.log(instance2.get('bla'));
+              return test.done();
+            }, this));
+          }
+        }, this));
+      }, this));
+    }
+  };
   exports.EverythingTogether = {
     setUp: function(callback) {
       var realcollection;
