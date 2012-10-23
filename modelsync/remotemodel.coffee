@@ -17,18 +17,15 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
 
     changed: (model,data) -> @flush()
 
-    export: (realm) ->
-        return _.omit(@attributes,'collection')
+    export: (realm) -> _.omit(@attributes,'collection')
 
     update: (data) -> @set(data)
         
     flush: decorate( decorators.MakeDecorator_Throttle({ throttletime: 1 }), (callback) -> @flushnow(callback) )
 
     flushnow: (callback) ->
-        if not id = @get 'id'
-            @collection.create @export('store'), (err,id) => @set 'id', id; callback()
-        else
-            @collection.update {id: id}, @export('store'), callback
+        if not id = @get 'id' then @collection.create @export('store'), (err,id) => @set 'id', id; callback()
+        else @collection.update {id: id}, @export('store'), callback
 
     remove: (callback) ->
         @trigger('remove')
@@ -38,12 +35,13 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
 ModelMixin = exports.ModelMixin = Backbone.Model.extend4000
     initialize: ->
         @models = {}
-        
+                
     defineModel: (name,superclasses...,definition) ->
         if not definition.defaults? then definition.defaults = {}
         definition.defaults.collection = this
         definition.defaults.type = name
-        @models[name] = RemoteModel.extend4000.apply(RemoteModel,helpers.push(superclasses,definition))
+        @models[name] = RemoteModel.extend4000.apply RemoteModel, helpers.push(superclasses,definition)
+        
     resolveModel: (entry) ->
         if @models.length is 1 then return @models[0]
         if (entry.type) then return @models[entry.type]
@@ -52,14 +50,29 @@ ModelMixin = exports.ModelMixin = Backbone.Model.extend4000
         @find pattern,limits,(entry) =>
             if not entry? then callback() else callback(new (@resolveModel(entry))(entry))
 
-
-
+# provides subscribe and unsubscribe methods for collection events (like model changes)
+# remotemodels automatically subscribe to those events to update themselves with remote changes,
+# if the collection offers the option
 SubscriptionMixin = exports.SubscriptionMixin = Backbone.Model.extend4000
+    superValidator: v { create: 'function'
+                        update: 'function'
+                        remove: 'function' }
     initialize: ->
         @subscriptions = new SubscriptionMan()
+        
+    create: (entry,callback) ->
+        @_super('create',[entry,callback])
+        
+    update: (pattern,update,callback) ->
+        @_super('update',[pattern,update,callback])
+        
+    remove: (pattern,callback) ->
+        @_super('remove',[pattern,callback])
 
     subscribe: ->
         true
 
     unsubscribe: ->
         true
+
+

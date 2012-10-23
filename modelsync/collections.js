@@ -14,7 +14,7 @@
   MsgNode = core.MsgNode;
   Msg = core.Msg;
   RemoteModel = require('./remotemodel');
-  RemoteCollection = exports.RemoteCollection = Backbone.Model.extend4000(RemoteModel.ModelMixin, Validator.ValidatedModel, MsgNode, {
+  RemoteCollection = exports.RemoteCollection = Backbone.Model.extend4000(RemoteModel.ModelMixin, RemoteModel.SubscriptionMixin, Validator.ValidatedModel, MsgNode, {
     validator: v({
       name: "String"
     }),

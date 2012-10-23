@@ -12,7 +12,7 @@ RemoteModel = require './remotemodel'
 
 
 # talks to the collection that's away, pretends to be local
-RemoteCollection = exports.RemoteCollection = Backbone.Model.extend4000 RemoteModel.ModelMixin, Validator.ValidatedModel, MsgNode,
+RemoteCollection = exports.RemoteCollection = Backbone.Model.extend4000 RemoteModel.ModelMixin, RemoteModel.SubscriptionMixin, Validator.ValidatedModel, MsgNode,
     validator: v(name: "String")
 
     resolveModel: (entry) ->

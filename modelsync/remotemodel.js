@@ -98,6 +98,15 @@
     initialize: function() {
       return this.subscriptions = new SubscriptionMan();
     },
+    create: function(entry, callback) {
+      return this._super('create', [entry, callback]);
+    },
+    update: function(pattern, update, callback) {
+      return this._super('update', [pattern, update, callback]);
+    },
+    remove: function(pattern, callback) {
+      return this._super('remove', [pattern, callback]);
+    },
     subscribe: function() {
       return true;
     },
