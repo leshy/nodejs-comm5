@@ -1,5 +1,5 @@
 (function() {
-  var Backbone, CollectionExposer, Msg, MsgNode, RemoteCollection, RemoteModel, Select, SubscriptionMan, Validator, async, core, decorate, decorators, helpers, v, _;
+  var Backbone, CollectionExposer, Msg, MsgNode, RemoteCollection, RemoteModel, Select, Validator, async, core, decorate, decorators, helpers, v, _;
   var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
   Backbone = require('backbone4000');
   _ = require('underscore');
@@ -13,7 +13,6 @@
   core = require('../core/');
   MsgNode = core.MsgNode;
   Msg = core.Msg;
-  SubscriptionMan = require('subscriptionman').SubscriptionMan;
   RemoteModel = require('./remotemodel');
   RemoteCollection = exports.RemoteCollection = Backbone.Model.extend4000(RemoteModel.ModelMixin, Validator.ValidatedModel, MsgNode, {
     validator: v({
@@ -71,7 +70,6 @@
     initialize: function() {
       var name;
       name = this.get('name');
-      this.subscriptions = new SubscriptionMan();
       this.subscribe({
         collection: name,
         create: "Object"
@@ -96,11 +94,11 @@
         collection: name,
         remove: "Object"
       }, __bind(function(msg, reply, next, transmit) {
-        return this.find(msg.find).each(__bind(function(entry) {
+        return this.findModels(msg.find).each(__bind(function(entry) {
           if (entry != null) {
             return entry.remove();
           } else {
-            return reply.end;
+            return reply.end();
           }
         }, this));
       }, this));
@@ -113,7 +111,7 @@
           if (entry != null) {
             return entry.update(data);
           } else {
-            return reply.end;
+            return reply.end();
           }
         }, this));
       }, this));

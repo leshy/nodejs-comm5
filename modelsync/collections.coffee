@@ -1,14 +1,12 @@
 Backbone = require 'backbone4000'
 _ = require 'underscore'
-decorators = require 'decorators'
-decorate = decorators.decorate;
+decorators = require 'decorators'; decorate = decorators.decorate;
 async = require 'async'
 helpers = require 'helpers'
 Validator = require 'validator2-extras'; v = Validator.v; Select = Validator.Select
 
 
 core = require '../core/'; MsgNode = core.MsgNode; Msg = core.Msg
-SubscriptionMan = require('subscriptionman').SubscriptionMan
 RemoteModel = require './remotemodel'
 
 
@@ -35,7 +33,6 @@ CollectionExposer = exports.CollectionExposer = MsgNode.extend4000
     defaults: { name: undefined }
     initialize: ->
         name = @get 'name'
-        @subscriptions = new SubscriptionMan()
         
         # create
         @subscribe { collection: name, create: "Object" },
@@ -51,13 +48,13 @@ CollectionExposer = exports.CollectionExposer = MsgNode.extend4000
             
         # remove
         @subscribe { collection: name, remove: "Object" },
-            (msg,reply,next,transmit) => @find(msg.find).each (entry) =>
-                if entry? then entry.remove() else reply.end
+            (msg,reply,next,transmit) => @findModels(msg.find).each (entry) =>
+                if entry? then entry.remove() else reply.end()
 
         # update
         @subscribe { collection: name, update: "Object", data: "Object" },
             (msg,reply,next,transmit) => @find(msg.find).each (entry) =>
-                if entry? then entry.update(data) else reply.end
+                if entry? then entry.update(data) else reply.end()
         
         # find
         @subscribe { collection: name, find: "Object", limits: v().Default({}).Object() },

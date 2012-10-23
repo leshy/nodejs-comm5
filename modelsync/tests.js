@@ -310,64 +310,39 @@
       return callback();
     }
   };
-  exports.ModelMixin = {
-    defineModel: function(test) {
-      var instance, mixin, newmodel, remotemodel;
-      remotemodel = require('./remotemodel');
-      mixin = new remotemodel.ModelMixin();
-      newmodel = mixin.defineModel('bla1', {
-        initialize: function() {
-          return true;
-        }
-      });
-      instance = new newmodel();
-      test.equals(instance.get('type'), 'bla1');
-      return test.done();
-    },
-    findModels: function(test) {
-      var mixin, newmodel1, newmodel2, remotemodel, res;
-      remotemodel = require('./remotemodel');
-      mixin = new remotemodel.ModelMixin();
-      newmodel1 = mixin.defineModel('bla1', {
-        hi: function() {
-          return 'bla1';
-        }
-      });
-      newmodel2 = mixin.defineModel('bla2', {
-        hi: function() {
-          return 'bla2';
-        }
-      });
-      mixin.find = function(pattern, limits, callback) {
-        callback({
-          type: 'bla1',
-          kkk: 1
-        });
-        callback({
-          type: 'bla1',
-          kkk: 2
-        });
-        callback({
-          type: 'bla2',
-          kkk: 3
-        });
-        callback({
-          type: 'bla1',
-          kkk: 4
-        });
-        return callback();
-      };
-      res = [];
-      return mixin.findModels({}, {}, function(model) {
-        if (model != null) {
-          return res.push([model.get('type'), model.hi()]);
-        } else {
-          test.deepEqual([['bla1', 'bla1'], ['bla1', 'bla1'], ['bla2', 'bla2'], ['bla1', 'bla1']], res);
-          return test.done();
-        }
-      });
-    }
-  };
+  /*
+  exports.ModelMixin =
+      defineModel: (test) ->
+          remotemodel = require './remotemodel'
+          mixin = new remotemodel.ModelMixin()
+          newmodel = mixin.defineModel('bla1',{ initialize: -> true })
+  
+          instance = new newmodel()
+          test.equals(instance.get('type'),'bla1')
+          test.done()
+  
+  
+      findModels: (test) ->
+          remotemodel = require './remotemodel'
+          mixin = new remotemodel.ModelMixin()
+          newmodel1 = mixin.defineModel 'bla1',{ hi: -> 'bla1' }
+          newmodel2 = mixin.defineModel 'bla2',{ hi: -> 'bla2' }
+  
+          mixin.find = (pattern,limits,callback) ->
+              callback { type: 'bla1', kkk: 1}
+              callback { type: 'bla1', kkk: 2}
+              callback { type: 'bla2', kkk: 3}
+              callback { type: 'bla1', kkk: 4}
+              callback()
+  
+          res = []
+          mixin.findModels {},{}, (model) ->
+              if model?
+                  res.push([model.get('type'), model.hi()])
+              else
+                  test.deepEqual( [ [ 'bla1', 'bla1' ], [ 'bla1', 'bla1' ], [ 'bla2', 'bla2' ], [ 'bla1', 'bla1' ] ], res)
+                  test.done()
+  */
   exports.EverythingTogether = {
     setUp: function(callback) {
       var realcollection;

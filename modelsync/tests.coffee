@@ -54,8 +54,6 @@ exports.mongoNode =
         response = @c.msg ({ collection: 'test', create: { bla: 3 }})
         response.read (msg) ->
             if not msg then test.done()
-#            if msg then console.log(msg.data) else test.done()
-
 
     find: (test) ->
         response = @c.msg ({ collection: 'test', find: { bla: 3 }})
@@ -119,7 +117,7 @@ exports.mongoRemote =
         callback()
     
 
-
+###
 exports.ModelMixin =
     defineModel: (test) ->
         remotemodel = require './remotemodel'
@@ -151,7 +149,8 @@ exports.ModelMixin =
             else
                 test.deepEqual( [ [ 'bla1', 'bla1' ], [ 'bla1', 'bla1' ], [ 'bla2', 'bla2' ], [ 'bla1', 'bla1' ] ], res)
                 test.done()
-
+###
+# 
 exports.EverythingTogether =
     setUp: (callback) ->
         @mongoC = require './serverside/mongodb'
