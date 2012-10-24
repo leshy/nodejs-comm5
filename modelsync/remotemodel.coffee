@@ -9,12 +9,12 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
     validator: v { collection: 'instance' }
     
     initialize: ->
-
         # this is temporary, permission system will make sure that this is never exported
         @when 'collection', (collection) =>
             @unset 'collection'
             @collection = collection
-                
+
+        # once the object has been saved, we can request a subscription to its changes (this will be automatic for in the future)
         @when 'id', (id) =>
             @collection.subscribechanges { id: id }, @remoteChange.bind(@)
             @on 'change', @changed
@@ -42,6 +42,7 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
     update: (data) -> @set(data)
     
     # simplified for now, will reintroduce when done with model syncing
+    # throttle decorator makes sure that we can apply bunch of changes in a series to an object, but the system requests a sync only once.
     #flush: decorate( decorators.MakeDecorator_Throttle({ throttletime: 1 }), (callback) -> @flushnow(callback) )
     flush: (callback) -> @flushnow(callback)
 
