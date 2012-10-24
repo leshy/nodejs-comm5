@@ -22,7 +22,7 @@ CollectionExposer = exports.CollectionExposer = MsgNode.extend4000
         # remove raw
         @subscribe { collection: name, remove: "Object", raw: true  },
             (msg,reply,next,transmit) => @remove msg.remove, core.callbackMsgEnd reply
-
+        
         # update raw
         @subscribe { collection: name, update: "Object", data: "Object" },
             (msg,reply,next,transmit) => @update msg.update, msg.data, core.callbackMsgEnd reply
@@ -34,7 +34,7 @@ CollectionExposer = exports.CollectionExposer = MsgNode.extend4000
 
         # update
         @subscribe { collection: name, update: "Object", data: "Object" },
-            (msg,reply,next,transmit) => @find(msg.find).each (entry) =>
+            (msg,reply,next,transmit) => @findModels(msg.find).each (entry) =>
                 if entry? then entry.update(data) else reply.end()
         
         # find
@@ -47,7 +47,6 @@ CollectionExposer = exports.CollectionExposer = MsgNode.extend4000
             (msg,reply,next,transmit) =>
                 @subscribe msg.subscribe, (event) =>
                     reply.write(event)
-            
 
 
 # this can be mixed into a RemoteCollection or Collection itself.
@@ -66,6 +65,7 @@ SubscriptionMixin = exports.SubscriptionMixin = Backbone.Model.extend4000
         @subscriptions.msg { action: 'create', entry: entry }
         
     update: (pattern,update,callback) ->
+        console.log 'update',pattern,update
         @_super 'update',pattern,update,callback
         @subscriptions.msg { action: 'update', pattern: pattern, update: update }
         

@@ -59,7 +59,7 @@
         update: "Object",
         data: "Object"
       }, __bind(function(msg, reply, next, transmit) {
-        return this.find(msg.find).each(__bind(function(entry) {
+        return this.findModels(msg.find).each(__bind(function(entry) {
           if (entry != null) {
             return entry.update(data);
           } else {
@@ -111,6 +111,7 @@
       });
     },
     update: function(pattern, update, callback) {
+      console.log('update', pattern, update);
       this._super('update', pattern, update, callback);
       return this.subscriptions.msg({
         action: 'update',
