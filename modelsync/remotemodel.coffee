@@ -9,19 +9,35 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
     validator: v { collection: 'instance' }
     
     initialize: ->
-        @collection = @get 'collection'
+
+        # this is temporary, permission system will make sure that this is never exported
+        @when 'collection', (collection) =>
+            @unset 'collection'
+            @collection = collection
+                
         @when 'id', (id) =>
             @collection.subscribechanges { id: id }, @remoteChange.bind(@)
-            #@on 'change', @changed
+            @on 'change', @changed
+
+        # if we haven't been saved yet, we want to flush all our attributes when flush is called..
+        if @get 'id' then @changes = {} else @changes = helpers.hashmap(@attributes, -> true)
 
     remoteChange: (change) -> 
         switch change.action
-            
             when 'update' then console.log("SETTING",@get('bla'), change.update); @set change.update, { silent: true }
         
-    changed: (model,data) -> true #@flush()
+    changed: (model,data) ->
+        change = model.changedAttributes()
+        delete change.id
+        _.extend @changes, helpers.hashmap(change, -> true)
 
-    export: (realm) -> _.omit(@attributes,'collection')
+    export: (realm,attrs) ->
+        return helpers.hashfind attrs, (value,property) => @attributes[property]
+
+    exportchanges: (realm) ->
+        ret = @export(realm,@changes)
+        @changes = {}
+        return ret
 
     update: (data) -> @set(data)
     
@@ -30,8 +46,10 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
     flush: (callback) -> @flushnow(callback)
 
     flushnow: (callback) ->
-        if not id = @get 'id' then @collection.create @export('store'), (err,id) => @set 'id', id; callback(err,id)
-        else @collection.update {id: id}, @export('store'), callback
+        changes = @exportchanges('store')
+        if helpers.isEmpty(changes) then callback()
+        if not id = @get 'id' then @collection.create changes, (err,id) => @set 'id', id; callback(err,id)
+        else @collection.update {id: id}, changes, callback
 
     remove: (callback) ->
         @trigger('remove')

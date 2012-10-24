@@ -176,10 +176,11 @@
     resolveModel: function(entry) {
       var tmp;
       if (this.models.length === 1) {
-        return this.models[0];
+        this.models[0];
       } else if (entry.type && (tmp = this.models[entry.type])) {
         return tmp;
       }
+      throw "unable to resolve " + JSON.stringify(entry);
     },
     create: function(entry, callback) {
       return core.msgCallback(this.send({

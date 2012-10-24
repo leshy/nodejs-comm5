@@ -79,8 +79,6 @@ SubscriptionMixin = exports.SubscriptionMixin = Backbone.Model.extend4000
         true
 
 
-
-
 # this can be mixed into a RemoteCollection or Collection itself, it adds findModel method that automatically instantiates propper models for query results
 ModelMixin = exports.ModelMixin = Backbone.Model.extend4000
     initialize: ->
@@ -101,13 +99,13 @@ ModelMixin = exports.ModelMixin = Backbone.Model.extend4000
             if not entry? then callback() else callback(new (@resolveModel(entry))(entry))
 
 
-
 # has the same interface as local collections but it transparently talks to the remote collectionExposer via the messaging system,
 RemoteCollection = exports.RemoteCollection = Backbone.Model.extend4000 ModelMixin, SubscriptionMixin, Validator.ValidatedModel, MsgNode,
     validator: v(name: "String")
 
     resolveModel: (entry) ->
         if @models.length is 1 then @models[0] else if entry.type and tmp = @models[entry.type] then return tmp
+        throw "unable to resolve " + JSON.stringify(entry)
             
     create: (entry,callback) -> core.msgCallback @send( collection: @get('name'), create: entry ), callback
     

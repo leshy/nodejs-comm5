@@ -34,14 +34,13 @@ MongoCollection = exports.MongoCollection = Backbone.Model.extend4000
             
     find: (pattern,limits,callback) ->
         @collection.find @patternIn(pattern), limits, (err,cursor) => cursor.each (err,entry) =>
-            console.log(">>", entry)
             callback @patternOut(entry)
 
     remove: (pattern,callback) ->
         @collection.remove @patternIn(pattern), callback
 
     update: (pattern,update,callback) ->
-        @collection.update @patternIn(pattern), update, callback
+        @collection.update @patternIn(pattern), { '$set': update }, callback
 
 MongoCollectionNode = exports.MongoCollectionNode = MongoCollection.extend4000 collections.ModelMixin, collections.SubscriptionMixin, collections.CollectionExposer
 

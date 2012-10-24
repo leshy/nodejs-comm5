@@ -63,7 +63,6 @@
     find: function(pattern, limits, callback) {
       return this.collection.find(this.patternIn(pattern), limits, __bind(function(err, cursor) {
         return cursor.each(__bind(function(err, entry) {
-          console.log(">>", entry);
           return callback(this.patternOut(entry));
         }, this));
       }, this));
@@ -72,7 +71,9 @@
       return this.collection.remove(this.patternIn(pattern), callback);
     },
     update: function(pattern, update, callback) {
-      return this.collection.update(this.patternIn(pattern), update, callback);
+      return this.collection.update(this.patternIn(pattern), {
+        '$set': update
+      }, callback);
     }
   });
   MongoCollectionNode = exports.MongoCollectionNode = MongoCollection.extend4000(collections.ModelMixin, collections.SubscriptionMixin, collections.CollectionExposer);
