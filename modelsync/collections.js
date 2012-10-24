@@ -133,7 +133,7 @@
         return next();
       });
     },
-    unsubscribe: function() {
+    unsubscribechanges: function() {
       return true;
     }
   });

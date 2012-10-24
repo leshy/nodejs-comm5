@@ -50,9 +50,11 @@ CollectionExposer = exports.CollectionExposer = MsgNode.extend4000
             
 
 
-# provides subscribe and unsubscribe methods for collection events (like model changes)
-# remotemodels automatically subscribe to those events to update themselves with remote changes,
-# if the collection offers the option
+# this can be mixed into a RemoteCollection or Collection itself.
+# it provides subscribe and unsubscribe methods for collection events (remove/update/create)
+# 
+# if this is mixed into a collection,
+# remotemodels will automatically subscribe to those events to update themselves with potential remote changes
 SubscriptionMixin = exports.SubscriptionMixin = Backbone.Model.extend4000
     superValidator: v { create: 'function', update: 'function', remove: 'function' }
                        
@@ -61,25 +63,27 @@ SubscriptionMixin = exports.SubscriptionMixin = Backbone.Model.extend4000
         
     create: (entry,callback) ->        
         @_super 'create',entry,callback
-        @subscriptions.msg {action: 'create', entry: entry }
+        @subscriptions.msg { action: 'create', entry: entry }
         
     update: (pattern,update,callback) ->
         @_super 'update',pattern,update,callback
-        @subscriptions.msg {action: 'update', pattern: pattern, update: update }
+        @subscriptions.msg { action: 'update', pattern: pattern, update: update }
         
     remove: (pattern,callback) ->
         @_super 'remove',pattern,callback
-        @subscriptions.msg {action: 'remove', pattern: pattern}
+        @subscriptions.msg { action: 'remove', pattern: pattern}
 
     subscribechanges: (pattern,callback,name) ->
         #console.log('got subscribe request for',pattern,callback)
         @subscriptions.subscribe { pattern: pattern }, (changes,next) -> callback(changes); next()
         
-    unsubscribe: ->
+    unsubscribechanges: ->
+        
         true
 
 
-# this can be mixed into a RemoteCollection or Collection itself, it adds findModel method that automatically instantiates propper models for query results
+# this can be mixed into a RemoteCollection or Collection itself
+# it adds findModel method that automatically instantiates propper models for query results
 ModelMixin = exports.ModelMixin = Backbone.Model.extend4000
     initialize: ->
         @models = {}
