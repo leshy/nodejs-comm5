@@ -24,7 +24,7 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
 
     remoteChange: (change) -> 
         switch change.action
-            when 'update' then console.log("SETTING",@get('bla'), change.update); @set change.update, { silent: true }
+            when 'update' then @set change.update, { silent: true }
         
     changed: (model,data) ->
         change = model.changedAttributes()

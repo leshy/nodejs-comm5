@@ -114,3 +114,4 @@ RemoteCollection = exports.RemoteCollection = Backbone.Model.extend4000 ModelMix
     find: (pattern,limits,callback) ->
         reply = @send( collection: @get('name'), find: pattern, limits: limits )
         reply.read (msg) -> if msg then callback(msg.data) else callback()
+

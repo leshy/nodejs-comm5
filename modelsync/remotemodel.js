@@ -35,7 +35,6 @@
     remoteChange: function(change) {
       switch (change.action) {
         case 'update':
-          console.log("SETTING", this.get('bla'), change.update);
           return this.set(change.update, {
             silent: true
           });

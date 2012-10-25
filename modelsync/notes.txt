@@ -1,9 +1,6 @@
-I should add remove_raw and update_raw functions to mongodb.coffee
-and update and remove should be implemented by a standard concrete-collection-mixin
+I should add remove_raw and update_raw functions to mongodb.coffee and update and remove should be implemented by a standard concrete-collection-mixin
 
-I want to instantiate each object before changing it..
-
-Also, investigate an option of using standard messaging of the RemoteCollection for subscriptions (this would mean that I want to inherit msgnode in the standard collection/subscription mixin too, which is fine..)
+I want to instantiate each object before changing it.. (I want this to be an extra option, not a common thing!)
 
 and work on the remoteobject level events like 'remove' and 'remoteupdate'
 
@@ -11,3 +8,4 @@ build a sample website
 
 work on collection query level subscriptions
 
+collectionexposer subscriptions?
