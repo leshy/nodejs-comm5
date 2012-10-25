@@ -56,29 +56,23 @@ CollectionExposer = exports.CollectionExposer = MsgNode.extend4000
 # remotemodels will automatically subscribe to those events to update themselves with potential remote changes
 SubscriptionMixin = exports.SubscriptionMixin = Backbone.Model.extend4000
     superValidator: v { create: 'function', update: 'function', remove: 'function' }
-                       
-    initialize: ->
-        @subscriptions = new SubscriptionMan()
-        
+
     create: (entry,callback) ->        
         @_super 'create',entry,callback
-        @subscriptions.msg { action: 'create', entry: entry }
+        @msg { collection: @get 'name', action: 'create', entry: entry }
         
     update: (pattern,update,callback) ->
-        console.log 'update',pattern,update
         @_super 'update',pattern,update,callback
-        @subscriptions.msg { action: 'update', pattern: pattern, update: update }
+        @msg { collection: @get 'name', action: 'update', pattern: pattern, update: update }
         
     remove: (pattern,callback) ->
         @_super 'remove',pattern,callback
-        @subscriptions.msg { action: 'remove', pattern: pattern}
+        @msg { collection: @get 'name', action: 'remove', pattern: pattern}
 
     subscribechanges: (pattern,callback,name) ->
-        #console.log('got subscribe request for',pattern,callback)
-        @subscriptions.subscribe { pattern: pattern }, (changes,next) -> callback(changes); next()
+        @subscribe { pattern: pattern }, (changes,next) -> callback(changes); next()
         
     unsubscribechanges: ->
-        
         true
 
 
