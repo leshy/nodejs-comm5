@@ -4,11 +4,11 @@ var decorators = require('decorators'); var decorate = decorators.decorate;
 var helpers = require('helpers')
 
 var v = require('validator2-extras'); var Validator = v.v; var Select = v.Select
-var core = exports.MsgNode = require('../core/'); var MsgNode = core.MsgNode; var Msg = core.Msg
+var core = exports.MsgNode = require('../../core/'); var MsgNode = core.MsgNode; var Msg = core.Msg
 
 var io = require('socket.io')
 
-var WebsocketWrapper = require('../shared/websocket').WebsocketWrapper
+var WebsocketWrapper = require('../websocket').WebsocketWrapper
 
 // sets realm for a message to be this.attributes.realm, 
 // passes it to other potential local subscribers and broadcasts message to other nodes connected to this node

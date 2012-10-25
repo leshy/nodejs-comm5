@@ -76,7 +76,7 @@ exports.SpeedLeak = function (test) {
 
 exports.Http = function (test) {
     var express = require('express');
-    var http = require('./serverside/http')
+    var http = require('./transports/serverside/http')
     var request = require('request')
     var app = express.createServer();
 
@@ -119,7 +119,7 @@ exports.Http = function (test) {
 
 exports.Nssocket = function (test) {
 
-    var s = require('./serverside/nssocketWrapper')
+    var s = require('./transports/serverside/nssocketWrapper')
 
     var ServerNode = new s.nssocketServer({ realm: 'tcp', port: 6785 })
     
