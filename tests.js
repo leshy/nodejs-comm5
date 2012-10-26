@@ -119,7 +119,7 @@ exports.Http = function (test) {
 
 exports.Nssocket = function (test) {
 
-    var s = require('./transports/serverside/nssocketWrapper')
+    var s = require('./transports/serverside/nssocket')
 
     var ServerNode = new s.nssocketServer({ realm: 'tcp', port: 6785 })
     
@@ -127,10 +127,9 @@ exports.Nssocket = function (test) {
         client.subscribe(true,function (msg,reply,next,transmit) {
             reply.write({pong: 1})
             reply.end({pong: 2})
-        })
-        
+        })        
     })
-        
+
     var ClientNode = new s.nssocketClient({ realm: 'tcp'});
     
     messages = []

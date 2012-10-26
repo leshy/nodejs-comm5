@@ -1,23 +1,24 @@
-var _ = require('underscore')
-var Backbone = require('backbone4000');
-var decorators = require('decorators'); var decorate = decorators.decorate;
-var helpers = require('helpers')
-
-var v = require('validator2-extras'); var Validator = v.v; var Select = v.Select
-var core = exports.MsgNode = require('../core/'); var MsgNode = core.MsgNode; var Msg = core.Msg
-
-
-var WebsocketWrapper = exports.WebsocketWrapper = core.ConnectionMan.extend4000({ 
-    validator: Validator({ 
-        realm: "String",
-        socket: "Object"
+(function() {
+  var Backbone, Msg, MsgNode, Select, Validator, WebsocketWrapper, core, helpers, v, _;
+  _ = require('underscore');
+  Backbone = require('backbone4000');
+  helpers = require('helpers');
+  Validator = require('validator2-extras');
+  v = Validator.v;
+  Select = Validator.Select;
+  core = require('../core/');
+  MsgNode = core.MsgNode;
+  Msg = core.Msg;
+  WebsocketWrapper = exports.WebsocketWrapper = core.ConnectionMan.extend4000({
+    validator: v({
+      realm: "string",
+      socket: "instance"
     }),
-    
-    tx: function (msgstring) {
-        this.get('socket').emit('msg',msgstring)
+    tx: function(msgstring) {
+      return this.get('socket').emit('msg', msgstring);
     },
-    
-    rx: function (callback) {
-        this.get('socket').on('msg',callback)
+    rx: function(callback) {
+      return this.get('socket').on('msg', callback);
     }
-})
+  });
+}).call(this);

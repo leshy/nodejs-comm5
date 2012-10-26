@@ -6,9 +6,6 @@ var helpers = require('helpers')
 var v = require('validator2-extras'); var Validator = v.v; var Select = v.Select
 var core = exports.MsgNode = require('../../core/'); var MsgNode = core.MsgNode; var Msg = core.Msg
 
-var io = require('socket.io')
-
-var WebsocketWrapper = require('../websocket').WebsocketWrapper
 
 // sets realm for a message to be this.attributes.realm, 
 // passes it to other potential local subscribers and broadcasts message to other nodes connected to this node
@@ -51,22 +48,3 @@ var HttpServer = exports.HttpServer = Backbone.Model.extend4000(
         }
     })
 
-
-var WebsocketServer = exports.WebsocketServer = Backbone.Model.extend4000(
-    MsgNode,
-    v.ValidatedModel,
-    { 
-        validator: Validator({ 
-            realm: "String",
-            express: "Object"
-        }),
-        
-        listen: function (ClientCallback) {
-            var self = this
-            io.listen(this.get('express'))
-
-            io.sockets.on('connection', function (socket) {
-                ClientCallback(new WebsocketWrapper({socket: socket, realm: self.get('realm') }))
-            })
-        }
-    })
