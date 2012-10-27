@@ -53,6 +53,8 @@ Msg.prototype.render = function() {
     return data
 }
 
+Msg.prototype.json = function () { return JSON.stringify(this.render()) }
+
 exports.Msg = Msg
 
 var a = new Msg({bla: 3})

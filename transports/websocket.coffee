@@ -10,6 +10,6 @@ WebsocketWrapper = exports.WebsocketWrapper = core.ConnectionMan.extend4000
     tx: (msgstring) -> 
         @get('socket').emit 'msg', msgstring
     
-    rx: (callback) -> 
+    rx: (callback) ->
         @get('socket').on 'msg', callback
 

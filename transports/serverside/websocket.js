@@ -10,8 +10,8 @@ var WebsocketServer = exports.WebsocketServer = Backbone.Model.extend4000(
     validator.ValidatedModel,
     { 
         validator: v({ 
-            realm: "String",
-            express: "Object"
+            realm: "string",
+            express: "instance"
         }),
         
         listen: function (ClientCallback) {

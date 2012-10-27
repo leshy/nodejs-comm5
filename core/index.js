@@ -57,11 +57,11 @@ var ConnectionMan = exports.ConnectionMan = Backbone.Model.extend4000(
             var streams = {}
             var self = this
             
+
             this.subscribe(true,function (msg,reply,next,transmit) {
                 if (received[msg.meta.id]) {
-                    reply.end(); next(); return
+                    reply.end(); next(); transmit(); return
                 }
-
                 var txmsg = msg.render()
                 txmsg.meta = { id: msg.meta.id }
                 streams[msg.meta.id] = reply // when I receive replies write them here
@@ -75,6 +75,7 @@ var ConnectionMan = exports.ConnectionMan = Backbone.Model.extend4000(
                 } else if (msg.meta.end) {
                     streams[msg.meta.end].end()
                 } else {
+
                     received[msg.meta.id] = true
                     
                     var stream = self.msg(msg)
