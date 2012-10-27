@@ -100,20 +100,18 @@
       update: 'function',
       remove: 'function'
     }),
-    initialize: function() {
-      return this.subscriptions = new SubscriptionMan();
-    },
     create: function(entry, callback) {
       this._super('create', entry, callback);
-      return this.subscriptions.msg({
+      return this.msg({
+        collection: this.get('name'),
         action: 'create',
         entry: entry
       });
     },
     update: function(pattern, update, callback) {
-      console.log('update', pattern, update);
       this._super('update', pattern, update, callback);
-      return this.subscriptions.msg({
+      return this.msg({
+        collection: this.get('name'),
         action: 'update',
         pattern: pattern,
         update: update
@@ -121,18 +119,14 @@
     },
     remove: function(pattern, callback) {
       this._super('remove', pattern, callback);
-      return this.subscriptions.msg({
+      return this.msg({
+        collection: this.get('name'),
         action: 'remove',
         pattern: pattern
       });
     },
     subscribechanges: function(pattern, callback, name) {
-      return this.subscriptions.subscribe({
-        pattern: pattern
-      }, function(changes, next) {
-        callback(changes);
-        return next();
-      });
+      return true;
     },
     unsubscribechanges: function() {
       return true;
@@ -153,12 +147,15 @@
       return this.models[name] = RemoteModel.extend4000.apply(RemoteModel, helpers.push(superclasses, definition));
     },
     resolveModel: function(entry) {
-      if (this.models.length === 1) {
-        return this.models[0];
+      var keys, tmp;
+      keys = _.keys(this.models);
+      if (keys.length === 1) {
+        return this.models[_.first(keys)];
       }
-      if (entry.type) {
-        return this.models[entry.type];
+      if (entry.type && (tmp = this.models[entry.type])) {
+        return tmp;
       }
+      throw "resolve " + JSON.stringify(entry) + " " + _.keys(this.models).join(", ");
     },
     findModels: function(pattern, limits, callback) {
       return this.find(pattern, limits, __bind(function(entry) {
@@ -174,15 +171,6 @@
     validator: v({
       name: "String"
     }),
-    resolveModel: function(entry) {
-      var tmp;
-      if (this.models.length === 1) {
-        this.models[0];
-      } else if (entry.type && (tmp = this.models[entry.type])) {
-        return tmp;
-      }
-      throw "unable to resolve " + JSON.stringify(entry);
-    },
     create: function(entry, callback) {
       return core.msgCallback(this.send({
         collection: this.get('name'),

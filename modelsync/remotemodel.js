@@ -69,7 +69,7 @@
       var changes, id;
       changes = this.exportchanges('store');
       if (helpers.isEmpty(changes)) {
-        callback();
+        helpers.cbc(callback);
       }
       if (!(id = this.get('id'))) {
         return this.collection.create(changes, __bind(function(err, id) {

@@ -55,22 +55,22 @@ CollectionExposer = exports.CollectionExposer = MsgNode.extend4000
 # if this is mixed into a collection,
 # remotemodels will automatically subscribe to those events to update themselves with potential remote changes
 SubscriptionMixin = exports.SubscriptionMixin = Backbone.Model.extend4000
-    superValidator: v { create: 'function', update: 'function', remove: 'function' }
+    superValidator: v({ create: 'function', update: 'function', remove: 'function' })
 
-    create: (entry,callback) ->        
-        @_super 'create',entry,callback
-        @msg { collection: @get 'name', action: 'create', entry: entry }
+    create: (entry,callback) ->
+        @_super 'create', entry, callback
+        @msg { collection: @get('name'), action: 'create', entry: entry }
         
     update: (pattern,update,callback) ->
-        @_super 'update',pattern,update,callback
-        @msg { collection: @get 'name', action: 'update', pattern: pattern, update: update }
+        @_super 'update', pattern, update, callback
+        @msg { collection: @get('name'), action: 'update', pattern: pattern, update: update }
         
     remove: (pattern,callback) ->
-        @_super 'remove',pattern,callback
-        @msg { collection: @get 'name', action: 'remove', pattern: pattern}
+        @_super 'remove', pattern, callback
+        @msg { collection: @get('name'), action: 'remove', pattern: pattern }
 
-    subscribechanges: (pattern,callback,name) ->
-        @subscribe { pattern: pattern }, (changes,next) -> callback(changes); next()
+    subscribechanges: (pattern,callback,name) -> true
+        #@subscribe { pattern: pattern }, (changes,next) -> callback(changes); next()
         
     unsubscribechanges: ->
         true
@@ -89,8 +89,10 @@ ModelMixin = exports.ModelMixin = Backbone.Model.extend4000
         @models[name] = RemoteModel.extend4000.apply RemoteModel, helpers.push(superclasses,definition)
         
     resolveModel: (entry) ->
-        if @models.length is 1 then return @models[0]
-        if (entry.type) then return @models[entry.type]
+        keys = _.keys(@models)
+        if keys.length is 1 then return @models[_.first(keys)]
+        if entry.type and tmp = @models[entry.type] then return tmp
+        throw "resolve " + JSON.stringify(entry) + " " + _.keys(@models).join ", "
    
     findModels: (pattern,limits,callback) ->
         @find pattern,limits,(entry) =>
@@ -100,10 +102,6 @@ ModelMixin = exports.ModelMixin = Backbone.Model.extend4000
 # has the same interface as local collections but it transparently talks to the remote collectionExposer via the messaging system,
 RemoteCollection = exports.RemoteCollection = Backbone.Model.extend4000 ModelMixin, SubscriptionMixin, Validator.ValidatedModel, MsgNode,
     validator: v(name: "String")
-
-    resolveModel: (entry) ->
-        if @models.length is 1 then @models[0] else if entry.type and tmp = @models[entry.type] then return tmp
-        throw "unable to resolve " + JSON.stringify(entry)
             
     create: (entry,callback) -> core.msgCallback @send( collection: @get('name'), create: entry ), callback
     
