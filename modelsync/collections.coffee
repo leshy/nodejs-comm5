@@ -85,14 +85,14 @@ ModelMixin = exports.ModelMixin = Backbone.Model.extend4000
     defineModel: (name,superclasses...,definition) ->
         if not definition.defaults? then definition.defaults = {}
         definition.defaults.collection = this
-        definition.defaults.type = name
+        definition.defaults._t = name
         @models[name] = RemoteModel.extend4000.apply RemoteModel, helpers.push(superclasses,definition)
         
     resolveModel: (entry) ->
         keys = _.keys(@models)
         if keys.length is 1 then return @models[_.first(keys)]
-        if entry.type and tmp = @models[entry.type] then return tmp
-        throw "resolve " + JSON.stringify(entry) + " " + _.keys(@models).join ", "
+        if entry._t and tmp = @models[entry._t] then return tmp
+        throw "unable to resolve " + JSON.stringify(entry) + " " + _.keys(@models).join ", "
    
     findModels: (pattern,limits,callback) ->
         @find pattern,limits,(entry) =>

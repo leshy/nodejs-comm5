@@ -430,7 +430,7 @@
         }
       });
       test.equals(this.c.resolveModel({
-        type: 'bla2'
+        _t: 'bla2'
       }), newmodel2);
       return test.done();
     },
@@ -472,7 +472,7 @@
               test.equals(instance2.get('everythingtogether'), 666);
               test.deepEqual(instance2["export"]('store'), instance1["export"]('store'));
               test.deepEqual(_.omit(instance2["export"]('store', instance2.attributes), 'id'), {
-                type: 'bla1',
+                _t: 'bla1',
                 everythingtogether: 666,
                 somethingelse: 667
               });

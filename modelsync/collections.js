@@ -143,7 +143,7 @@
         definition.defaults = {};
       }
       definition.defaults.collection = this;
-      definition.defaults.type = name;
+      definition.defaults._t = name;
       return this.models[name] = RemoteModel.extend4000.apply(RemoteModel, helpers.push(superclasses, definition));
     },
     resolveModel: function(entry) {
@@ -152,10 +152,10 @@
       if (keys.length === 1) {
         return this.models[_.first(keys)];
       }
-      if (entry.type && (tmp = this.models[entry.type])) {
+      if (entry._t && (tmp = this.models[entry._t])) {
         return tmp;
       }
-      throw "resolve " + JSON.stringify(entry) + " " + _.keys(this.models).join(", ");
+      throw "unable to resolve " + JSON.stringify(entry) + " " + _.keys(this.models).join(", ");
     },
     findModels: function(pattern, limits, callback) {
       return this.find(pattern, limits, __bind(function(entry) {

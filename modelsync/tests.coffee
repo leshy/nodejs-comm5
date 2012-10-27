@@ -203,7 +203,7 @@ exports.EverythingTogether =
         newmodel1 = @c.defineModel 'bla1',{ hi: -> 'bla1' }
         newmodel2 = @c.defineModel 'bla2',{ hi: -> 'bla2' }
         
-        test.equals @c.resolveModel({ type: 'bla2' }), newmodel2
+        test.equals @c.resolveModel({ _t: 'bla2' }), newmodel2
         test.done()
 
     flush: (test) ->
@@ -225,7 +225,7 @@ exports.EverythingTogether =
                         found = true
                         test.equals instance2.get('everythingtogether'), 666
                         test.deepEqual instance2.export('store'), instance1.export('store')
-                        test.deepEqual _.omit(instance2.export('store',instance2.attributes), 'id'), {type: 'bla1', everythingtogether: 666, somethingelse: 667 }
+                        test.deepEqual _.omit(instance2.export('store',instance2.attributes), 'id'), {_t: 'bla1', everythingtogether: 666, somethingelse: 667 }
                         test.equals instance2.get('id').constructor, String
                         
                         id = instance2.get 'id'
