@@ -81,7 +81,7 @@ SubscriptionMixin = exports.SubscriptionMixin = Backbone.Model.extend4000
 ModelMixin = exports.ModelMixin = Backbone.Model.extend4000
     initialize: ->
         @models = {}
-                
+
     defineModel: (name,superclasses...,definition) ->
         if not definition.defaults? then definition.defaults = {}
         definition.defaults.collection = this
@@ -90,7 +90,8 @@ ModelMixin = exports.ModelMixin = Backbone.Model.extend4000
         
     resolveModel: (entry) ->
         keys = _.keys(@models)
-        if keys.length is 1 then return @models[_.first(keys)]
+        if keys.length is 0 then throw "I don't have any models defined"
+        if keys.length is 1 or not entry._t? then return @models[_.first(keys)]
         if entry._t and tmp = @models[entry._t] then return tmp
         throw "unable to resolve " + JSON.stringify(entry) + " " + _.keys(@models).join ", "
    

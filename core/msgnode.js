@@ -45,8 +45,8 @@ var MsgNode = exports.MsgNode = Backbone.Model.extend4000(
             })
         },
 
-        passthrough: function () { // allow all messages to pass through this node
-            this.subscribe(true,function (msg,reply,next,transmit) { reply.end(); transmit(); })
+        pass: function (pattern) { // allow all messages to pass through this node
+            this.subscribe(pattern || true, function (msg,reply,next,transmit) { reply.end(); transmit(); next() })
         },
 
         msg: decorate(decorators.MakeObjReceiver(Msg), function (msg) {

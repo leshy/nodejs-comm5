@@ -149,7 +149,10 @@
     resolveModel: function(entry) {
       var keys, tmp;
       keys = _.keys(this.models);
-      if (keys.length === 1) {
+      if (keys.length === 0) {
+        throw "I don't have any models defined";
+      }
+      if (keys.length === 1 || !(entry._t != null)) {
         return this.models[_.first(keys)];
       }
       if (entry._t && (tmp = this.models[entry._t])) {
