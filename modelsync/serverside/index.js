@@ -6,7 +6,6 @@
       return exports[name] = f;
     });
   };
-  mount(require('./core'));
-  mount(require('./modelsync'));
-  mount(require('./transports/clientside/websocket'));
+  mount(require('./mongodb'));
+  mount(require('../index'));
 }).call(this);

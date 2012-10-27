@@ -17,9 +17,11 @@ var WebsocketServer = exports.WebsocketServer = Backbone.Model.extend4000(
         listen: function (ClientCallback) {
             var self = this
             var server = io.listen(this.get('express'))
-
+//            server.set('log level',1)
             server.on('connection', function (socket) {
                 ClientCallback(new WebsocketWrapper({socket: socket, realm: self.get('realm') }))
             })
         }
     })
+
+

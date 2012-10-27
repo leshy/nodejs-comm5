@@ -36,7 +36,6 @@ var ServerMan = exports.ServerMan = Backbone.Model.extend4000(
         validator: Validator({ protocol: Validator(true),
                                options: Validator().Default({}).Object() }),
                                
-        
         initialize: function () {
             this.server = this.get('protocol')
             this.server.start(this.get('options'))
@@ -93,5 +92,4 @@ var ConnectionMan = exports.ConnectionMan = Backbone.Model.extend4000(
 
         }
     })
-
 
