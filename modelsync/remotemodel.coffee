@@ -17,6 +17,7 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
         # once the object has been saved, we can request a subscription to its changes (this will be automatic for in the future)
         @when 'id', (id) =>
             @collection.subscribechanges { id: id }, @remoteChange.bind(@)
+                
             @on 'change', @changed
 
         # if we haven't been saved yet, we want to flush all our attributes when flush is called..
@@ -32,7 +33,7 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
         _.extend @changes, helpers.hashmap(change, -> true)
 
     export: (realm,attrs) ->
-        return helpers.hashfind attrs, (value,property) => @attributes[property]
+        return helpers.hashfilter attrs, (value,property) => @attributes[property]
 
     exportchanges: (realm) ->
         ret = @export(realm,@changes)

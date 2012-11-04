@@ -49,7 +49,7 @@
       }));
     },
     "export": function(realm, attrs) {
-      return helpers.hashfind(attrs, __bind(function(value, property) {
+      return helpers.hashfilter(attrs, __bind(function(value, property) {
         return this.attributes[property];
       }, this));
     },

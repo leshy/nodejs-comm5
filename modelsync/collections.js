@@ -126,7 +126,14 @@
       });
     },
     subscribechanges: function(pattern, callback, name) {
-      return true;
+      return this.subscribe({
+        pattern: pattern
+      }, function(msg, reply, next, transmit) {
+        reply.end();
+        next();
+        transmit();
+        return callback(msg);
+      });
     },
     unsubscribechanges: function() {
       return true;

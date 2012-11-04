@@ -44,10 +44,9 @@ CollectionExposer = exports.CollectionExposer = MsgNode.extend4000
         
         # subscribe to specific model changes/broadcasts
         @subscribe { collection: name, subscribe: "Object", tags: "Array" },
-            (msg,reply,next,transmit) =>
-                @subscribe msg.subscribe, (event) =>
-                    reply.write(event)
-
+            (msg,reply,next,transmit) => @subscribe msg.subscribe, (event) => reply.write(event)
+            # this wont work for remote collections?
+            
 
 # this can be mixed into a RemoteCollection or Collection itself.
 # it provides subscribe and unsubscribe methods for collection events (remove/update/create)
@@ -69,8 +68,8 @@ SubscriptionMixin = exports.SubscriptionMixin = Backbone.Model.extend4000
         @_super 'remove', pattern, callback
         @msg { collection: @get('name'), action: 'remove', pattern: pattern }
 
-    subscribechanges: (pattern,callback,name) -> true
-        #@subscribe { pattern: pattern }, (changes,next) -> callback(changes); next()
+    subscribechanges: (pattern,callback,name) ->
+        @subscribe { pattern: pattern }, (msg,reply,next,transmit) -> reply.end(); next(); transmit(); callback(msg);
         
     unsubscribechanges: ->
         true
