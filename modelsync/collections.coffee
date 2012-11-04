@@ -85,7 +85,7 @@ ModelMixin = exports.ModelMixin = Backbone.Model.extend4000
         if not definition.defaults? then definition.defaults = {}
         definition.defaults.collection = this
         definition.defaults._t = name
-        @models[name] = RemoteModel.extend4000.apply RemoteModel, helpers.push(superclasses,definition)
+        @models[name] = RemoteModel.extend4000.apply RemoteModel, superclasses.concat(definition)
         
     resolveModel: (entry) ->
         keys = _.keys(@models)

@@ -151,7 +151,7 @@
       }
       definition.defaults.collection = this;
       definition.defaults._t = name;
-      return this.models[name] = RemoteModel.extend4000.apply(RemoteModel, helpers.push(superclasses, definition));
+      return this.models[name] = RemoteModel.extend4000.apply(RemoteModel, superclasses.concat(definition));
     },
     resolveModel: function(entry) {
       var keys, tmp;
