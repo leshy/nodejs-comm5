@@ -37,27 +37,26 @@
     find: function(test) {
       var found;
       found = false;
-      this.c.create({
+      return this.c.create({
         bla: 3
-      }, function(err, data) {
+      }, __bind(function(err, data) {
         if ((data != null) && !(err != null)) {
           this.created = data;
-          return test.done();
+          return this.c.find({
+            bla: 3
+          }, {}, __bind(function(entry) {
+            if (String(entry != null ? entry.id : void 0) === this.created) {
+              found = true;
+            }
+            if (!(entry != null)) {
+              test.equals(found, true);
+              return test.done();
+            }
+          }, this));
         } else {
           return test.fail();
         }
-      });
-      return this.c.find({
-        bla: 3
-      }, {}, function(entry) {
-        if (String(entry != null ? entry._id : void 0) === this.created) {
-          found = true;
-        }
-        if (!(entry != null)) {
-          test.equals(found, true);
-          return test.done();
-        }
-      });
+      }, this));
     },
     remove: function(test) {
       return this.c.create({
@@ -234,27 +233,26 @@
     find: function(test) {
       var found;
       found = false;
-      this.c.create({
+      return this.c.create({
         bla: 3
-      }, function(err, data) {
+      }, __bind(function(err, data) {
         if ((data != null) && !(err != null)) {
           this.created = data;
-          return test.done();
+          return this.c.find({
+            bla: 3
+          }, {}, __bind(function(entry) {
+            if (String(entry != null ? entry.id : void 0) === this.created) {
+              found = true;
+            }
+            if (!(entry != null)) {
+              test.equals(found, true);
+              return test.done();
+            }
+          }, this));
         } else {
           return test.fail();
         }
-      });
-      return this.c.find({
-        bla: 3
-      }, {}, function(entry) {
-        if (String(entry != null ? entry._id : void 0) === this.created) {
-          found = true;
-        }
-        if (!(entry != null)) {
-          test.equals(found, true);
-          return test.done();
-        }
-      });
+      }, this));
     },
     remove: function(test) {
       return this.c.create({

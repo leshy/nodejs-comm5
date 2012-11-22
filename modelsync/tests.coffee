@@ -18,10 +18,12 @@ exports.mongo =
             
     find: (test) ->
         found = false
-        @c.create {bla: 3}, (err,data) -> if data? and not err? then @created = data; test.done() else test.fail()
-        @c.find {bla: 3}, {}, (entry) ->
-            if String(entry?._id) is @created then found = true
-            if not entry? then test.equals(found,true); test.done()
+        @c.create {bla: 3}, (err,data) => if data? and not err?
+            @created = data;
+            @c.find {bla: 3}, {}, (entry) =>
+                if String(entry?.id) is @created then found = true
+                if not entry? then test.equals(found,true); test.done()
+        else test.fail()
 
     remove: (test) ->
         @c.create {bla: 3}, (err,id) => if id? and err? then test.fail() else
@@ -92,13 +94,15 @@ exports.mongoRemote =
     
     create: (test) ->
         @c.create {bla: 3}, (err,data) -> if data? and not err? then @created = data; test.done() else test.fail()
-                        
+        
     find: (test) ->
         found = false
-        @c.create {bla: 3}, (err,data) -> if data? and not err? then @created = data; test.done() else test.fail()
-        @c.find {bla:3}, {}, (entry) ->
-            if String(entry?._id) is @created then found = true
-            if not entry? then test.equals(found,true); test.done()
+        @c.create {bla: 3}, (err,data) => if data? and not err?
+            @created = data;
+            @c.find {bla: 3}, {}, (entry) =>
+                if String(entry?.id) is @created then found = true
+                if not entry? then test.equals(found,true); test.done()
+        else test.fail()
 
     remove: (test) ->
         @c.create {bla: 3}, (err,id) => if id? and err? then test.fail("didn't get anything") else
