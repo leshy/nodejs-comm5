@@ -1,9 +1,7 @@
 _ = require 'underscore'
 
-mount = (obj) -> _.map obj, (f,name) -> exports[name] = f
-
-mount require './core'
-mount require './modelsync/serverside'
-mount require './transports/serverside/http'
-mount require './transports/serverside/websocket'
-mount require './transports/serverside/nssocket'
+_.extend exports, require './core'
+_.extend exports, require './modelsync/serverside'
+_.extend exports, require './transports/serverside/http'
+_.extend exports, require './transports/serverside/websocket'
+_.extend exports, require './transports/serverside/nssocket'
