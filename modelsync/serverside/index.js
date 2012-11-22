@@ -1,11 +1,6 @@
 (function() {
-  var mount, _;
+  var _;
   _ = require('underscore');
-  mount = function(obj) {
-    return _.map(obj, function(f, name) {
-      return exports[name] = f;
-    });
-  };
-  mount(require('./mongodb'));
-  mount(require('../index'));
+  _.extend(exports, require('./mongodb'));
+  _.extend(exports, require('../index'));
 }).call(this);

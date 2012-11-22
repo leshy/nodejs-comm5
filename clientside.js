@@ -1,12 +1,7 @@
 (function() {
-  var mount, _;
+  var _;
   _ = require('underscore');
-  mount = function(obj) {
-    return _.map(obj, function(f, name) {
-      return exports[name] = f;
-    });
-  };
-  mount(require('./core'));
-  mount(require('./modelsync'));
-  mount(require('./transports/clientside/websocket'));
+  _.extend(exports, require('./core'));
+  _.extend(exports, require('./modelsync'));
+  _.extend(exports, require('./transports/clientside/websocket'));
 }).call(this);

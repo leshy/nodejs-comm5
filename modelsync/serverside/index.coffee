@@ -1,6 +1,5 @@
 _ = require 'underscore'
-mount = (obj) -> _.map obj, (f,name) -> exports[name] = f
 
-mount require './mongodb' 
-mount require '../index'
+_.extend exports, require './mongodb' 
+_.extend exports, require '../index'
 
