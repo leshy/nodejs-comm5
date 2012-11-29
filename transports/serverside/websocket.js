@@ -3,7 +3,7 @@ var Backbone = require('backbone4000')
 var WebsocketWrapper = require('../websocket').WebsocketWrapper
 var io = require('socket.io')
 var validator = require('validator2-extras'); var v = validator.v; var Select = validator.Select
-var core = exports.MsgNode = require('../../core/'); var MsgNode = core.MsgNode; var Msg = core.Msg
+var core = require('../../core/'); var MsgNode = core.MsgNode; var Msg = core.Msg
 var helpers = require('helpers')
 
 var WebsocketServer = exports.WebsocketServer = Backbone.Model.extend4000(

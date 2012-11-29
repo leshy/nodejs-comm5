@@ -40,7 +40,7 @@ exports.mongo =
     tearDown: (callback) ->
         @db.close()
         callback()
-    
+
 exports.mongoNode =
     setUp: (callback) ->
         @mongoC = require './serverside/mongodb'
@@ -73,7 +73,7 @@ exports.mongoNode =
         response.read (msg) ->
             if not msg then test.done()
 
-        
+                
 exports.mongoRemote =
     setUp: (callback) ->
         @mongoC = require './serverside/mongodb'
@@ -82,6 +82,7 @@ exports.mongoRemote =
         @db = new @mongo.Db('testdb',new @mongo.Server('localhost',27017), {safe: true });
         
         realcollection = new @mongoC.MongoCollectionNode { db: @db, collection: 'test' }
+        
         @c = new @collections.RemoteCollection { db: @db, name: 'test' }
 
         realcollection.connect @c
