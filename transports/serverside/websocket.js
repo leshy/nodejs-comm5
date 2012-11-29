@@ -15,12 +15,15 @@ var WebsocketServer = exports.WebsocketServer = Backbone.Model.extend4000(
             express: "instance"
         }),
         
-        initialize: function () { this.pass() },
+        initialize: function () {
+            this.subscribe(true, function (msg,reply,next,transmit) {
+                reply.end(); transmit();
+            })
+        },
 
         listen: function (ClientCallback) {
             var self = this
             var server = io.listen(this.get('express'))
-//            server.set('log level',1)
             server.on('connection', function (socket) {
                 var client = new WebsocketWrapper({socket: socket, realm: self.get('realm') })
                 self.addconnection(client)

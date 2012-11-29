@@ -101,12 +101,16 @@
       remove: 'function'
     }),
     create: function(entry, callback) {
-      this._super('create', entry, callback);
-      return this.msg({
-        collection: this.get('name'),
-        action: 'create',
-        entry: entry
-      });
+      return this._super('create', entry, __bind(function(err, id) {
+        this.msg({
+          collection: this.get('name'),
+          action: 'create',
+          entry: _.extend({
+            id: id
+          }, entry)
+        });
+        return callback(err, id);
+      }, this));
     },
     update: function(pattern, update, callback) {
       this._super('update', pattern, update, callback);

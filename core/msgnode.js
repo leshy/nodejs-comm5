@@ -88,7 +88,6 @@ var MsgNode = exports.MsgNode = Backbone.Model.extend4000(
             })
 
             mainStream.on('end',function () { 
-                //self.log(['stream',9],'mainstream end')
                 delete self.messages[msg.meta.id]
             })
 
@@ -101,7 +100,7 @@ var MsgNode = exports.MsgNode = Backbone.Model.extend4000(
                 this.connections.map(function (node) {
                     return function (callback) {
                         var Stream = node.msg(msg)
-                        if (Stream) { replyStream.addchild(Stream) }
+                        if (Stream) { replyStream.addchild(Stream) }                        
                         callback()
                     }
                 }))

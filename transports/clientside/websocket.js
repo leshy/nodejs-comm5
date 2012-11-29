@@ -16,11 +16,7 @@
       realm: 'string'
     }),
     initialize: function() {
-      return this.subscribe(true, function(msg, reply, next, transmit) {
-        reply.end();
-        next();
-        return transmit();
-      });
+      return this.pass();
     },
     connect: function(host, callback) {
       var client, socket;

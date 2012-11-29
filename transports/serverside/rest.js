@@ -21,16 +21,42 @@
       root = this.get('root');
       this.subscribe({
         http: 'GET',
+        url: v().regex(new RegExp(root + "(.*)\/(.*)\/(.*)", "g"))
+      }, __bind(function(msg, reply, next, transmit) {
+        var attribute, collection, find, res, searchstring;
+        collection = msg.url[1];
+        attribute = msg.url[2];
+        searchstring = msg.url[3];
+        find = {};
+        find[attribute] = {
+          '$regex': '.*' + searchstring + '.*'
+        };
+        console.log(find);
+        res = this.send({
+          collection: collection,
+          find: find,
+          limits: {}
+        });
+        return res.read(function(msg) {
+          if (msg) {
+            return reply.write(msg.data);
+          } else {
+            return reply.end();
+          }
+        });
+      }, this));
+      this.subscribe({
+        http: 'GET',
         url: v().regex(new RegExp(root + "(.*)\/(.*)", "g"))
       }, __bind(function(msg, reply, next, transmit) {
-        var collection, res, search;
+        var collection, res, searchstring;
         collection = msg.url[1];
-        search = msg.url[2];
+        searchstring = msg.url[2];
         res = this.send({
           collection: collection,
           find: {
             title: {
-              '$regex': '.*' + search + '.*'
+              '$regex': '.*' + searchstring + '.*'
             }
           },
           limits: {}

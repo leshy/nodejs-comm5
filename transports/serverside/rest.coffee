@@ -13,12 +13,26 @@ Rest = exports.Rest = Backbone.Model.extend4000 MsgNode, Validator.ValidatedMode
     initialize: ->
         root = @get 'root'
 
-        # search request
+        # specific field search request
+        @subscribe { http: 'GET', url: v().regex(new RegExp(root + "(.*)\/(.*)\/(.*)", "g")) }, (msg,reply,next,transmit) =>
+            collection = msg.url[1]
+            attribute = msg.url[2]
+            searchstring = msg.url[3]
+
+            find = {}
+            find[attribute] =  { '$regex' : '.*' + searchstring + '.*' }
+            console.log(find)
+
+            res = @send collection: collection, find: find, limits: {}
+            res.read (msg) ->
+                if (msg) then reply.write msg.data else reply.end()
+
+
+        # general search request
         @subscribe { http: 'GET', url: v().regex(new RegExp(root + "(.*)\/(.*)", "g")) }, (msg,reply,next,transmit) =>
             collection = msg.url[1]
-            search = msg.url[2]
-            
-            res = @send collection: collection, find: { title: { '$regex' : '.*' + search + '.*' } }, limits: {}
+            searchstring = msg.url[2]
+            res = @send collection: collection, find: { title: { '$regex' : '.*' + searchstring + '.*' } }, limits: {}
             
             res.read (msg) ->
                 if (msg) then reply.write msg.data else reply.end()
@@ -26,7 +40,6 @@ Rest = exports.Rest = Backbone.Model.extend4000 MsgNode, Validator.ValidatedMode
         # list request
         @subscribe { http: 'GET', url: v().regex(new RegExp(root + "(.*)", "g")) }, (msg,reply,next,transmit) =>
             collection = msg.url[1]
-
             res = @send collection: collection, find: {}, limits: {}
             res.read (msg) ->
                 if (msg) then reply.write msg.data else reply.end()
@@ -37,4 +50,3 @@ Rest = exports.Rest = Backbone.Model.extend4000 MsgNode, Validator.ValidatedMode
             id = msg.url[2]
             reply.write({ collection: name, book: id , update: 'unknwon' })
             reply.end()
-        

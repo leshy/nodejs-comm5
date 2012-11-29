@@ -12,12 +12,12 @@ WebsocketClient = exports.WebsocketClient = Backbone.Model.extend4000 MsgNode, V
     validator: v { realm: 'string' }
     
     initialize: ->
-        @subscribe true, (msg,reply,next,transmit) -> reply.end(); next(); transmit();
+        @pass()
             
     connect: (host,callback) ->
-        socket = io.connect(host)
-        client = new WebsocketWrapper({ realm: @get('realm'), socket: socket })
-        socket.on('connect',callback)
+        socket = io.connect host
+        client = new WebsocketWrapper { realm: @get('realm'), socket: socket }
+        socket.on 'connect', callback 
         @addconnection client
 
     end: -> @del()
