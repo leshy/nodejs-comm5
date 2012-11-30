@@ -11,8 +11,8 @@ var WebsocketServer = exports.WebsocketServer = Backbone.Model.extend4000(
     validator.ValidatedModel,
     { 
         validator: v({ 
-            realm: "string",
-            express: "instance"
+            realm: "String",
+            http: "Instance"
         }),
         
         initialize: function () {
@@ -23,7 +23,7 @@ var WebsocketServer = exports.WebsocketServer = Backbone.Model.extend4000(
 
         listen: function (ClientCallback) {
             var self = this
-            var server = io.listen(this.get('express'))
+            var server = io.listen(this.get('http'))
             server.on('connection', function (socket) {
                 var client = new WebsocketWrapper({socket: socket, realm: self.get('realm') })
                 self.addconnection(client)

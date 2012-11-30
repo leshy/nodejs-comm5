@@ -12,7 +12,7 @@ var HttpServer = exports.HttpServer = Backbone.Model.extend4000(
     MsgNode,
     v.ValidatedModel,
     {        
-        validator: Validator({ express: "Instance", realm: "String",  root: Validator().Default("/") }),
+        validator: Validator({ express: true, realm: "String",  root: Validator().Default("/") }),
         initialize: function () {
             var self = this
             var app = this.get('express')
