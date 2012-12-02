@@ -13,7 +13,8 @@
         "subscriptionman": "git://github.com/leshy/nodejs-subscriptionman.git",
         "graph": "git://github.com/leshy/nodejs-graph.git",
         "helpers": "git://github.com/leshy/nodejs-helpers.git",
-        "validator2-extras": "git://github.com/leshy/nodejs-validator2-extras.git"
+        "validator2-extras": "git://github.com/leshy/nodejs-validator2-extras.git",
+	"decorators": "git://github.com/leshy/nodejs-decorators.git"
     },
     "main": "index",
     "engines": {
