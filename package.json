@@ -9,12 +9,13 @@
     },
     "dependencies": {
         "underscore": "underscore >= 1.3.x",
+        "nssocket": "nssocket = 0.3.8",
         "backbone4000": "git://github.com/leshy/backbone4000.git",
         "subscriptionman": "git://github.com/leshy/nodejs-subscriptionman.git",
         "graph": "git://github.com/leshy/nodejs-graph.git",
         "helpers": "git://github.com/leshy/nodejs-helpers.git",
         "validator2-extras": "git://github.com/leshy/nodejs-validator2-extras.git",
-	"decorators": "git://github.com/leshy/nodejs-decorators.git"
+	    "decorators": "git://github.com/leshy/nodejs-decorators.git"
     },
     "main": "index",
     "engines": {
