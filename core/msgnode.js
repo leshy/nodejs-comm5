@@ -26,16 +26,14 @@ var MsgNode = exports.MsgNode = Backbone.Model.extend4000(
                                self.log([ 'weirdness', 'msg', 'msgnode', 'core' ], this.get('name') + " got replyto message but didn't get a path")
                                reply.end()
                            })
-
             // replies are allowed to pass through
             this.subscribe({ meta: Validator({ replyto: true, path: "Array"})}, function (msg,reply,next,transmit) { transmit(); next(); })
-
         },
         
         log: function (tags,msg,extras,logger) {
             if (!extras) { extras = {} }
             if (!logger && !(logger = this.get('logger'))) { console.log (String(new Date().getTime()).yellow + " " +  this.get('name').green, tags, msg); return }
-            logger.msg(_.extend(extras,{ tags: tags, msg: msg }))
+            logger.log(_.extend( extras ,{ tags: tags, msg: msg }))
         },
 
         connect: function () {
