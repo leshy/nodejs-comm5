@@ -76,10 +76,11 @@ exports.SpeedLeak = function (test) {
 
 exports.Http = function (test) {
     var express = require('express');
-    var http = require('./transports/serverside/http')
+    var httpTransport = require('./transports/serverside/http')
+    var http = require('http')
     var request = require('request')
-    var app = express.createServer();
-
+    var app = express()
+    
 
     app.configure(function(){
         app.set('views', __dirname + '/views');
@@ -91,9 +92,10 @@ exports.Http = function (test) {
         app.use(express.static(__dirname + '/static'));
     });
 
-    app.listen(8000);
+    server = http.createServer(app)
+    server.listen(8000);
 
-    var server = new http.HttpServer({express: app, name: "http"})
+    var server = new httpTransport.HttpServer({express: app, name: "http"})
     
     var responder = new comm.MsgNode({name: "echo"})
     
@@ -106,6 +108,7 @@ exports.Http = function (test) {
     })
 
     request('http://localhost:8000', function (error, response, body) {
+        console.log(error,response,body)
         if (!error && response.statusCode == 200) {
             test.deepEqual(_.map(helpers.trim(body).split('\n'), function (string) { return JSON.parse(string)}), [ { oh: 'hi' }, { bla: '33' } ])
             app.close()
@@ -148,3 +151,4 @@ exports.Nssocket = function (test) {
     ClientNode.connect('localhost',6785);
 
 }
+
