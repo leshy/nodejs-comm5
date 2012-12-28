@@ -22,7 +22,7 @@
         this.collection.subscribechanges({
           id: id
         }, this.remoteChange.bind(this));
-        return this.on('change', this.changed);
+        return this.on('change', this.changed.bind(this));
       }, this));
       if (this.get('id')) {
         return this.changes = {};
