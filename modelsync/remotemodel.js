@@ -22,7 +22,7 @@
         this.collection.subscribechanges({
           id: id
         }, this.remoteChange.bind(this));
-        return this.on('change', this.changed.bind(this));
+        return this.on('change', this.remotechange.bind(this));
       }, this));
       if (this.get('id')) {
         return this.changes = {};
@@ -40,7 +40,7 @@
           });
       }
     },
-    changed: function(model, data) {
+    remotechange: function(model, data) {
       var change;
       change = model.changedAttributes();
       delete change.id;
