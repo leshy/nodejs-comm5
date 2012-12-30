@@ -49,10 +49,11 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
     flushnow: (callback) ->
         changes = @exportchanges('store')
         if helpers.isEmpty(changes) then helpers.cbc(callback)
-        if not id = @get 'id' then @collection.create changes, (err,id) => @set 'id', id; callback(err,id)
+        if not id = @get 'id' then @collection.create changes, (err,id) => @set 'id', id; helpers.cbc callback, err, id
         else @collection.update {id: id}, changes, callback
 
-    remove: (callback) ->
-        @trigger('remove')
+    del: (callback) ->
+        console.log('triggering del')
+        @trigger 'del', @
         if id = @get 'id' then @collection.remove {id: id}, callback else callback()
     

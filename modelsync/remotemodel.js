@@ -74,7 +74,7 @@
       if (!(id = this.get('id'))) {
         return this.collection.create(changes, __bind(function(err, id) {
           this.set('id', id);
-          return callback(err, id);
+          return helpers.cbc(callback, err, id);
         }, this));
       } else {
         return this.collection.update({
@@ -82,9 +82,10 @@
         }, changes, callback);
       }
     },
-    remove: function(callback) {
+    del: function(callback) {
       var id;
-      this.trigger('remove');
+      console.log('triggering del');
+      this.trigger('del', this);
       if (id = this.get('id')) {
         return this.collection.remove({
           id: id

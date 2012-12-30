@@ -54,8 +54,6 @@ var MsgNode = exports.MsgNode = Backbone.Model.extend4000(
             
             var mainStream = new (this.get('stream'))({name: "mainStream-" + this.get('name')})
             var _transmit = false
-
-            msg.meta.breadcrumbs.push(this)
             
             function transmit () { _transmit = true }
             

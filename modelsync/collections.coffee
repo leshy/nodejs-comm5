@@ -14,7 +14,7 @@ CollectionExposer = exports.CollectionExposer = MsgNode.extend4000
     defaults: { name: undefined }
     initialize: ->
         name = @get 'name'
-        
+
         # create
         @subscribe { collection: name, create: "Object" },
             (msg,reply,next,transmit) => @create msg.create, core.callbackMsgEnd reply
