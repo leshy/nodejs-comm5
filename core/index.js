@@ -55,10 +55,13 @@ var ConnectionMan = exports.ConnectionMan = Backbone.Model.extend4000(
             var received = {}
             var streams = {}
             var self = this            
-
+            var options = this.get('options')
+            var notransmit = false
+            if (options) { notransmit = options.notransmit }
+            
             this.subscribe(true,function (msg,reply,next,transmit) {
                 if (received[msg.meta.id]) {
-                    reply.end(); next(); transmit(); return
+                    reply.end(); next(); if (!notransmit) { transmit() }; return
                 }
                 var txmsg = msg.render()
                 txmsg.meta = { id: msg.meta.id }
