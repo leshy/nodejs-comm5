@@ -82,11 +82,24 @@ var Stream = exports.Stream = Backbone.Model.extend4000(
             if (!pattern) { pattern = true }
             return this.subscribe(pattern,callback)
         },
+
+
+        readPattern: function (pattern,callback) {
+            if (!pattern) { pattern = true }
+            return this.subscribe(pattern,callback)
+        },
         
         readOne: function (callback,pattern) {
             if (!pattern) { pattern = true }
             return this.oneshot(pattern,callback)
         },
+
+
+        readPatternOne: function (pattern,callback) {
+            if (!pattern) { pattern = true }
+            return this.oneshot(pattern,callback)
+        },
+
 
         each: function (callback) { this.read(callback) }
 
