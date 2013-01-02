@@ -7,8 +7,8 @@ core = require '../core/'; MsgNode = core.MsgNode; Msg = core.Msg
 WebsocketWrapper = exports.WebsocketWrapper = core.ConnectionMan.extend4000
     validator: v { realm: "string", socket: "instance" }
 
-    initialize: -> @get('socket').on 'disconnect', => @del()
+    initialize: -> @get('socket').on 'disconnect', => @trigger 'disconnect'
 
-    tx: (msgstring) ->  @get('socket').emit 'msg', msgstring
+    tx: (msgstring) -> @get('socket').emit 'msg', msgstring
     rx: (callback) -> @get('socket').on 'msg', callback
 

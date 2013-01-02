@@ -26,6 +26,7 @@ var WebsocketServer = exports.WebsocketServer = Backbone.Model.extend4000(
             var server = io.listen(this.get('http'), this.get('options').socketio || {})
             server.on('connection', function (socket) {
                 var client = new WebsocketWrapper({socket: socket, realm: self.get('realm'), options: self.get('options') })
+                client.on('disconnect', function () { client.del() })
                 self.addconnection(client)
                 helpers.cbc(ClientCallback,client)
             })

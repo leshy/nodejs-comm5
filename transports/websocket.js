@@ -17,7 +17,7 @@
     }),
     initialize: function() {
       return this.get('socket').on('disconnect', __bind(function() {
-        return this.del();
+        return this.trigger('disconnect');
       }, this));
     },
     tx: function(msgstring) {
