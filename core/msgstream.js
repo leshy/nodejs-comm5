@@ -78,28 +78,17 @@ var Stream = exports.Stream = Backbone.Model.extend4000(
             if (this._ended && (!this.childrencounter)) { return true } else { return false }
         },
                 
-        read: function (callback,pattern) {
-            if (!pattern) { pattern = true }
-            return this.subscribe(pattern,callback)
-        },
-
-
-        readPattern: function (pattern,callback) {
+        read: function (arg1,arg2) {
+            if (arg1.constructor == Function) { callback = arg1; pattern = arg2 } else { callback = arg2; pattern = arg1 }
             if (!pattern) { pattern = true }
             return this.subscribe(pattern,callback)
         },
         
-        readOne: function (callback,pattern) {
+        readOne: function (arg1,arg2) {
+            if (arg1.constructor == Function) { callback = arg1; pattern = arg2 } else { callback = arg2; pattern = arg1 }
             if (!pattern) { pattern = true }
             return this.oneshot(pattern,callback)
         },
-
-
-        readPatternOne: function (pattern,callback) {
-            if (!pattern) { pattern = true }
-            return this.oneshot(pattern,callback)
-        },
-
 
         each: function (callback) { this.read(callback) }
 
