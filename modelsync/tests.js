@@ -476,7 +476,7 @@
               });
               test.equals(instance2.get('id').constructor, String);
               id = instance2.get('id');
-              return instance2.remove(function() {
+              return instance2.del(__bind(function() {
                 return this.c.findModels({
                   id: id
                 }, __bind(function(model) {
@@ -486,7 +486,7 @@
                     return false;
                   }
                 }, this));
-              });
+              }, this));
             }
           }, this));
         }, this));

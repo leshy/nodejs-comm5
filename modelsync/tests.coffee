@@ -235,6 +235,6 @@ exports.EverythingTogether =
                         
                         id = instance2.get 'id'
                         
-                        instance2.remove ->                 
+                        instance2.del =>                 
                             @c.findModels { id: id }, (model) =>
                                 if (model) then test.fail() else false
