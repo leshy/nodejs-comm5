@@ -92,7 +92,6 @@
     },
     del: function(callback) {
       var id;
-      console.log('triggering del');
       this.trigger('del', this);
       if (id = this.get('id')) {
         return this.collection.remove({

@@ -86,6 +86,21 @@
       }, this));
       this.subscribe({
         collection: name,
+        findOne: "Object"
+      }, __bind(function(msg, reply, next, transmit) {
+        return this.findOne(msg.findOne, __bind(function(entry) {
+          if (entry != null) {
+            return reply.write({
+              data: entry,
+              err: void 0
+            });
+          } else {
+            return reply.end();
+          }
+        }, this));
+      }, this));
+      this.subscribe({
+        collection: name,
         subscribe: "Object",
         tags: "Array"
       }, __bind(function(msg, reply, next, transmit) {
@@ -198,6 +213,15 @@
         }
       }, this));
     },
+    findModel: function(pattern, callback) {
+      return this.findOne(pattern, __bind(function(entry) {
+        if (!(entry != null)) {
+          return callback();
+        } else {
+          return callback(new (this.resolveModel(entry))(entry));
+        }
+      }, this));
+    },
     fcall: function(name, args, pattern, callback) {
       return this.findModels(pattern, {}, function(model) {
         if (model != null) {
@@ -241,6 +265,20 @@
         collection: this.get('name'),
         find: pattern,
         limits: limits
+      });
+      return reply.read(function(msg) {
+        if (msg) {
+          return callback(msg.data);
+        } else {
+          return callback();
+        }
+      });
+    },
+    findOne: function(pattern, callback) {
+      var reply;
+      reply = this.send({
+        collection: this.get('name'),
+        findOne: pattern
       });
       return reply.read(function(msg) {
         if (msg) {

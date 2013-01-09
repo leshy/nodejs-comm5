@@ -457,6 +457,55 @@
         });
       }, this));
     },
+    findOne: function(test) {
+      var instance1, instance2, newmodel1;
+      newmodel1 = this.c.defineModel('findonetest', {
+        hi: function() {
+          return 'bla1';
+        }
+      });
+      instance1 = new newmodel1({
+        blabla: 3,
+        f: 5
+      });
+      instance2 = new newmodel1({
+        blabla: 3,
+        f: 8
+      });
+      return instance1.flush(__bind(function() {
+        return instance2.flush(__bind(function() {
+          test.equals(Boolean(instance1.get('id')), true);
+          test.equals(Boolean(instance2.get('id')), true);
+          test.notEqual(instance1.get('id', instance2.get('id')));
+          return this.c.findModel({
+            id: instance1.get('id')
+          }, __bind(function(model) {
+            var found;
+            test.equals(Boolean(model), true);
+            found = false;
+            return this.c.findModel({
+              blabla: 3
+            }, __bind(function(model) {
+              test.equals(Boolean(model), true);
+              if (found) {
+                test.fail('findmodel returned two results');
+              }
+              found = true;
+              return this.c.findModel({
+                something_nonexistant: 'nonexistant'
+              }, __bind(function(nonexistant) {
+                test.equals(nonexistant, void 0);
+                return instance1.del(__bind(function() {
+                  return instance2.del(__bind(function() {
+                    return test.done();
+                  }, this));
+                }, this));
+              }, this));
+            }, this));
+          }, this));
+        }, this));
+      }, this));
+    },
     flush: function(test) {
       var instance1, newmodel1, newmodel2;
       newmodel1 = this.c.defineModel('bla1', {

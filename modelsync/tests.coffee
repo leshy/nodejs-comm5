@@ -230,6 +230,37 @@ exports.EverythingTogether =
                 test.done()
 
 
+
+    findOne: (test) ->
+        newmodel1 = @c.defineModel 'findonetest',{ hi: -> 'bla1' }
+
+        instance1 = new newmodel1 { blabla: 3, f: 5 }
+        instance2 = new newmodel1 { blabla: 3, f: 8}
+
+        instance1.flush =>
+            instance2.flush =>
+
+                test.equals Boolean(instance1.get 'id'), true
+                test.equals Boolean(instance2.get 'id'), true
+
+                test.notEqual instance1.get 'id', instance2.get 'id'
+
+                @c.findModel { id: instance1.get 'id' }, (model) =>
+                    test.equals Boolean(model), true
+
+                    found = false
+                    
+                    @c.findModel { blabla: 3 }, (model) =>
+                        test.equals Boolean(model), true
+                        
+                        if found then test.fail 'findmodel returned two results'
+                        found = true
+                        
+                        @c.findModel { something_nonexistant: 'nonexistant' }, (nonexistant) =>
+                            test.equals nonexistant, undefined
+                            instance1.del => instance2.del => test.done()
+
+
     flush: (test) ->
         newmodel1 = @c.defineModel 'bla1',{ hi: -> 'bla1' }
         newmodel2 = @c.defineModel 'bla2',{ hi: -> 'bla2' }

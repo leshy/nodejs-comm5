@@ -67,6 +67,11 @@
         }, this));
       }, this));
     },
+    findOne: function(pattern, callback) {
+      return this.collection.findOne(this.patternIn(pattern), __bind(function(err, entry) {
+        return callback(this.patternOut(entry));
+      }, this));
+    },
     remove: function(pattern, callback) {
       return this.collection.remove(this.patternIn(pattern), callback);
     },

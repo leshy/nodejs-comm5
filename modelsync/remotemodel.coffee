@@ -63,7 +63,7 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
         else @collection.update {id: id}, changes, callback
 
     del: (callback) ->
-        console.log('triggering del')
+        #console.log('triggering del')
         @trigger 'del', @
         if id = @get 'id' then @collection.remove {id: id}, callback else callback()
     

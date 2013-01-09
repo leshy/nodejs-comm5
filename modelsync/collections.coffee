@@ -41,7 +41,12 @@ CollectionExposer = exports.CollectionExposer = MsgNode.extend4000
         @subscribe { collection: name, find: "Object", limits: v().Default({}).Object() },
             (msg,reply,next,transmit) => @find msg.find, msg.limits, (entry) =>
                 if entry? then reply.write ({ data: entry, err: undefined }) else reply.end()
-        
+
+        # findOne
+        @subscribe { collection: name, findOne: "Object" },
+            (msg,reply,next,transmit) => @findOne msg.findOne, (entry) =>
+                if entry? then reply.write ({ data: entry, err: undefined }) else reply.end()
+                
         # subscribe to specific model changes/broadcasts
         @subscribe { collection: name, subscribe: "Object", tags: "Array" },
             (msg,reply,next,transmit) => @subscribe msg.subscribe, (event) => reply.write(event)
@@ -103,6 +108,10 @@ ModelMixin = exports.ModelMixin = Backbone.Model.extend4000
         @find pattern,limits,(entry) =>
             if not entry? then callback() else callback(new (@resolveModel(entry))(entry))
 
+    findModel: (pattern,callback) ->
+        @findOne pattern,(entry) =>
+            if not entry? then callback() else callback(new (@resolveModel(entry))(entry))
+
     fcall: (name,args,pattern,callback) ->
         @findModels pattern, {}, (model) ->
             if model? then model.remoteCallReceive name, args, (err,data) -> callback err, data
@@ -120,6 +129,10 @@ RemoteCollection = exports.RemoteCollection = Backbone.Model.extend4000 ModelMix
     
     find: (pattern,limits,callback) ->
         reply = @send( collection: @get('name'), find: pattern, limits: limits )
+        reply.read (msg) -> if msg then callback(msg.data) else callback()
+
+    findOne: (pattern,callback) ->
+        reply = @send( collection: @get('name'), findOne: pattern )
         reply.read (msg) -> if msg then callback(msg.data) else callback()
 
     fcall: (name, args, pattern, callback) ->
