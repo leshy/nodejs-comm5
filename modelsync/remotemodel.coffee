@@ -16,20 +16,27 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
 
         # once the object has been saved, we can request a subscription to its changes (this will be automatic for in the future)
         @when 'id', (id) =>
-            @collection.subscribechanges { id: id }, @remoteChange.bind(@)
-            @on 'change', @remotechange.bind(@)
+            @collection.subscribechanges { id: id }, @remoteChangeReceive.bind(@)
+            @on 'change', @remoteChangePropagade.bind(@)
 
         # if we haven't been saved yet, we want to flush all our attributes when flush is called..
         if @get 'id' then @changes = {} else @changes = helpers.hashmap(@attributes, -> true)
 
-    remoteChange: (change) ->
+    remoteChangeReceive: (change) ->
         switch change.action
             when 'update' then @set change.update, { silent: true }
         
-    remotechange: (model,data) ->
+    remoteChangePropagade: (model,data) ->
         change = model.changedAttributes()
         delete change.id
         _.extend @changes, helpers.hashmap(change, -> true)
+        # flush call would go here if it were throtteled properly and if autoflush is enabled
+
+    remoteCallPropagade: (name,args,callback) ->
+        @collection.fcall name,args,{ id: @id }, callback         
+        
+    remoteCallReceive: (name,args,callback) ->
+        @[name].apply @, args.concat(callback)
 
     export: (realm,attrs) ->
         return helpers.hashfilter attrs, (value,property) => @attributes[property]

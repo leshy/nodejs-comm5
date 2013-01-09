@@ -61,7 +61,8 @@
       }, __bind(function(msg, reply, next, transmit) {
         return this.findModels(msg.find).each(__bind(function(entry) {
           if (entry != null) {
-            return entry.update(data);
+            entry.update(data);
+            return entry.flush();
           } else {
             return reply.end();
           }
@@ -83,7 +84,7 @@
           }
         }, this));
       }, this));
-      return this.subscribe({
+      this.subscribe({
         collection: name,
         subscribe: "Object",
         tags: "Array"
@@ -91,6 +92,23 @@
         return this.subscribe(msg.subscribe, __bind(function(event) {
           return reply.write(event);
         }, this));
+      }, this));
+      return this.subscribe({
+        collection: name,
+        call: "String",
+        args: "Array",
+        data: "Object"
+      }, __bind(function(msg, reply, next, transmit) {
+        return this.fcall(msg.call, msg.args, msg.data, function(err, data) {
+          if (err || data) {
+            return reply.write({
+              err: err,
+              data: data
+            });
+          } else {
+            return reply.end();
+          }
+        });
       }, this));
     }
   });
@@ -179,6 +197,17 @@
           return callback(new (this.resolveModel(entry))(entry));
         }
       }, this));
+    },
+    fcall: function(name, args, pattern, callback) {
+      return this.findModels(pattern, {}, function(model) {
+        if (model != null) {
+          return model.remoteCallReceive(name, args, function(err, data) {
+            return callback(err, data);
+          });
+        } else {
+          return callback();
+        }
+      });
     }
   });
   RemoteCollection = exports.RemoteCollection = Backbone.Model.extend4000(ModelMixin, SubscriptionMixin, Validator.ValidatedModel, MsgNode, {
@@ -218,6 +247,20 @@
           return callback(msg.data);
         } else {
           return callback();
+        }
+      });
+    },
+    fcall: function(name, args, pattern, callback) {
+      var reply;
+      reply = this.send({
+        collection: this.get('name'),
+        call: name,
+        args: args,
+        data: pattern
+      });
+      return reply.read(function(msg) {
+        if (msg) {
+          return callback(msg.err, msg.data);
         }
       });
     }

@@ -159,7 +159,6 @@ exports.ModelMixin =
                 test.done()
 ###
 
-
 exports.AutoModelSync =
     setUp: (callback) ->
         @mongoC = require './serverside/mongodb'
@@ -183,7 +182,8 @@ exports.AutoModelSync =
                 if instance2
                     instance1.set { bla: 3 }
                     instance1.flush (err,id) =>
-                        console.log(instance2.get 'bla'); test.done()
+                        #console.log(instance2.get 'bla');
+                        test.done()
         
 
 exports.EverythingTogether =
@@ -193,7 +193,7 @@ exports.EverythingTogether =
         @mongo = require 'mongodb'
         @db = new @mongo.Db('testdb',new @mongo.Server('localhost',27017), {safe: true });
         
-        realcollection = new @mongoC.MongoCollectionNode { db: @db, collection: 'test' }
+        @realcollection = realcollection = new @mongoC.MongoCollectionNode { db: @db, collection: 'test' }
         @c = new @collections.RemoteCollection { db: @db, name: 'test' }
 
         realcollection.connect @c
@@ -210,6 +210,25 @@ exports.EverythingTogether =
         
         test.equals @c.resolveModel({ _t: 'bla2' }), newmodel2
         test.done()
+
+
+    call: (test) ->
+        clientsideModel = @c.defineModel 'bla1',
+            hi: (args...,callback) -> @remoteCallPropagade 'hi', args, callback
+
+        serversideModel = @realcollection.defineModel 'bla1',
+            hi: (n,callback) -> callback(undefined, n + 2)
+
+        instance1 = new clientsideModel { something: 666 }
+
+        instance1.flush =>
+            test.equals Boolean(instance1.get 'id'), true
+
+            instance1.hi 3, (err,data) ->
+                test.equals err, undefined
+                test.equals data, 5
+                test.done()
+
 
     flush: (test) ->
         newmodel1 = @c.defineModel 'bla1',{ hi: -> 'bla1' }

@@ -21,8 +21,8 @@
       this.when('id', __bind(function(id) {
         this.collection.subscribechanges({
           id: id
-        }, this.remoteChange.bind(this));
-        return this.on('change', this.remotechange.bind(this));
+        }, this.remoteChangeReceive.bind(this));
+        return this.on('change', this.remoteChangePropagade.bind(this));
       }, this));
       if (this.get('id')) {
         return this.changes = {};
@@ -32,7 +32,7 @@
         });
       }
     },
-    remoteChange: function(change) {
+    remoteChangeReceive: function(change) {
       switch (change.action) {
         case 'update':
           return this.set(change.update, {
@@ -40,13 +40,21 @@
           });
       }
     },
-    remotechange: function(model, data) {
+    remoteChangePropagade: function(model, data) {
       var change;
       change = model.changedAttributes();
       delete change.id;
       return _.extend(this.changes, helpers.hashmap(change, function() {
         return true;
       }));
+    },
+    remoteCallPropagade: function(name, args, callback) {
+      return this.collection.fcall(name, args, {
+        id: this.id
+      }, callback);
+    },
+    remoteCallReceive: function(name, args, callback) {
+      return this[name].apply(this, args.concat(callback));
     },
     "export": function(realm, attrs) {
       return helpers.hashfilter(attrs, __bind(function(value, property) {

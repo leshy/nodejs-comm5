@@ -35,7 +35,7 @@ CollectionExposer = exports.CollectionExposer = MsgNode.extend4000
         # update
         @subscribe { collection: name, update: "Object", data: "Object" },
             (msg,reply,next,transmit) => @findModels(msg.find).each (entry) =>
-                if entry? then entry.update(data) else reply.end()
+                if entry? then entry.update(data); entry.flush() else reply.end()
         
         # find
         @subscribe { collection: name, find: "Object", limits: v().Default({}).Object() },
@@ -46,7 +46,11 @@ CollectionExposer = exports.CollectionExposer = MsgNode.extend4000
         @subscribe { collection: name, subscribe: "Object", tags: "Array" },
             (msg,reply,next,transmit) => @subscribe msg.subscribe, (event) => reply.write(event)
             # this wont work for remote collections?
-            
+
+        # call
+        @subscribe { collection: name, call: "String", args: "Array", data: "Object" },
+            (msg,reply,next,transmit) => @fcall msg.call, msg.args, msg.data, (err,data) ->
+                if err or data then reply.write { err: err, data: data } else reply.end()
 
 # this can be mixed into a RemoteCollection or Collection itself.
 # it provides subscribe and unsubscribe methods for collection events (remove/update/create)
@@ -98,7 +102,12 @@ ModelMixin = exports.ModelMixin = Backbone.Model.extend4000
     findModels: (pattern,limits,callback) ->
         @find pattern,limits,(entry) =>
             if not entry? then callback() else callback(new (@resolveModel(entry))(entry))
-                
+
+    fcall: (name,args,pattern,callback) ->
+        @findModels pattern, {}, (model) ->
+            if model? then model.remoteCallReceive name, args, (err,data) -> callback err, data
+            else callback() # this is problematic, if function is async, empty callback() will be called before the functions have finished execution which will cause a premature reply.end()
+            
 # has the same interface as local collections but it transparently talks to the remote collectionExposer via the messaging system,
 RemoteCollection = exports.RemoteCollection = Backbone.Model.extend4000 ModelMixin, SubscriptionMixin, Validator.ValidatedModel, MsgNode,
     validator: v(name: "String")
@@ -112,4 +121,8 @@ RemoteCollection = exports.RemoteCollection = Backbone.Model.extend4000 ModelMix
     find: (pattern,limits,callback) ->
         reply = @send( collection: @get('name'), find: pattern, limits: limits )
         reply.read (msg) -> if msg then callback(msg.data) else callback()
+
+    fcall: (name, args, pattern, callback) ->
+        reply = @send( collection: @get('name'), call: name, args: args, data: pattern )
+        reply.read (msg) -> if msg then callback msg.err, msg.data;
 

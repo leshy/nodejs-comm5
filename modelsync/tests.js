@@ -1,6 +1,6 @@
 (function() {
   var wait, _;
-  var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
+  var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; }, __slice = Array.prototype.slice;
   _ = require('underscore');
   wait = function(time, f) {
     return setTimeout(f, time);
@@ -383,7 +383,6 @@
               bla: 3
             });
             return instance1.flush(__bind(function(err, id) {
-              console.log(instance2.get('bla'));
               return test.done();
             }, this));
           }
@@ -400,7 +399,7 @@
       this.db = new this.mongo.Db('testdb', new this.mongo.Server('localhost', 27017), {
         safe: true
       });
-      realcollection = new this.mongoC.MongoCollectionNode({
+      this.realcollection = realcollection = new this.mongoC.MongoCollectionNode({
         db: this.db,
         collection: 'test'
       });
@@ -431,6 +430,32 @@
         _t: 'bla2'
       }), newmodel2);
       return test.done();
+    },
+    call: function(test) {
+      var clientsideModel, instance1, serversideModel;
+      clientsideModel = this.c.defineModel('bla1', {
+        hi: function() {
+          var args, callback, _i;
+          args = 2 <= arguments.length ? __slice.call(arguments, 0, _i = arguments.length - 1) : (_i = 0, []), callback = arguments[_i++];
+          return this.remoteCallPropagade('hi', args, callback);
+        }
+      });
+      serversideModel = this.realcollection.defineModel('bla1', {
+        hi: function(n, callback) {
+          return callback(void 0, n + 2);
+        }
+      });
+      instance1 = new clientsideModel({
+        something: 666
+      });
+      return instance1.flush(__bind(function() {
+        test.equals(Boolean(instance1.get('id')), true);
+        return instance1.hi(3, function(err, data) {
+          test.equals(err, void 0);
+          test.equals(data, 5);
+          return test.done();
+        });
+      }, this));
     },
     flush: function(test) {
       var instance1, newmodel1, newmodel2;
