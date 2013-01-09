@@ -22,16 +22,19 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
         # if we haven't been saved yet, we want to flush all our attributes when flush is called..
         if @get 'id' then @changes = {} else @changes = helpers.hashmap(@attributes, -> true)
 
+    # I need a permissions implementation here..
     remoteChangeReceive: (change) ->
         switch change.action
             when 'update' then @set change.update, { silent: true }
-        
+
+    # I need to find nested models here and replace them with their ids
     remoteChangePropagade: (model,data) ->
         change = model.changedAttributes()
         delete change.id
         _.extend @changes, helpers.hashmap(change, -> true)
         # flush call would go here if it were throtteled properly and if autoflush is enabled
 
+    # I need a permissions implementation here..
     remoteCallPropagade: (name,args,callback) ->
         @collection.fcall name,args,{ id: @id }, callback         
         
