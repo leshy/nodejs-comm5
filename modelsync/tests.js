@@ -390,6 +390,153 @@
       }, this));
     }
   };
+  exports.References = {
+    setUp: function(callback) {
+      var realcollection;
+      this.remotemodel = require('./remotemodel');
+      this.mongoC = require('./serverside/mongodb');
+      this.collections = require('./collections');
+      this.mongo = require('mongodb');
+      this.db = new this.mongo.Db('testdb', new this.mongo.Server('localhost', 27017), {
+        safe: true
+      });
+      this.c1 = realcollection = new this.mongoC.MongoCollectionNode({
+        db: this.db,
+        collection: 'test'
+      });
+      this.c2 = realcollection = new this.mongoC.MongoCollectionNode({
+        db: this.db,
+        collection: 'test2'
+      });
+      return this.db.open(callback);
+    },
+    tearDown: function(callback) {
+      this.db.close();
+      return callback();
+    },
+    depthFirst: function(test) {
+      var newmodel1, x;
+      newmodel1 = this.c1.defineModel('bla1', {
+        hi: 3
+      });
+      x = new newmodel1({
+        property1: 3,
+        something: {
+          lala: 3,
+          bla: 75,
+          ff: 'lfla'
+        },
+        ar: [1, 2, 3, 4, 5]
+      });
+      test.deepEqual({
+        property1: 'replaced',
+        something: {
+          lala: 'replaced',
+          bla: 75,
+          ff: 'lfla'
+        },
+        ar: [1, 2, 'replaced', 4, 5],
+        _t: 'bla1'
+      }, x.depthfirst(function(val) {
+        if (val === 3) {
+          return 'replaced';
+        } else {
+          return val;
+        }
+      }));
+      return test.done();
+    },
+    exportReferences: function(test) {
+      var child1, child2, childmodel1, childmodel2, parentmodel;
+      parentmodel = this.c1.defineModel('type1', {
+        hi: 3
+      });
+      childmodel1 = this.c1.defineModel('type1', {
+        childmodel: 1
+      });
+      childmodel2 = this.c2.defineModel('type2', {
+        childmodel: 2
+      });
+      child1 = new childmodel1({
+        some_value: 5
+      });
+      child2 = new childmodel2({
+        some_value: 6
+      });
+      child1.flush(function() {
+        return child2.flush(function() {
+          var expected, exported, parent;
+          parent = new parentmodel({
+            testdict: {
+              bla: child1,
+              bla2: 3
+            },
+            child2: child2,
+            ar: [child1, 3, 4, 'ggg']
+          });
+          exported = parent.exportreferences();
+          expected = {
+            testdict: {
+              bla: {
+                "_r": child1.get('id'),
+                "_c": 'test'
+              },
+              bla2: 3
+            },
+            child2: {
+              "_r": child2.get('id'),
+              "_c": 'test2'
+            },
+            ar: [
+              {
+                "_r": child1.get('id'),
+                "_c": 'test'
+              }, 3, 4, 'ggg'
+            ],
+            _t: 'type1'
+          };
+          test.deepEqual(exported, expected);
+          return child1.del(function() {
+            return child2.del(function() {
+              return test.done();
+            });
+          });
+        });
+      });
+      return {
+        resolveReferences: function(test) {
+          parentmodel = this.c1.defineModel('type1', {
+            hi: 3
+          });
+          childmodel1 = this.c1.defineModel('type1', {
+            childmodel: 1
+          });
+          childmodel2 = this.c2.defineModel('type2', {
+            childmodel: 2
+          });
+          child1 = new childmodel1({
+            some_value: 5
+          });
+          child2 = new childmodel2({
+            some_value: 6
+          });
+          return child1.flush(function() {
+            return child2.flush(function() {
+              var parent;
+              return parent = new parentmodel({
+                testdict: {
+                  bla: child1,
+                  bla2: 3
+                },
+                child2: child2,
+                ar: [child1, 3, 4, 'ggg']
+              });
+            });
+          });
+        }
+      };
+    }
+  };
   exports.EverythingTogether = {
     setUp: function(callback) {
       var realcollection;

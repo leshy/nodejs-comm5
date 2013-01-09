@@ -13,6 +13,23 @@
     validator: v({
       collection: 'instance'
     }),
+    depthfirst: function(callback, target) {
+      var key, response;
+      if (target == null) {
+        target = this.attributes;
+      }
+      if (target.constructor === Object || target.constructor === Array) {
+        target = _.clone(target);
+        for (key in target) {
+          target[key] = this.depthfirst(callback, target[key]);
+        }
+        return target;
+      } else if (response = callback(target)) {
+        return response;
+      } else {
+        return target;
+      }
+    },
     initialize: function() {
       this.when('collection', __bind(function(collection) {
         this.unset('collection');
@@ -61,6 +78,37 @@
         return this.attributes[property];
       }, this));
     },
+    exportreferences: function() {
+      var _export;
+      _export = function(model) {
+        return {
+          _r: model.get('id'),
+          _c: model.collection.name()
+        };
+      };
+      return this.depthfirst(function(val) {
+        if (val instanceof RemoteModel) {
+          return _export(val);
+        } else {
+          return val;
+        }
+      });
+    },
+    importreferences: function(attributes) {
+      var refcheck, _import;
+      _import = function(reference) {
+        return true;
+      };
+      refcheck = v({
+        _r: "String",
+        _c: "String"
+      });
+      return this.depthfirst(function(val) {
+        return refcheck.feed(val, function(err, data) {
+          if (!err) {}
+        });
+      });
+    },
     exportchanges: function(realm) {
       var ret;
       ret = this["export"](realm, this.changes);
@@ -76,6 +124,7 @@
     flushnow: function(callback) {
       var changes, id;
       changes = this.exportchanges('store');
+      changes = this.exportreferences(changes);
       if (helpers.isEmpty(changes)) {
         helpers.cbc(callback);
       }
@@ -89,6 +138,9 @@
           id: id
         }, changes, callback);
       }
+    },
+    fetch: function(callback) {
+      return true;
     },
     del: function(callback) {
       var id;

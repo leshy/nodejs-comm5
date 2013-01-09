@@ -184,7 +184,84 @@ exports.AutoModelSync =
                     instance1.flush (err,id) =>
                         #console.log(instance2.get 'bla');
                         test.done()
+
+exports.References =
+    setUp: (callback) ->
+        @remotemodel = require './remotemodel'
+        @mongoC = require './serverside/mongodb'
+        @collections = require './collections'
+        @mongo = require 'mongodb'
+        @db = new @mongo.Db('testdb',new @mongo.Server('localhost',27017), {safe: true });
         
+        @c1 = realcollection = new @mongoC.MongoCollectionNode { db: @db, collection: 'test' }
+        @c2 = realcollection = new @mongoC.MongoCollectionNode { db: @db, collection: 'test2' }
+        
+        @db.open callback
+
+    tearDown: (callback) ->
+        @db.close()
+        callback()
+    
+    depthFirst: (test) ->
+        newmodel1 = @c1.defineModel 'bla1', { hi: 3 }
+
+        x = new newmodel1
+            property1: 3
+            something: { lala: 3, bla: 75, ff: 'lfla' }
+            ar: [ 1,2,3,4,5 ]
+
+
+        test.deepEqual { property1: 'replaced', something: { lala: 'replaced', bla: 75, ff: 'lfla' }, ar: [ 1, 2, 'replaced', 4, 5 ], _t: 'bla1' }, x.depthfirst (val) -> if val is 3 then 'replaced' else val
+
+        test.done()
+
+
+
+    exportReferences: (test) ->
+        parentmodel = @c1.defineModel 'type1', { hi: 3 }
+
+        childmodel1 = @c1.defineModel 'type1', { childmodel: 1 }
+        childmodel2 = @c2.defineModel 'type2', { childmodel: 2 }
+
+        child1 = new childmodel1 { some_value: 5 }
+        child2 = new childmodel2 { some_value: 6 }
+
+        child1.flush ->
+            child2.flush ->
+                
+                parent = new parentmodel { testdict: { bla: child1, bla2: 3 }, child2: child2, ar: [ child1, 3 ,4, 'ggg' ] }
+
+                exported = parent.exportreferences()
+
+                expected =
+                    testdict: { bla: { "_r": child1.get('id'), "_c": 'test' }, bla2: 3 }
+                    child2: { "_r": child2.get('id'), "_c": 'test2' }
+                    ar: [ { "_r": child1.get('id'), "_c": 'test' }, 3, 4, 'ggg' ],
+                    _t: 'type1'
+
+                test.deepEqual exported, expected
+
+                child1.del ->
+                    child2.del ->
+                        test.done()
+
+        resolveReferences: (test) ->
+            parentmodel = @c1.defineModel 'type1', { hi: 3 }
+
+            childmodel1 = @c1.defineModel 'type1', { childmodel: 1 }
+            childmodel2 = @c2.defineModel 'type2', { childmodel: 2 }
+
+            child1 = new childmodel1 { some_value: 5 }
+            child2 = new childmodel2 { some_value: 6 }
+
+            child1.flush ->
+                child2.flush ->
+                    
+                    parent = new parentmodel { testdict: { bla: child1, bla2: 3 }, child2: child2, ar: [ child1, 3 ,4, 'ggg' ] }
+
+                    
+            
+                
 
 exports.EverythingTogether =
     setUp: (callback) ->

@@ -69,9 +69,6 @@ exports.SpeedLeak = function (test) {
         memlog.push(mem - firstmem)
         lastmem = mem
     }
-    
-    
-
 }
 
 exports.Http = function (test) {
@@ -81,7 +78,6 @@ exports.Http = function (test) {
     var request = require('request')
     var app = express()
     
-
     app.configure(function(){
         app.set('views', __dirname + '/views');
         app.set('view engine', 'ejs');
@@ -95,8 +91,7 @@ exports.Http = function (test) {
     server = http.createServer(app)
     server.listen(8000);
 
-    var server = new httpTransport.HttpServer({express: app, name: "http"})
-    
+    var server = new httpTransport.HttpServer({express: app, name: "http"})    
     var responder = new comm.MsgNode({name: "echo"})
     
     responder.subscribe(true,function (msg,reply,next,transmit) {

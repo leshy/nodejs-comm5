@@ -4,10 +4,19 @@ helpers = require 'helpers'
 Validator = require 'validator2-extras'; v = Validator.v; Select = Validator.Select
 decorators = require 'decorators'; decorate = decorators.decorate;
 
+
 # knows about its collection, knows how to store/create itself and defines the permissions
 RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
     validator: v { collection: 'instance' }
-    
+
+    depthfirst: (callback,target=@attributes) ->
+        if target.constructor is Object or target.constructor is Array
+            target = _.clone target
+            for key of target
+                target[key] = @depthfirst callback, target[key]
+            target
+        else if response = callback(target) then response else target
+            
     initialize: ->
         # this is temporary, permission system will make sure that this is never exported
         @when 'collection', (collection) =>
@@ -44,6 +53,23 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
     export: (realm,attrs) ->
         return helpers.hashfilter attrs, (value,property) => @attributes[property]
 
+    # looks for references to remote models and replaces them with object ids
+    # what do we do if a reference object is not flushed? propagade flush call for now
+    exportreferences: () ->
+        _export = (model) -> _r: model.get('id'), _c: model.collection.name()
+        @depthfirst (val) -> if val instanceof RemoteModel then _export(val) else val
+
+    importreferences: (attributes) ->
+        _import = (reference) -> true
+        
+        refcheck = v _r: "String", _c: "String"
+        
+        @depthfirst (val) ->
+            refcheck.feed val, (err,data) ->
+                if not err then return 
+            # fuck, I need async depthfirst. booooring
+
+    # apply permissions per realm
     exportchanges: (realm) ->
         ret = @export(realm,@changes)
         @changes = {}
@@ -58,9 +84,16 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
 
     flushnow: (callback) ->
         changes = @exportchanges('store')
+
+        changes = @exportreferences(changes)
+        
         if helpers.isEmpty(changes) then helpers.cbc(callback)
         if not id = @get 'id' then @collection.create changes, (err,id) => @set 'id', id; helpers.cbc callback, err, id
         else @collection.update {id: id}, changes, callback
+
+    # requests its data from a collection
+    fetch: (callback) ->
+        true
 
     del: (callback) ->
         #console.log('triggering del')
