@@ -446,6 +446,75 @@
       }));
       return test.done();
     },
+    asyncDepthFirst_noasync: function(test) {
+      var newmodel1, x;
+      newmodel1 = this.c1.defineModel('bla1', {
+        hi: 3
+      });
+      x = new newmodel1({
+        property1: 3,
+        something: {
+          lala: 3,
+          bla: 75,
+          ff: 'lfla'
+        },
+        ar: [1, 2, 3, 4, 5]
+      });
+      return x.asyncDepthfirst((function(val, callback) {
+        if (val === 3) {
+          return 'replaced';
+        } else {
+          return val;
+        }
+      }), function(err, data) {
+        test.deepEqual({
+          property1: 'replaced',
+          something: {
+            lala: 'replaced',
+            bla: 75,
+            ff: 'lfla'
+          },
+          ar: [1, 2, 'replaced', 4, 5],
+          _t: 'bla1'
+        }, data);
+        return test.done();
+      });
+    },
+    asyncDepthFirst_async: function(test) {
+      var f, newmodel1, x;
+      newmodel1 = this.c1.defineModel('bla1', {
+        hi: 3
+      });
+      x = new newmodel1({
+        property1: 3,
+        something: {
+          lala: 3,
+          bla: 75,
+          ff: 'lfla'
+        },
+        ar: [1, 2, 3, 4, 5]
+      });
+      f = function(val, callback) {
+        if (val === 3) {
+          return callback(void 0, 'replaced');
+        } else {
+          return callback(void 0, val);
+        }
+      };
+      return x.asyncDepthfirst(f, function(err, data) {
+        test.deepEqual({
+          property1: 'replaced',
+          something: {
+            lala: 'replaced',
+            bla: 75,
+            ff: 'lfla'
+          },
+          ar: [1, 2, 'replaced', 4, 5],
+          _t: 'bla1'
+        }, data);
+        return test.done();
+      });
+    },
     exportReferences: function(test) {
       var child1, child2, childmodel1, childmodel2, parentmodel;
       parentmodel = this.c1.defineModel('type1', {

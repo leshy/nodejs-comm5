@@ -30,6 +30,34 @@
         return target;
       }
     },
+    asyncDepthfirst: function(changef, callback, target, clone) {
+      var bucket, cb, key, result;
+      if (target == null) {
+        target = this.attributes;
+      }
+      if (clone == null) {
+        clone = false;
+      }
+      if (target.constructor === Object || target.constructor === Array) {
+        if (clone) {
+          target = _.clone(target);
+        }
+        bucket = new helpers.parallelBucket();
+        for (key in target) {
+          cb = bucket.cb();
+          result = function(err, data) {
+            target[key] = data;
+            return cb(err, data);
+          };
+          this.asyncDepthfirst(changef, result, target[key], clone);
+        }
+        return bucket.done(function(err, data) {
+          return callback(err, target);
+        });
+      } else {
+        return helpers.forceCallback(changef, target, callback);
+      }
+    },
     initialize: function() {
       this.when('collection', __bind(function(collection) {
         this.unset('collection');

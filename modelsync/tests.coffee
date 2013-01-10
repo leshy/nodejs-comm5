@@ -216,6 +216,38 @@ exports.References =
         test.done()
 
 
+    asyncDepthFirst_noasync: (test) ->
+        newmodel1 = @c1.defineModel 'bla1', { hi: 3 }
+
+        x = new newmodel1
+            property1: 3
+            something: { lala: 3, bla: 75, ff: 'lfla' }
+            ar: [ 1,2,3,4,5 ]
+
+        x.asyncDepthfirst ((val,callback) -> if val is 3 then 'replaced' else val),
+            (err,data) ->
+                test.deepEqual { property1: 'replaced', something: { lala: 'replaced', bla: 75, ff: 'lfla' }, ar: [ 1, 2, 'replaced', 4, 5 ], _t: 'bla1' }, data
+                test.done()
+
+
+    asyncDepthFirst_async: (test) ->
+        newmodel1 = @c1.defineModel 'bla1', { hi: 3 }
+
+        x = new newmodel1
+            property1: 3
+            something: { lala: 3, bla: 75, ff: 'lfla' }
+            ar: [ 1,2,3,4,5 ]
+
+        f = (val,callback) ->
+            if val is 3 then callback(undefined,'replaced') else callback(undefined,val)
+
+        x.asyncDepthfirst f,
+            (err,data) ->
+                test.deepEqual { property1: 'replaced', something: { lala: 'replaced', bla: 75, ff: 'lfla' }, ar: [ 1, 2, 'replaced', 4, 5 ], _t: 'bla1' }, data
+                test.done()
+
+
+
 
     exportReferences: (test) ->
         parentmodel = @c1.defineModel 'type1', { hi: 3 }
@@ -259,9 +291,7 @@ exports.References =
                     
                     parent = new parentmodel { testdict: { bla: child1, bla2: 3 }, child2: child2, ar: [ child1, 3 ,4, 'ggg' ] }
 
-                    
-            
-                
+
 
 exports.EverythingTogether =
     setUp: (callback) ->

@@ -4,7 +4,6 @@ helpers = require 'helpers'
 Validator = require 'validator2-extras'; v = Validator.v; Select = Validator.Select
 decorators = require 'decorators'; decorate = decorators.decorate;
 
-
 # knows about its collection, knows how to store/create itself and defines the permissions
 RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
     validator: v { collection: 'instance' }
@@ -16,7 +15,23 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
                 target[key] = @depthfirst callback, target[key]
             target
         else if response = callback(target) then response else target
+
+    asyncDepthfirst: (changef, callback, target=@attributes, clone=false) ->
+        if target.constructor is Object or target.constructor is Array
+            if clone then target = _.clone target
+            bucket = new helpers.parallelBucket()
             
+            for key of target
+                cb = bucket.cb()
+                result = (err,data) -> target[key] = data; cb(err,data)
+                @asyncDepthfirst changef, result, target[key], clone
+                
+            bucket.done (err,data) -> callback(err,target)
+
+        else
+            helpers.forceCallback changef, target, callback 
+
+                                    
     initialize: ->
         # this is temporary, permission system will make sure that this is never exported
         @when 'collection', (collection) =>
