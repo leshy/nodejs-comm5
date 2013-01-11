@@ -328,7 +328,7 @@ exports.EverythingTogether =
 
     call: (test) ->
         clientsideModel = @c.defineModel 'bla1',
-            hi: (args...,callback) -> @remoteCallPropagade 'hi', args, callback
+            hi: (args...,callback) -> @localCallPropagade 'hi', args, callback
 
         serversideModel = @realcollection.defineModel 'bla1',
             hi: (n,callback) -> callback(undefined, n + 2)

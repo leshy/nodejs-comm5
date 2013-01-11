@@ -87,7 +87,7 @@
         this.collection.subscribechanges({
           id: id
         }, this.remoteChangeReceive.bind(this));
-        return this.on('change', this.remoteChangePropagade.bind(this));
+        return this.on('change', this.localChangePropagade.bind(this));
       }, this));
       if (this.get('id')) {
         return this.changes = {};
@@ -105,7 +105,7 @@
           });
       }
     },
-    remoteChangePropagade: function(model, data) {
+    localChangePropagade: function(model, data) {
       var change;
       change = model.changedAttributes();
       delete change.id;
@@ -113,7 +113,7 @@
         return true;
       }));
     },
-    remoteCallPropagade: function(name, args, callback) {
+    localCallPropagade: function(name, args, callback) {
       return this.collection.fcall(name, args, {
         id: this.id
       }, callback);

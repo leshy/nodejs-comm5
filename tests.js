@@ -70,7 +70,7 @@ exports.SpeedLeak = function (test) {
         lastmem = mem
     }
 }
-
+/*
 exports.Http = function (test) {
     var express = require('express');
     var httpTransport = require('./transports/serverside/http')
@@ -147,3 +147,4 @@ exports.Nssocket = function (test) {
 
 }
 
+*/

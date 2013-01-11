@@ -5,6 +5,14 @@ Validator = require 'validator2-extras'; v = Validator.v; Select = Validator.Sel
 decorators = require 'decorators'; decorate = decorators.decorate;
 
 # knows about its collection, knows how to store/create itself and defines the permissions
+#
+# rough description:
+# it logs changes of its attributes
+#
+#
+#
+# 
+
 RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
     validator: v { collection: 'instance' }
 
@@ -19,7 +27,7 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
     asyncDepthfirst: (changef, callback, clone=false, all=false, target=@attributes) ->
         # call changef on the target, return results
         _check = (target,callback) -> helpers.forceCallback changef, target, callback
-        # recursively search through iterable target
+        # recursively search through an iterable target
         _digtarget = (target,callback) =>
             bucket = new helpers.parallelBucket()
             
@@ -47,7 +55,7 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
         # once the object has been saved, we can request a subscription to its changes (this will be automatic for in the future)
         @when 'id', (id) =>
             @collection.subscribechanges { id: id }, @remoteChangeReceive.bind(@)
-            @on 'change', @remoteChangePropagade.bind(@)
+            @on 'change', @localChangePropagade.bind(@)
 
         # if we haven't been saved yet, we want to flush all our attributes when flush is called..
         if @get 'id' then @changes = {} else @changes = helpers.hashmap(@attributes, -> true)
@@ -58,14 +66,14 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
             when 'update' then @set change.update, { silent: true }
 
     # I need to find nested models here and replace them with their ids
-    remoteChangePropagade: (model,data) ->
+    localChangePropagade: (model,data) ->
         change = model.changedAttributes()
         delete change.id
         _.extend @changes, helpers.hashmap(change, -> true)
         # flush call would go here if it were throtteled properly and if autoflush is enabled
 
     # I need a permissions implementation here..
-    remoteCallPropagade: (name,args,callback) ->
+    localCallPropagade: (name,args,callback) ->
         @collection.fcall name,args,{ id: @id }, callback         
         
     remoteCallReceive: (name,args,callback) ->

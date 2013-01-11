@@ -661,7 +661,7 @@
         hi: function() {
           var args, callback, _i;
           args = 2 <= arguments.length ? __slice.call(arguments, 0, _i = arguments.length - 1) : (_i = 0, []), callback = arguments[_i++];
-          return this.remoteCallPropagade('hi', args, callback);
+          return this.localCallPropagade('hi', args, callback);
         }
       });
       serversideModel = this.realcollection.defineModel('bla1', {
