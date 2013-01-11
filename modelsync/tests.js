@@ -532,9 +532,9 @@
       child2 = new childmodel2({
         some_value: 6
       });
-      child1.flush(function() {
+      return child1.flush(function() {
         return child2.flush(function() {
-          var expected, exported, parent;
+          var parent;
           parent = new parentmodel({
             testdict: {
               bla: child1,
@@ -543,69 +543,54 @@
             child2: child2,
             ar: [child1, 3, 4, 'ggg']
           });
-          exported = parent.exportreferences();
-          expected = {
-            testdict: {
-              bla: {
-                "_r": child1.get('id'),
-                "_c": 'test'
+          return parent.exportreferences(parent.attributes, function(err, exported) {
+            var expected;
+            expected = {
+              testdict: {
+                bla: {
+                  "_r": child1.get('id'),
+                  "_c": 'test'
+                },
+                bla2: 3
               },
-              bla2: 3
-            },
-            child2: {
-              "_r": child2.get('id'),
-              "_c": 'test2'
-            },
-            ar: [
-              {
-                "_r": child1.get('id'),
-                "_c": 'test'
-              }, 3, 4, 'ggg'
-            ],
-            _t: 'type1'
-          };
-          test.deepEqual(exported, expected);
-          return child1.del(function() {
-            return child2.del(function() {
-              return test.done();
+              child2: {
+                "_r": child2.get('id'),
+                "_c": 'test2'
+              },
+              ar: [
+                {
+                  "_r": child1.get('id'),
+                  "_c": 'test'
+                }, 3, 4, 'ggg'
+              ],
+              _t: 'type1'
+            };
+            test.deepEqual(exported, expected);
+            return child1.del(function() {
+              return child2.del(function() {
+                return test.done();
+              });
             });
           });
         });
       });
-      return {
-        resolveReferences: function(test) {
-          parentmodel = this.c1.defineModel('type1', {
-            hi: 3
-          });
-          childmodel1 = this.c1.defineModel('type1', {
-            childmodel: 1
-          });
-          childmodel2 = this.c2.defineModel('type2', {
-            childmodel: 2
-          });
-          child1 = new childmodel1({
-            some_value: 5
-          });
-          child2 = new childmodel2({
-            some_value: 6
-          });
-          return child1.flush(function() {
-            return child2.flush(function() {
-              var parent;
-              return parent = new parentmodel({
-                testdict: {
-                  bla: child1,
-                  bla2: 3
-                },
-                child2: child2,
-                ar: [child1, 3, 4, 'ggg']
-              });
-            });
-          });
-        }
-      };
     }
   };
+  /*
+      resolveReferences: (test) ->
+          parentmodel = @c1.defineModel 'type1', { hi: 3 }
+  
+          childmodel1 = @c1.defineModel 'type1', { childmodel: 1 }
+          childmodel2 = @c2.defineModel 'type2', { childmodel: 2 }
+  
+          child1 = new childmodel1 { some_value: 5 }
+          child2 = new childmodel2 { some_value: 6 }
+  
+          child1.flush ->
+              child2.flush ->
+                      
+                  parent = new parentmodel { testdict: { bla: child1, bla2: 3 }, child2: child2, ar: [ child1, 3 ,4, 'ggg' ] }
+  */
   exports.EverythingTogether = {
     setUp: function(callback) {
       var realcollection;

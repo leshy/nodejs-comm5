@@ -16,7 +16,8 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
             target
         else if response = callback(target) then response else target
 
-    asyncDepthfirst: (changef, callback, target=@attributes, clone=false) ->
+    asyncDepthfirst: (changef, callback, clone=false, target=@attributes) ->
+
         if target.constructor is Object or target.constructor is Array
             if clone then target = _.clone target
             bucket = new helpers.parallelBucket()
@@ -24,14 +25,12 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
             for key of target
                 cb = bucket.cb()
                 result = (err,data) -> target[key] = data; cb(err,data)
-                @asyncDepthfirst changef, result, target[key], clone
+                @asyncDepthfirst changef, result, clone, target[key]
                 
             bucket.done (err,data) -> callback(err,target)
-
         else
             helpers.forceCallback changef, target, callback 
-
-                                    
+        
     initialize: ->
         # this is temporary, permission system will make sure that this is never exported
         @when 'collection', (collection) =>
@@ -70,20 +69,34 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
 
     # looks for references to remote models and replaces them with object ids
     # what do we do if a reference object is not flushed? propagade flush call for now
-    exportreferences: () ->
-        _export = (model) -> _r: model.get('id'), _c: model.collection.name()
-        @depthfirst (val) -> if val instanceof RemoteModel then _export(val) else val
+    exportreferences: (data,callback) ->
+        # finds a reference to remotemodel, and converts it to saveable reference in a form of a small json that points to the correct collection and id
+        _matchf = (value,callback) ->
+            if value instanceof RemoteModel
+                # has a child model been flushed?
+                if id = value.get('id') then callback undefined, { _r: id, _c: value.collection.name() }
+                else # if not, flush it, and then create a proper reference
+                    value.flush (err,id) ->
+                    if err then callback(err,id)
+                    else callback undefined, { _r: id, _c: value.collection.name() }
+                return undefined
+            else value # we can also return a value, and not call the callback, as this function gets wrapped into helpers.forceCallback
 
-    importreferences: (attributes) ->
-        _import = (reference) -> true
+        @asyncDepthfirst _matchf, callback, true, data
+
+    importreferences: (data,callback) ->
+        _import = (reference) -> true # instantiate an unresolved reference, or the propper model, with an unresolved state.
         
         refcheck = v _r: "String", _c: "String"
-        
-        @depthfirst (val) ->
-            refcheck.feed val, (err,data) ->
-                if not err then return 
-            # fuck, I need async depthfirst. booooring
 
+        _matchf = (value,callback) ->
+            refcheck.feed value, (err,data) ->
+            if err then callback undefined, value
+            else callback undefined, "MATCHED"
+            return
+                
+        @asyncDepthfirst _matchf, callback, false, data
+        
     # apply permissions per realm
     exportchanges: (realm) ->
         ret = @export(realm,@changes)
@@ -100,16 +113,15 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
     flushnow: (callback) ->
         changes = @exportchanges('store')
 
-        changes = @exportreferences(changes)
-        
-        if helpers.isEmpty(changes) then helpers.cbc(callback)
-        if not id = @get 'id' then @collection.create changes, (err,id) => @set 'id', id; helpers.cbc callback, err, id
-        else @collection.update {id: id}, changes, callback
+        @exportreferences changes, (err, changes) =>
+            if helpers.isEmpty(changes) then helpers.cbc(callback)
+            if not id = @get 'id' then @collection.create changes, (err,id) => @set 'id', id; helpers.cbc callback, err, id
+            else @collection.update {id: id}, changes, callback
 
     # requests its data from a collection
     fetch: (callback) ->
         true
-
+        
     del: (callback) ->
         #console.log('triggering del')
         @trigger 'del', @

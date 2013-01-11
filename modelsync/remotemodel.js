@@ -30,13 +30,13 @@
         return target;
       }
     },
-    asyncDepthfirst: function(changef, callback, target, clone) {
+    asyncDepthfirst: function(changef, callback, clone, target) {
       var bucket, cb, key, result;
-      if (target == null) {
-        target = this.attributes;
-      }
       if (clone == null) {
         clone = false;
+      }
+      if (target == null) {
+        target = this.attributes;
       }
       if (target.constructor === Object || target.constructor === Array) {
         if (clone) {
@@ -49,7 +49,7 @@
             target[key] = data;
             return cb(err, data);
           };
-          this.asyncDepthfirst(changef, result, target[key], clone);
+          this.asyncDepthfirst(changef, result, clone, target[key]);
         }
         return bucket.done(function(err, data) {
           return callback(err, target);
@@ -106,24 +106,35 @@
         return this.attributes[property];
       }, this));
     },
-    exportreferences: function() {
-      var _export;
-      _export = function(model) {
-        return {
-          _r: model.get('id'),
-          _c: model.collection.name()
-        };
-      };
-      return this.depthfirst(function(val) {
-        if (val instanceof RemoteModel) {
-          return _export(val);
+    exportreferences: function(data, callback) {
+      var _matchf;
+      _matchf = function(value, callback) {
+        var id;
+        if (value instanceof RemoteModel) {
+          if (id = value.get('id')) {
+            callback(void 0, {
+              _r: id,
+              _c: value.collection.name()
+            });
+          } else {
+            value.flush(function(err, id) {});
+            if (err) {
+              callback(err, id);
+            } else {
+              callback(void 0, {
+                _r: id,
+                _c: value.collection.name()
+              });
+            }
+          }
         } else {
-          return val;
+          return value;
         }
-      });
+      };
+      return this.asyncDepthfirst(_matchf, callback, true, data);
     },
-    importreferences: function(attributes) {
-      var refcheck, _import;
+    importreferences: function(data, callback) {
+      var refcheck, _import, _matchf;
       _import = function(reference) {
         return true;
       };
@@ -131,11 +142,15 @@
         _r: "String",
         _c: "String"
       });
-      return this.depthfirst(function(val) {
-        return refcheck.feed(val, function(err, data) {
-          if (!err) {}
-        });
-      });
+      _matchf = function(value, callback) {
+        refcheck.feed(value, function(err, data) {});
+        if (err) {
+          callback(void 0, value);
+        } else {
+          callback(void 0, "MATCHED");
+        }
+      };
+      return this.asyncDepthfirst(_matchf, callback, false, data);
     },
     exportchanges: function(realm) {
       var ret;
@@ -150,22 +165,24 @@
       return this.flushnow(callback);
     },
     flushnow: function(callback) {
-      var changes, id;
+      var changes;
       changes = this.exportchanges('store');
-      changes = this.exportreferences(changes);
-      if (helpers.isEmpty(changes)) {
-        helpers.cbc(callback);
-      }
-      if (!(id = this.get('id'))) {
-        return this.collection.create(changes, __bind(function(err, id) {
-          this.set('id', id);
-          return helpers.cbc(callback, err, id);
-        }, this));
-      } else {
-        return this.collection.update({
-          id: id
-        }, changes, callback);
-      }
+      return this.exportreferences(changes, __bind(function(err, changes) {
+        var id;
+        if (helpers.isEmpty(changes)) {
+          helpers.cbc(callback);
+        }
+        if (!(id = this.get('id'))) {
+          return this.collection.create(changes, __bind(function(err, id) {
+            this.set('id', id);
+            return helpers.cbc(callback, err, id);
+          }, this));
+        } else {
+          return this.collection.update({
+            id: id
+          }, changes, callback);
+        }
+      }, this));
     },
     fetch: function(callback) {
       return true;
