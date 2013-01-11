@@ -30,18 +30,22 @@
         return target;
       }
     },
-    asyncDepthfirst: function(changef, callback, clone, target) {
-      var bucket, cb, key, result;
+    asyncDepthfirst: function(changef, callback, clone, all, target) {
+      var _check, _digtarget;
       if (clone == null) {
         clone = false;
+      }
+      if (all == null) {
+        all = false;
       }
       if (target == null) {
         target = this.attributes;
       }
-      if (target.constructor === Object || target.constructor === Array) {
-        if (clone) {
-          target = _.clone(target);
-        }
+      _check = function(target, callback) {
+        return helpers.forceCallback(changef, target, callback);
+      };
+      _digtarget = __bind(function(target, callback) {
+        var bucket, cb, key, result;
         bucket = new helpers.parallelBucket();
         for (key in target) {
           cb = bucket.cb();
@@ -49,13 +53,25 @@
             target[key] = data;
             return cb(err, data);
           };
-          this.asyncDepthfirst(changef, result, clone, target[key]);
+          this.asyncDepthfirst(changef, result, clone, all, target[key]);
         }
         return bucket.done(function(err, data) {
           return callback(err, target);
         });
+      }, this);
+      if (target.constructor === Object || target.constructor === Array) {
+        if (clone) {
+          target = _.clone(target);
+        }
+        if (all) {
+          return _check(target, function(err, target) {
+            return _digtarget(target, callback);
+          });
+        } else {
+          return _digtarget(target, callback);
+        }
       } else {
-        return helpers.forceCallback(changef, target, callback);
+        return _check(target, callback);
       }
     },
     initialize: function() {
@@ -131,7 +147,7 @@
           return value;
         }
       };
-      return this.asyncDepthfirst(_matchf, callback, true, data);
+      return this.asyncDepthfirst(_matchf, callback, true, false, data);
     },
     importReferences: function(data, callback) {
       var refcheck, _import, _matchf;
@@ -150,7 +166,7 @@
           callback(void 0, "MATCHED");
         }
       };
-      return this.asyncDepthfirst(_matchf, callback, false, data);
+      return this.asyncDepthfirst(_matchf, callback, false, true, data);
     },
     exportchanges: function(realm) {
       var ret;

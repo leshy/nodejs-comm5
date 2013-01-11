@@ -223,7 +223,7 @@ exports.References =
             property1: 3
             something: { lala: 3, bla: 75, ff: 'lfla' }
             ar: [ 1,2,3,4,5 ]
-
+            
         x.asyncDepthfirst ((val,callback) -> if val is 3 then 'replaced' else val),
             (err,data) ->
                 test.deepEqual { property1: 'replaced', something: { lala: 'replaced', bla: 75, ff: 'lfla' }, ar: [ 1, 2, 'replaced', 4, 5 ], _t: 'bla1' }, data
@@ -273,6 +273,8 @@ exports.References =
                     child1.del ->
                         child2.del ->
                             test.done()
+
+        
 ###
     resolveReferences: (test) ->
         parentmodel = @c1.defineModel 'type1', { hi: 3 }

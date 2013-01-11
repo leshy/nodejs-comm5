@@ -16,21 +16,27 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
             target
         else if response = callback(target) then response else target
 
-    asyncDepthfirst: (changef, callback, clone=false, target=@attributes) ->
-
-        if target.constructor is Object or target.constructor is Array
-            if clone then target = _.clone target
+    asyncDepthfirst: (changef, callback, clone=false, all=false, target=@attributes) ->
+        # call changef on the target, return results
+        _check = (target,callback) -> helpers.forceCallback changef, target, callback
+        # recursively search through iterable target
+        _digtarget = (target,callback) =>
             bucket = new helpers.parallelBucket()
             
             for key of target
                 cb = bucket.cb()
                 result = (err,data) -> target[key] = data; cb(err,data)
-                @asyncDepthfirst changef, result, clone, target[key]
+                @asyncDepthfirst changef, result, clone, all, target[key]
                 
             bucket.done (err,data) -> callback(err,target)
+    
+        if target.constructor is Object or target.constructor is Array
+            if clone then target = _.clone target
+            if all then _check target, (err,target) -> _digtarget(target,callback)
+            else _digtarget(target,callback) 
         else
-            helpers.forceCallback changef, target, callback 
-        
+            _check target, callback
+                        
     initialize: ->
         # this is temporary, permission system will make sure that this is never exported
         @when 'collection', (collection) =>
@@ -82,7 +88,7 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
                 return undefined
             else value # we can also return a value, and not call the callback, as this function gets wrapped into helpers.forceCallback
 
-        @asyncDepthfirst _matchf, callback, true, data
+        @asyncDepthfirst _matchf, callback, true, false, data
 
     importReferences: (data,callback) ->
         _import = (reference) -> true # instantiate an unresolved reference, or the propper model, with an unresolved state.
@@ -95,7 +101,7 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
             else callback undefined, "MATCHED"
             return
                 
-        @asyncDepthfirst _matchf, callback, false, data
+        @asyncDepthfirst _matchf, callback, false, true, data
         
     # apply permissions per realm
     exportchanges: (realm) ->
