@@ -65,7 +65,11 @@
         }
         if (all) {
           return _check(target, function(err, target) {
-            return _digtarget(target, callback);
+            if (target.constructor === Object || target.constructor === Array) {
+              return _digtarget(target, callback);
+            } else {
+              return callback(void 0, target);
+            }
           });
         } else {
           return _digtarget(target, callback);
@@ -159,12 +163,13 @@
         _c: "String"
       });
       _matchf = function(value, callback) {
-        refcheck.feed(value, function(err, data) {});
-        if (err) {
-          callback(void 0, value);
-        } else {
-          callback(void 0, "MATCHED");
-        }
+        refcheck.feed(value, function(err, data) {
+          if (err) {
+            return callback(void 0, value);
+          } else {
+            return callback(void 0, "MATCHED");
+          }
+        });
       };
       return this.asyncDepthfirst(_matchf, callback, false, true, data);
     },

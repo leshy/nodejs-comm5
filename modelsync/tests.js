@@ -574,6 +574,29 @@
           });
         });
       });
+    },
+    importReferences: function(test) {
+      var parent, parentmodel;
+      parentmodel = this.c1.defineModel('type1', {
+        hi: 3
+      });
+      parent = new parentmodel();
+      return parent.importReferences({
+        bla1: 'bla11',
+        bla2: {
+          _r: '124124',
+          _c: 'something'
+        },
+        lala: [
+          1, 2, {
+            _r: '124124',
+            _c: 'something'
+          }, 3
+        ]
+      }, function(err, data) {
+        console.log("IMPORT DONE", err, data);
+        return test.done();
+      });
     }
   };
   /*

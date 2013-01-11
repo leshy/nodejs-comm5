@@ -274,6 +274,14 @@ exports.References =
                         child2.del ->
                             test.done()
 
+    importReferences: (test) ->
+        parentmodel = @c1.defineModel 'type1', { hi: 3 }
+        parent = new parentmodel()
+
+        parent.importReferences { bla1: 'bla11', bla2: { _r: '124124', _c: 'something' }, lala: [1,2,{ _r: '124124', _c: 'something' }, 3] }, (err,data) ->
+            console.log "IMPORT DONE",err,data
+            test.done()
+
         
 ###
     resolveReferences: (test) ->

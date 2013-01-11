@@ -32,8 +32,9 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
     
         if target.constructor is Object or target.constructor is Array
             if clone then target = _.clone target
-            if all then _check target, (err,target) -> _digtarget(target,callback)
-            else _digtarget(target,callback) 
+            if all then _check target, (err,target) ->
+                if target.constructor is Object or target.constructor is Array then _digtarget(target,callback) else callback(undefined,target)
+            else _digtarget(target,callback)
         else
             _check target, callback
                         
@@ -93,13 +94,13 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
     importReferences: (data,callback) ->
         _import = (reference) -> true # instantiate an unresolved reference, or the propper model, with an unresolved state.
         
-        refcheck = v _r: "String", _c: "String"
+        refcheck = v { _r: "String", _c: "String" }
 
         _matchf = (value,callback) ->
             refcheck.feed value, (err,data) ->
-            if err then callback undefined, value
-            else callback undefined, "MATCHED"
-            return
+                if err then callback undefined, value
+                else callback undefined, "MATCHED"
+            return undefined
                 
         @asyncDepthfirst _matchf, callback, false, true, data
         
