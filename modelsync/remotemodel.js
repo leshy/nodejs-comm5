@@ -106,7 +106,7 @@
         return this.attributes[property];
       }, this));
     },
-    exportreferences: function(data, callback) {
+    exportReferences: function(data, callback) {
       var _matchf;
       _matchf = function(value, callback) {
         var id;
@@ -133,7 +133,7 @@
       };
       return this.asyncDepthfirst(_matchf, callback, true, data);
     },
-    importreferences: function(data, callback) {
+    importReferences: function(data, callback) {
       var refcheck, _import, _matchf;
       _import = function(reference) {
         return true;
@@ -167,7 +167,7 @@
     flushnow: function(callback) {
       var changes;
       changes = this.exportchanges('store');
-      return this.exportreferences(changes, __bind(function(err, changes) {
+      return this.exportReferences(changes, __bind(function(err, changes) {
         var id;
         if (helpers.isEmpty(changes)) {
           helpers.cbc(callback);

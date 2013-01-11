@@ -69,7 +69,7 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
 
     # looks for references to remote models and replaces them with object ids
     # what do we do if a reference object is not flushed? propagade flush call for now
-    exportreferences: (data,callback) ->
+    exportReferences: (data,callback) ->
         # finds a reference to remotemodel, and converts it to saveable reference in a form of a small json that points to the correct collection and id
         _matchf = (value,callback) ->
             if value instanceof RemoteModel
@@ -84,7 +84,7 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
 
         @asyncDepthfirst _matchf, callback, true, data
 
-    importreferences: (data,callback) ->
+    importReferences: (data,callback) ->
         _import = (reference) -> true # instantiate an unresolved reference, or the propper model, with an unresolved state.
         
         refcheck = v _r: "String", _c: "String"
@@ -113,7 +113,7 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
     flushnow: (callback) ->
         changes = @exportchanges('store')
 
-        @exportreferences changes, (err, changes) =>
+        @exportReferences changes, (err, changes) =>
             if helpers.isEmpty(changes) then helpers.cbc(callback)
             if not id = @get 'id' then @collection.create changes, (err,id) => @set 'id', id; helpers.cbc callback, err, id
             else @collection.update {id: id}, changes, callback

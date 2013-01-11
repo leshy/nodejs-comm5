@@ -260,7 +260,7 @@ exports.References =
             child2.flush ->
                 
                 parent = new parentmodel { testdict: { bla: child1, bla2: 3 }, child2: child2, ar: [ child1, 3 ,4, 'ggg' ] }
-                parent.exportreferences parent.attributes, (err,exported) -> 
+                parent.exportReferences parent.attributes, (err,exported) -> 
 
                     expected =
                         testdict: { bla: { "_r": child1.get('id'), "_c": 'test' }, bla2: 3 }

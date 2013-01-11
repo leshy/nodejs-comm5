@@ -543,7 +543,7 @@
             child2: child2,
             ar: [child1, 3, 4, 'ggg']
           });
-          return parent.exportreferences(parent.attributes, function(err, exported) {
+          return parent.exportReferences(parent.attributes, function(err, exported) {
             var expected;
             expected = {
               testdict: {
