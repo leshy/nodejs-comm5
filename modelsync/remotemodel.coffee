@@ -17,6 +17,27 @@ decorators = require 'decorators'; decorate = decorators.decorate;
 RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
     validator: v { collection: 'instance' }
 
+    
+    initialize: ->
+        # this is temporary, permission system will make sure that this is never exported
+        @when 'collection', (collection) =>
+            @unset 'collection'
+            @collection = collection
+
+        # once the object has been saved, we can request a subscription to its changes (this will be automatic for in the future)
+        @when 'id', (id) =>
+            @id = id
+            @collection.subscribechanges { id: id }, @remoteChangeReceive.bind(@)
+            @on 'change', @localChangePropagade.bind(@)
+
+        @importReferences @attributes, (err,data) => @attributes = data
+
+        # if we haven't been saved yet, we want to flush all our attributes when flush is called..
+        if @get 'id' then @changes = {} else @changes = helpers.hashmap(@attributes, -> true)
+
+    # get a reference for this model
+    reference: (id=@get 'id') ->  { _r: id, _c: @collection.name() }
+
     depthfirst: (callback,target=@attributes) ->
         if target.constructor is Object or target.constructor is Array
             target = _.clone target
@@ -47,24 +68,6 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
         else
             _check target, callback
 
-    reference: (id=@get 'id') ->  { _r: id, _c: @collection.name() }
-    
-    initialize: ->
-        # this is temporary, permission system will make sure that this is never exported
-        @when 'collection', (collection) =>
-            @unset 'collection'
-            @collection = collection
-
-        # once the object has been saved, we can request a subscription to its changes (this will be automatic for in the future)
-        @when 'id', (id) =>
-            @collection.subscribechanges { id: id }, @remoteChangeReceive.bind(@)
-            @on 'change', @localChangePropagade.bind(@)
-
-        @importReferences @attributes, (err,data) => @attributes = data
-
-        # if we haven't been saved yet, we want to flush all our attributes when flush is called..
-        if @get 'id' then @changes = {} else @changes = helpers.hashmap(@attributes, -> true)
-
     # I need a permissions implementation here..
     remoteChangeReceive: (change) ->
         switch change.action
@@ -76,6 +79,11 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
         delete change.id
         _.extend @changes, helpers.hashmap(change, -> true)
         # flush call would go here if it were throtteled properly and if autoflush is enabled
+
+    # mark some attributes as dirty (to be saved)
+    # needs to be done explicitly when changing dictionaries or arrays in attributes as change() won't catch that
+    # or you can call set _clone(property)
+    dirty: (attributes...) -> _.map attributes, (attr) => @changes.attr = true
 
     # I need a permissions implementation here..
     localCallPropagade: (name,args,callback) ->

@@ -1,6 +1,6 @@
 (function() {
   var Backbone, RemoteModel, Select, Validator, decorate, decorators, helpers, v, _;
-  var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
+  var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; }, __slice = Array.prototype.slice;
   Backbone = require('backbone4000');
   _ = require('underscore');
   helpers = require('helpers');
@@ -13,6 +13,38 @@
     validator: v({
       collection: 'instance'
     }),
+    initialize: function() {
+      this.when('collection', __bind(function(collection) {
+        this.unset('collection');
+        return this.collection = collection;
+      }, this));
+      this.when('id', __bind(function(id) {
+        this.id = id;
+        this.collection.subscribechanges({
+          id: id
+        }, this.remoteChangeReceive.bind(this));
+        return this.on('change', this.localChangePropagade.bind(this));
+      }, this));
+      this.importReferences(this.attributes, __bind(function(err, data) {
+        return this.attributes = data;
+      }, this));
+      if (this.get('id')) {
+        return this.changes = {};
+      } else {
+        return this.changes = helpers.hashmap(this.attributes, function() {
+          return true;
+        });
+      }
+    },
+    reference: function(id) {
+      if (id == null) {
+        id = this.get('id');
+      }
+      return {
+        _r: id,
+        _c: this.collection.name()
+      };
+    },
     depthfirst: function(callback, target) {
       var key, response;
       if (target == null) {
@@ -78,37 +110,6 @@
         return _check(target, callback);
       }
     },
-    reference: function(id) {
-      if (id == null) {
-        id = this.get('id');
-      }
-      return {
-        _r: id,
-        _c: this.collection.name()
-      };
-    },
-    initialize: function() {
-      this.when('collection', __bind(function(collection) {
-        this.unset('collection');
-        return this.collection = collection;
-      }, this));
-      this.when('id', __bind(function(id) {
-        this.collection.subscribechanges({
-          id: id
-        }, this.remoteChangeReceive.bind(this));
-        return this.on('change', this.localChangePropagade.bind(this));
-      }, this));
-      this.importReferences(this.attributes, __bind(function(err, data) {
-        return this.attributes = data;
-      }, this));
-      if (this.get('id')) {
-        return this.changes = {};
-      } else {
-        return this.changes = helpers.hashmap(this.attributes, function() {
-          return true;
-        });
-      }
-    },
     remoteChangeReceive: function(change) {
       switch (change.action) {
         case 'update':
@@ -124,6 +125,13 @@
       return _.extend(this.changes, helpers.hashmap(change, function() {
         return true;
       }));
+    },
+    dirty: function() {
+      var attributes;
+      attributes = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+      return _.map(attributes, __bind(function(attr) {
+        return this.changes.attr = true;
+      }, this));
     },
     localCallPropagade: function(name, args, callback) {
       return this.collection.fcall(name, args, {
