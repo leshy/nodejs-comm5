@@ -69,6 +69,7 @@ exports.mongoNode =
             if not msg then test.done()
 
     remove_raw: (test) ->
+        @c.msg ({ collection: 'test', remove: { bla: 4 }, raw: true })
         response = @c.msg ({ collection: 'test', remove: { bla: 3 }, raw: true })
         response.read (msg) ->
             if not msg then test.done()
@@ -106,8 +107,9 @@ exports.mongoRemote =
         else test.fail()
 
     remove: (test) ->
-        @c.create {bla: 3}, (err,id) => if id? and err? then test.fail("didn't get anything") else
-            @c.remove { id: id }, (err,data) -> test.equals(data,1); test.done();
+        #@c.create {bla: 3}, (err,id) => if id? and err? then test.fail("didn't get anything") else
+        @c.find { bla:3 }, {}, (entry) =>
+            if (entry) then @c.remove { id: entry.id }, (err,data) -> test.equals(data,1); test.done();
 
     update: (test) ->
         @c.create {bla: 3}, (err,id) => if id? and err? then test.fail() else
@@ -182,8 +184,9 @@ exports.AutoModelSync =
                 if instance2
                     instance1.set { bla: 3 }
                     instance1.flush (err,id) =>
+                        instance1.del(test.done)
                         #console.log(instance2.get 'bla');
-                        test.done()
+                        #test.done()
 
 exports.References =
     setUp: (callback) ->
@@ -354,7 +357,7 @@ exports.EverythingTogether =
             instance1.hi 3, (err,data) ->
                 test.equals err, undefined
                 test.equals data, 5
-                test.done()
+                instance1.del(test.done)
                 
 
     findOne: (test) ->

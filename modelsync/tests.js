@@ -180,6 +180,13 @@
     },
     remove_raw: function(test) {
       var response;
+      this.c.msg({
+        collection: 'test',
+        remove: {
+          bla: 4
+        },
+        raw: true
+      });
       response = this.c.msg({
         collection: 'test',
         remove: {
@@ -255,14 +262,12 @@
       }, this));
     },
     remove: function(test) {
-      return this.c.create({
+      return this.c.find({
         bla: 3
-      }, __bind(function(err, id) {
-        if ((id != null) && (err != null)) {
-          return test.fail("didn't get anything");
-        } else {
+      }, {}, __bind(function(entry) {
+        if (entry) {
           return this.c.remove({
-            id: id
+            id: entry.id
           }, function(err, data) {
             test.equals(data, 1);
             return test.done();
@@ -383,7 +388,7 @@
               bla: 3
             });
             return instance1.flush(__bind(function(err, id) {
-              return test.done();
+              return instance1.del(test.done);
             }, this));
           }
         }, this));
@@ -701,7 +706,7 @@
         return instance1.hi(3, function(err, data) {
           test.equals(err, void 0);
           test.equals(data, 5);
-          return test.done();
+          return instance1.del(test.done);
         });
       }, this));
     },
