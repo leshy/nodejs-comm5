@@ -6,13 +6,14 @@ decorators = require 'decorators'; decorate = decorators.decorate;
 
 # knows about its collection, knows how to store/create itself and defines the permissions
 #
-# rough description:
-# it logs changes of its attributes
 #
+# it logs changes of its attributes (localCallPropagade) 
+# and when flush() is called it will call its collection and provide it with its changed data (update or create request depending if the model already exists in the collection)
 #
+# it will also subscribe to changes to its id on its collection, so it will update itself (remoteChangeReceive) with remote data
 #
+# it also has localCallPropagade and remoteCallReceive for remote function calling
 # 
-
 RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
     validator: v { collection: 'instance' }
 
@@ -45,7 +46,9 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
             else _digtarget(target,callback)
         else
             _check target, callback
-                        
+
+    reference: (id=@get 'id') ->  { _r: id, _c: @collection.name() }
+    
     initialize: ->
         # this is temporary, permission system will make sure that this is never exported
         @when 'collection', (collection) =>
@@ -56,6 +59,8 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
         @when 'id', (id) =>
             @collection.subscribechanges { id: id }, @remoteChangeReceive.bind(@)
             @on 'change', @localChangePropagade.bind(@)
+
+        @importReferences @attributes, (err,data) => @attributes = data
 
         # if we haven't been saved yet, we want to flush all our attributes when flush is called..
         if @get 'id' then @changes = {} else @changes = helpers.hashmap(@attributes, -> true)
@@ -89,11 +94,11 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
         _matchf = (value,callback) ->
             if value instanceof RemoteModel
                 # has a child model been flushed?
-                if id = value.get('id') then callback undefined, { _r: id, _c: value.collection.name() }
+                if id = value.get('id') then callback undefined, value.reference(id)
                 else # if not, flush it, and then create a proper reference
                     value.flush (err,id) ->
                     if err then callback(err,id)
-                    else callback undefined, { _r: id, _c: value.collection.name() }
+                    else callback undefined, value.reference(id)
                 return undefined
             else value # we can also return a value, and not call the callback, as this function gets wrapped into helpers.forceCallback
 
@@ -103,11 +108,15 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
         _import = (reference) -> true # instantiate an unresolved reference, or the propper model, with an unresolved state.
         
         refcheck = v { _r: "String", _c: "String" }
+        
+        _resolve_reference = (ref) =>
+            if not targetcollection = @collection.getcollection(ref._c) then throw 'unknown collection "' + ref._c + '"'
+            else targetcollection.unresolved(ref._r)
 
         _matchf = (value,callback) ->
             refcheck.feed value, (err,data) ->
                 if err then callback undefined, value
-                else callback undefined, "MATCHED"
+                else callback undefined, _resolve_reference(value)
             return undefined
                 
         @asyncDepthfirst _matchf, callback, false, true, data
@@ -138,7 +147,6 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
         true
         
     del: (callback) ->
-        #console.log('triggering del')
         @trigger 'del', @
         if id = @get 'id' then @collection.remove {id: id}, callback else callback()
     

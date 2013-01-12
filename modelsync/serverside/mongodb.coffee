@@ -46,5 +46,5 @@ MongoCollection = exports.MongoCollection = Backbone.Model.extend4000
     update: (pattern,update,callback) ->
         @collection.update @patternIn(pattern), { '$set': update }, callback
 
-MongoCollectionNode = exports.MongoCollectionNode = MongoCollection.extend4000 collections.ModelMixin, collections.SubscriptionMixin, collections.CollectionExposer
+MongoCollectionNode = exports.MongoCollectionNode = MongoCollection.extend4000 collections.ModelMixin, collections.SubscriptionMixin, collections.ReferenceMixin, collections.CollectionExposer
 

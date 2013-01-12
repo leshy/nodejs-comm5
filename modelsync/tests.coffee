@@ -276,11 +276,24 @@ exports.References =
 
     importReferences: (test) ->
         parentmodel = @c1.defineModel 'type1', { hi: 3 }
-        parent = new parentmodel()
 
-        parent.importReferences { bla1: 'bla11', bla2: { _r: '124124', _c: 'something' }, lala: [1,2,{ _r: '124124', _c: 'something' }, 3] }, (err,data) ->
-            console.log "IMPORT DONE",err,data
-            test.done()
+        childmodel1 = @c1.defineModel 'type1', { childmodel: 1 }
+        childmodel2 = @c2.defineModel 'type2', { childmodel: 2 }
+
+        child1 = new childmodel1 { some_value: 5 }
+        child2 = new childmodel2 { some_value: 6 }
+
+        child1.flush =>
+            child2.flush =>                
+                parent = new parentmodel( { testdict: { bla: child1, bla2: 3 }, child2: child2, ar: [ child1, 3 ,4, 'ggg' ] })
+                parent.flush (err,id) =>
+                    @c1.findModel { id: id }, (model) ->
+                        model.get('child2').resolve (myclass) ->
+                            test.equals model.get('child2').get('some_value'), 6
+                            parent.del ->
+                                child1.del ->
+                                    child2.del -> 
+                                        test.done()
 
         
 ###
@@ -342,8 +355,7 @@ exports.EverythingTogether =
                 test.equals err, undefined
                 test.equals data, 5
                 test.done()
-
-
+                
 
     findOne: (test) ->
         newmodel1 = @c.defineModel 'findonetest',{ hi: -> 'bla1' }

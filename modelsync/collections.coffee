@@ -84,6 +84,36 @@ SubscriptionMixin = exports.SubscriptionMixin = Backbone.Model.extend4000
     unsubscribechanges: ->
         true
 
+# global dict holding all collections
+exports.collectionDict = {}
+
+UnresolvedRemoteModel = Backbone.Model.extend4000
+    collection: undefined
+    id: undefined
+    
+    toString: -> 'unresolved model ' + @get('id') + ' of collection ' + @get('collection').name()
+    
+    resolve: (callback) ->
+        collection = @get 'collection'
+        collection.findOne {id: @get 'id'}, (entry) =>
+            if not entry then callback('unable to resolve reference to ' + @get('id') + ' at ' + collection.name())
+            else 
+                @morph collection.resolveModel(entry), entry
+                callback @
+        
+    morph: (myclass,mydata) ->
+        @attributes = mydata
+        @__proto__ = myclass::
+
+ReferenceMixin = exports.ReferenceMixin = Backbone.Model.extend4000
+    initialize: ->
+        @collectionDict = exports.collectionDict
+        @when 'name', (name) => @collectionDict[name] = @
+
+    getcollection: (name) -> @collectionDict[name]
+
+    unresolved: (id) -> new UnresolvedRemoteModel id: id, collection: @
+
 
 # this can be mixed into a RemoteCollection or Collection itself
 # it adds findModel method that automatically instantiates propper models for query results
@@ -118,7 +148,7 @@ ModelMixin = exports.ModelMixin = Backbone.Model.extend4000
             else callback() # this is problematic, if function is async, empty callback() will be called before the functions have finished execution which will cause a premature reply.end()
             
 # has the same interface as local collections but it transparently talks to the remote collectionExposer via the messaging system,
-RemoteCollection = exports.RemoteCollection = Backbone.Model.extend4000 ModelMixin, SubscriptionMixin, Validator.ValidatedModel, MsgNode,
+RemoteCollection = exports.RemoteCollection = Backbone.Model.extend4000 ModelMixin, ReferenceMixin, SubscriptionMixin, Validator.ValidatedModel, MsgNode,
     validator: v(name: "String")
             
     create: (entry,callback) -> core.msgCallback @send( collection: @get('name'), create: entry ), callback

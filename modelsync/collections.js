@@ -1,5 +1,5 @@
 (function() {
-  var Backbone, CollectionExposer, ModelMixin, Msg, MsgNode, RemoteCollection, RemoteModel, Select, SubscriptionMan, SubscriptionMixin, Validator, async, core, decorate, decorators, helpers, v, _;
+  var Backbone, CollectionExposer, ModelMixin, Msg, MsgNode, ReferenceMixin, RemoteCollection, RemoteModel, Select, SubscriptionMan, SubscriptionMixin, UnresolvedRemoteModel, Validator, async, core, decorate, decorators, helpers, v, _;
   var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; }, __slice = Array.prototype.slice;
   Backbone = require('backbone4000');
   _ = require('underscore');
@@ -176,6 +176,49 @@
       return true;
     }
   });
+  exports.collectionDict = {};
+  UnresolvedRemoteModel = Backbone.Model.extend4000({
+    collection: void 0,
+    id: void 0,
+    toString: function() {
+      return 'unresolved model ' + this.get('id') + ' of collection ' + this.get('collection').name();
+    },
+    resolve: function(callback) {
+      var collection;
+      collection = this.get('collection');
+      return collection.findOne({
+        id: this.get('id')
+      }, __bind(function(entry) {
+        if (!entry) {
+          return callback('unable to resolve reference to ' + this.get('id') + ' at ' + collection.name());
+        } else {
+          this.morph(collection.resolveModel(entry), entry);
+          return callback(this);
+        }
+      }, this));
+    },
+    morph: function(myclass, mydata) {
+      this.attributes = mydata;
+      return this.__proto__ = myclass.prototype;
+    }
+  });
+  ReferenceMixin = exports.ReferenceMixin = Backbone.Model.extend4000({
+    initialize: function() {
+      this.collectionDict = exports.collectionDict;
+      return this.when('name', __bind(function(name) {
+        return this.collectionDict[name] = this;
+      }, this));
+    },
+    getcollection: function(name) {
+      return this.collectionDict[name];
+    },
+    unresolved: function(id) {
+      return new UnresolvedRemoteModel({
+        id: id,
+        collection: this
+      });
+    }
+  });
   ModelMixin = exports.ModelMixin = Backbone.Model.extend4000({
     initialize: function() {
       return this.models = {};
@@ -234,7 +277,7 @@
       });
     }
   });
-  RemoteCollection = exports.RemoteCollection = Backbone.Model.extend4000(ModelMixin, SubscriptionMixin, Validator.ValidatedModel, MsgNode, {
+  RemoteCollection = exports.RemoteCollection = Backbone.Model.extend4000(ModelMixin, ReferenceMixin, SubscriptionMixin, Validator.ValidatedModel, MsgNode, {
     validator: v({
       name: "String"
     }),

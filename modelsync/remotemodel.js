@@ -78,6 +78,15 @@
         return _check(target, callback);
       }
     },
+    reference: function(id) {
+      if (id == null) {
+        id = this.get('id');
+      }
+      return {
+        _r: id,
+        _c: this.collection.name()
+      };
+    },
     initialize: function() {
       this.when('collection', __bind(function(collection) {
         this.unset('collection');
@@ -88,6 +97,9 @@
           id: id
         }, this.remoteChangeReceive.bind(this));
         return this.on('change', this.localChangePropagade.bind(this));
+      }, this));
+      this.importReferences(this.attributes, __bind(function(err, data) {
+        return this.attributes = data;
       }, this));
       if (this.get('id')) {
         return this.changes = {};
@@ -132,19 +144,13 @@
         var id;
         if (value instanceof RemoteModel) {
           if (id = value.get('id')) {
-            callback(void 0, {
-              _r: id,
-              _c: value.collection.name()
-            });
+            callback(void 0, value.reference(id));
           } else {
             value.flush(function(err, id) {});
             if (err) {
               callback(err, id);
             } else {
-              callback(void 0, {
-                _r: id,
-                _c: value.collection.name()
-              });
+              callback(void 0, value.reference(id));
             }
           }
         } else {
@@ -154,7 +160,7 @@
       return this.asyncDepthfirst(_matchf, callback, true, false, data);
     },
     importReferences: function(data, callback) {
-      var refcheck, _import, _matchf;
+      var refcheck, _import, _matchf, _resolve_reference;
       _import = function(reference) {
         return true;
       };
@@ -162,12 +168,20 @@
         _r: "String",
         _c: "String"
       });
+      _resolve_reference = __bind(function(ref) {
+        var targetcollection;
+        if (!(targetcollection = this.collection.getcollection(ref._c))) {
+          throw 'unknown collection "' + ref._c + '"';
+        } else {
+          return targetcollection.unresolved(ref._r);
+        }
+      }, this);
       _matchf = function(value, callback) {
         refcheck.feed(value, function(err, data) {
           if (err) {
             return callback(void 0, value);
           } else {
-            return callback(void 0, "MATCHED");
+            return callback(void 0, _resolve_reference(value));
           }
         });
       };

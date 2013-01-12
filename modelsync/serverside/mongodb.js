@@ -81,5 +81,5 @@
       }, callback);
     }
   });
-  MongoCollectionNode = exports.MongoCollectionNode = MongoCollection.extend4000(collections.ModelMixin, collections.SubscriptionMixin, collections.CollectionExposer);
+  MongoCollectionNode = exports.MongoCollectionNode = MongoCollection.extend4000(collections.ModelMixin, collections.SubscriptionMixin, collections.ReferenceMixin, collections.CollectionExposer);
 }).call(this);

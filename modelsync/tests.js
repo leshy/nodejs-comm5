@@ -576,27 +576,51 @@
       });
     },
     importReferences: function(test) {
-      var parent, parentmodel;
+      var child1, child2, childmodel1, childmodel2, parentmodel;
       parentmodel = this.c1.defineModel('type1', {
         hi: 3
       });
-      parent = new parentmodel();
-      return parent.importReferences({
-        bla1: 'bla11',
-        bla2: {
-          _r: '124124',
-          _c: 'something'
-        },
-        lala: [
-          1, 2, {
-            _r: '124124',
-            _c: 'something'
-          }, 3
-        ]
-      }, function(err, data) {
-        console.log("IMPORT DONE", err, data);
-        return test.done();
+      childmodel1 = this.c1.defineModel('type1', {
+        childmodel: 1
       });
+      childmodel2 = this.c2.defineModel('type2', {
+        childmodel: 2
+      });
+      child1 = new childmodel1({
+        some_value: 5
+      });
+      child2 = new childmodel2({
+        some_value: 6
+      });
+      return child1.flush(__bind(function() {
+        return child2.flush(__bind(function() {
+          var parent;
+          parent = new parentmodel({
+            testdict: {
+              bla: child1,
+              bla2: 3
+            },
+            child2: child2,
+            ar: [child1, 3, 4, 'ggg']
+          });
+          return parent.flush(__bind(function(err, id) {
+            return this.c1.findModel({
+              id: id
+            }, function(model) {
+              return model.get('child2').resolve(function(myclass) {
+                test.equals(model.get('child2').get('some_value'), 6);
+                return parent.del(function() {
+                  return child1.del(function() {
+                    return child2.del(function() {
+                      return test.done();
+                    });
+                  });
+                });
+              });
+            });
+          }, this));
+        }, this));
+      }, this));
     }
   };
   /*
