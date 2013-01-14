@@ -1,6 +1,6 @@
 (function() {
-  var Backbone, RemoteModel, Select, Validator, decorate, decorators, helpers, v, _;
-  var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; }, __slice = Array.prototype.slice;
+  var Backbone, Permission, RemoteModel, Select, Validator, decorate, decorators, helpers, v, _;
+  var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
   Backbone = require('backbone4000');
   _ = require('underscore');
   helpers = require('helpers');
@@ -9,6 +9,25 @@
   Select = Validator.Select;
   decorators = require('decorators');
   decorate = decorators.decorate;
+  /*
+  definePermissions = (f) ->
+      p = 
+  
+      permissions = {}
+      def = (name, permission)
+      
+      
+      f def, _.clone(some_standard_permissions_set)
+  */
+  Permission = exports.Permission = Validator.ValidatedModel.extend4000({
+    validator: v({
+      match: 'Object',
+      chew: 'Function'
+    }),
+    initialize: function() {
+      return this.match = this.get('match' && (this.chew = this.get('chew')));
+    }
+  });
   RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000({
     validator: v({
       collection: 'instance'
@@ -126,12 +145,8 @@
         return true;
       }));
     },
-    dirty: function() {
-      var attributes;
-      attributes = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
-      return _.map(attributes, __bind(function(attr) {
-        return this.changes.attr = true;
-      }, this));
+    dirty: function(attribute) {
+      return this.changes[attribute] = true;
     },
     localCallPropagade: function(name, args, callback) {
       return this.collection.fcall(name, args, {
@@ -140,11 +155,6 @@
     },
     remoteCallReceive: function(name, args, callback) {
       return this[name].apply(this, args.concat(callback));
-    },
-    "export": function(realm, attrs) {
-      return helpers.hashfilter(attrs, __bind(function(value, property) {
-        return this.attributes[property];
-      }, this));
     },
     exportReferences: function(data, callback) {
       var _matchf;
@@ -195,21 +205,25 @@
       };
       return this.asyncDepthfirst(_matchf, callback, false, true, data);
     },
-    exportchanges: function(realm) {
-      var ret;
-      ret = this["export"](realm, this.changes);
-      this.changes = {};
-      return ret;
-    },
-    update: function(data) {
-      return this.set(data);
+    update: function(data, realm) {
+      if (!realm) {
+        return this.set(data);
+      } else {
+        return this.applyPermissions(data, realm, function(err, data) {
+          if (!err) {
+            return this.set(data);
+          }
+        });
+      }
     },
     flush: function(callback) {
       return this.flushnow(callback);
     },
     flushnow: function(callback) {
       var changes;
-      changes = this.exportchanges('store');
+      changes = helpers.hashfilter(this.changes, __bind(function(value, property) {
+        return this.attributes[property];
+      }, this));
       return this.exportReferences(changes, __bind(function(err, changes) {
         var id;
         if (helpers.isEmpty(changes)) {
@@ -226,9 +240,6 @@
           }, changes, callback);
         }
       }, this));
-    },
-    fetch: function(callback) {
-      return true;
     },
     del: function(callback) {
       var id;

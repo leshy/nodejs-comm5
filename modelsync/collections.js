@@ -61,7 +61,7 @@
       }, __bind(function(msg, reply, next, transmit) {
         return this.findModels(msg.find).each(__bind(function(entry) {
           if (entry != null) {
-            entry.update(data);
+            entry.update(data, msg.realm);
             return entry.flush();
           } else {
             return reply.end();

@@ -4,20 +4,32 @@ helpers = require 'helpers'
 Validator = require 'validator2-extras'; v = Validator.v; Select = Validator.Select
 decorators = require 'decorators'; decorate = decorators.decorate;
 
+###
+definePermissions = (f) ->
+    p = 
+
+    permissions = {}
+    def = (name, permission)
+    
+    
+    f def, _.clone(some_standard_permissions_set)
+###
+
+Permission = exports.Permission = Validator.ValidatedModel.extend4000
+    validator: v { match: 'Object', chew: 'Function' }
+    initialize: -> @match = @get 'match' and @chew = @get 'chew'    
+
 # knows about its collection, knows how to store/create itself and defines the permissions
-#
 #
 # it logs changes of its attributes (localCallPropagade) 
 # and when flush() is called it will call its collection and provide it with its changed data (update or create request depending if the model already exists in the collection)
 #
 # it will also subscribe to changes to its id on its collection, so it will update itself (remoteChangeReceive) with remote data
 #
-# it also has localCallPropagade and remoteCallReceive for remote function calling
-# 
+# it also has localCallPropagade and remoteCallReceive for remote function calling 
 RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
     validator: v { collection: 'instance' }
 
-    
     initialize: ->
         # this is temporary, permission system will make sure that this is never exported
         @when 'collection', (collection) =>
@@ -83,7 +95,7 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
     # mark some attributes as dirty (to be saved)
     # needs to be done explicitly when changing dictionaries or arrays in attributes as change() won't catch that
     # or you can call set _clone(property)
-    dirty: (attributes...) -> _.map attributes, (attr) => @changes.attr = true
+    dirty: (attribute) -> @changes[attribute] = true
 
     # I need a permissions implementation here..
     localCallPropagade: (name,args,callback) ->
@@ -91,9 +103,6 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
         
     remoteCallReceive: (name,args,callback) ->
         @[name].apply @, args.concat(callback)
-
-    export: (realm,attrs) ->
-        return helpers.hashfilter attrs, (value,property) => @attributes[property]
 
     # looks for references to remote models and replaces them with object ids
     # what do we do if a reference object is not flushed? propagade flush call for now
@@ -129,30 +138,22 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
                 
         @asyncDepthfirst _matchf, callback, false, true, data
         
-    # apply permissions per realm
-    exportchanges: (realm) ->
-        ret = @export(realm,@changes)
-        @changes = {}
-        return ret
-
-    update: (data) -> @set(data)
-    
+    update: (data,realm) ->
+        if not realm then @set(data)
+        else @applyPermissions data, realm, (err,data) -> if not err then @set(data)
+                        
     # simplified for now, will reintroduce when done with model syncing
     # throttle decorator makes sure that we can apply bunch of changes in a series to an object, but the system requests a sync only once.
     #flush: decorate( decorators.MakeDecorator_Throttle({ throttletime: 1 }), (callback) -> @flushnow(callback) )
     flush: (callback) -> @flushnow(callback)
 
     flushnow: (callback) ->
-        changes = @exportchanges('store')
+        changes = helpers.hashfilter @changes, (value,property) => @attributes[property]
 
         @exportReferences changes, (err, changes) =>
             if helpers.isEmpty(changes) then helpers.cbc(callback)
             if not id = @get 'id' then @collection.create changes, (err,id) => @set 'id', id; helpers.cbc callback, err, id
             else @collection.update {id: id}, changes, callback
-
-    # requests its data from a collection
-    fetch: (callback) ->
-        true
         
     del: (callback) ->
         @trigger 'del', @

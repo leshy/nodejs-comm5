@@ -628,21 +628,6 @@
       }, this));
     }
   };
-  /*
-      resolveReferences: (test) ->
-          parentmodel = @c1.defineModel 'type1', { hi: 3 }
-  
-          childmodel1 = @c1.defineModel 'type1', { childmodel: 1 }
-          childmodel2 = @c2.defineModel 'type2', { childmodel: 2 }
-  
-          child1 = new childmodel1 { some_value: 5 }
-          child2 = new childmodel2 { some_value: 6 }
-  
-          child1.flush ->
-              child2.flush ->
-                      
-                  parent = new parentmodel { testdict: { bla: child1, bla2: 3 }, child2: child2, ar: [ child1, 3 ,4, 'ggg' ] }
-  */
   exports.EverythingTogether = {
     setUp: function(callback) {
       var realcollection;
@@ -795,8 +780,8 @@
             } else {
               found = true;
               test.equals(instance2.get('everythingtogether'), 666);
-              test.deepEqual(instance2["export"]('store'), instance1["export"]('store'));
-              test.deepEqual(_.omit(instance2["export"]('store', instance2.attributes), 'id'), {
+              test.deepEqual(_.omit(instance2.attributes, 'id'), _.omit(instance1.attributes, 'id'));
+              test.deepEqual(_.omit(instance2.attributes, 'id'), {
                 _t: 'bla1',
                 everythingtogether: 666,
                 somethingelse: 667
@@ -806,7 +791,7 @@
               return instance2.del(__bind(function() {
                 return this.c.findModels({
                   id: id
-                }, __bind(function(model) {
+                }, {}, __bind(function(model) {
                   if (model) {
                     return test.fail();
                   } else {

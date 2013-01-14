@@ -1,3 +1,5 @@
+# warning, need collection level permissions for raw update calls...
+
 Backbone = require 'backbone4000'
 _ = require 'underscore'
 decorators = require 'decorators'; decorate = decorators.decorate;
@@ -35,7 +37,7 @@ CollectionExposer = exports.CollectionExposer = MsgNode.extend4000
         # update
         @subscribe { collection: name, update: "Object", data: "Object" },
             (msg,reply,next,transmit) => @findModels(msg.find).each (entry) =>
-                if entry? then entry.update(data); entry.flush() else reply.end()
+                if entry? then entry.update(data,msg.realm); entry.flush() else reply.end()
         
         # find
         @subscribe { collection: name, find: "Object", limits: v().Default({}).Object() },
