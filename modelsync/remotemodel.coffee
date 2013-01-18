@@ -19,6 +19,7 @@ Permission = exports.Permission = Validator.ValidatedModel.extend4000
     validator: v { match: 'Object', chew: 'Function' }
     initialize: -> @match = @get 'match' and @chew = @get 'chew'    
 
+
 # knows about its collection, knows how to store/create itself and defines the permissions
 #
 # it logs changes of its attributes (localCallPropagade) 
@@ -80,11 +81,11 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
         else
             _check target, callback
 
-    # I need a permissions implementation here..
     remoteChangeReceive: (change) ->
         switch change.action
             when 'update' then @set change.update, { silent: true }
-
+            #when 'remove' then @del()
+            
     # I need to find nested models here and replace them with their ids
     localChangePropagade: (model,data) ->
         change = model.changedAttributes()
@@ -99,11 +100,46 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
 
     # I need a permissions implementation here..
     localCallPropagade: (name,args,callback) ->
-        @collection.fcall name,args,{ id: @id }, callback         
+        @collection.fcall name, args, { id: @id }, callback
         
-    remoteCallReceive: (name,args,callback) ->
+    remoteCallReceive: (name,args,realm,callback) ->
+#        if realm then @applyPermissions
         @[name].apply @, args.concat(callback)
 
+    update: (data,realm) ->
+        if not realm then @set(data)
+        else @applyPermissions data, realm, (err,data) -> if not err then @set(data)
+
+    applyPermissions: (data,realm,callback) ->
+        callback()
+        #bucket = new helpers.parallelBucket()
+        
+
+    applyPermission: (attribute,value,realm,callback) ->
+        true
+
+    getPermission: (attribute,realm,callback) ->
+
+        ###
+        perms = _.clone @permissions[attribute]
+        _next = ->
+            if not perms.length then callback('access denied'); return
+
+            perm = perms.pop()
+            perm.match realm, (err,data) -> if data then callback(undefined,data) else _next()
+            
+        _next()
+        ###
+            
+        async.series _.map(@permissions[attribute], (permission) -> (callback) -> permission.match(realm,helpers.reverseCb(callback))), (err,data) ->
+            
+            
+            
+            
+            
+
+    
+        
     # looks for references to remote models and replaces them with object ids
     # what do we do if a reference object is not flushed? propagade flush call for now
     exportReferences: (data,callback) ->
@@ -138,10 +174,8 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
                 
         @asyncDepthfirst _matchf, callback, false, true, data
         
-    update: (data,realm) ->
-        if not realm then @set(data)
-        else @applyPermissions data, realm, (err,data) -> if not err then @set(data)
-                        
+        
+
     # simplified for now, will reintroduce when done with model syncing
     # throttle decorator makes sure that we can apply bunch of changes in a series to an object, but the system requests a sync only once.
     #flush: decorate( decorators.MakeDecorator_Throttle({ throttletime: 1 }), (callback) -> @flushnow(callback) )
@@ -149,6 +183,7 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
 
     flushnow: (callback) ->
         changes = helpers.hashfilter @changes, (value,property) => @attributes[property]
+        #@applyPermissions changes, StoreRealm, (err,data) -> if not err then @set(data)
 
         @exportReferences changes, (err, changes) =>
             if helpers.isEmpty(changes) then helpers.cbc(callback)
@@ -159,3 +194,4 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
         @trigger 'del', @
         if id = @get 'id' then @collection.remove {id: id}, callback else callback()
     
+

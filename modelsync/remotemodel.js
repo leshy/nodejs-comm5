@@ -153,8 +153,41 @@
         id: this.id
       }, callback);
     },
-    remoteCallReceive: function(name, args, callback) {
+    remoteCallReceive: function(name, args, realm, callback) {
       return this[name].apply(this, args.concat(callback));
+    },
+    update: function(data, realm) {
+      if (!realm) {
+        return this.set(data);
+      } else {
+        return this.applyPermissions(data, realm, function(err, data) {
+          if (!err) {
+            return this.set(data);
+          }
+        });
+      }
+    },
+    applyPermissions: function(data, realm, callback) {
+      return callback();
+    },
+    applyPermission: function(attribute, value, realm, callback) {
+      return true;
+    },
+    getPermission: function(attribute, realm, callback) {
+      /*
+              perms = _.clone @permissions[attribute]
+              _next = ->
+                  if not perms.length then callback('access denied'); return
+      
+                  perm = perms.pop()
+                  perm.match realm, (err,data) -> if data then callback(undefined,data) else _next()
+                  
+              _next()
+              */      return async.series(_.map(this.permissions[attribute], function(permission) {
+        return function(callback) {
+          return permission.match(realm, helpers.reverseCb(callback));
+        };
+      }), function(err, data) {});
     },
     exportReferences: function(data, callback) {
       var _matchf;
@@ -204,17 +237,6 @@
         });
       };
       return this.asyncDepthfirst(_matchf, callback, false, true, data);
-    },
-    update: function(data, realm) {
-      if (!realm) {
-        return this.set(data);
-      } else {
-        return this.applyPermissions(data, realm, function(err, data) {
-          if (!err) {
-            return this.set(data);
-          }
-        });
-      }
     },
     flush: function(callback) {
       return this.flushnow(callback);

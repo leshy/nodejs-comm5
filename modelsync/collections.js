@@ -114,7 +114,7 @@
         args: "Array",
         data: "Object"
       }, __bind(function(msg, reply, next, transmit) {
-        return this.fcall(msg.call, msg.args, msg.data, function(err, data) {
+        return this.fcall(msg.call, msg.args, msg.data, msg.realm, function(err, data) {
           if (err || data) {
             return reply.write({
               err: err,
@@ -265,10 +265,10 @@
         }
       }, this));
     },
-    fcall: function(name, args, pattern, callback) {
+    fcall: function(name, args, pattern, realm, callback) {
       return this.findModels(pattern, {}, function(model) {
         if (model != null) {
-          return model.remoteCallReceive(name, args, function(err, data) {
+          return model.remoteCallReceive(name, args, realm, function(err, data) {
             return callback(err, data);
           });
         } else {
