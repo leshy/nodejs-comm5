@@ -699,6 +699,152 @@
           return test.done();
         });
       });
+    },
+    applyPermission: function(test) {
+      var attribute, model, realm, x;
+      model = this.c.defineModel('bla', {
+        permissions: {
+          xxx: [
+            new this.remotemodel.Permission({
+              v: 'bobby',
+              match: v({
+                user: 'bobby'
+              }),
+              chew: function(value, data, callback) {
+                return callback(void 0, "BLA" + data.realm.user + value);
+              }
+            }), new this.remotemodel.Permission({
+              v: 'bob',
+              match: v({
+                user: 'bob'
+              }),
+              chew: function(value, data, callback) {
+                return callback(void 0, "BLA" + data.realm.user + value);
+              }
+            }), new this.remotemodel.Permission({
+              v: 'bob2',
+              match: v({
+                user: 'bob'
+              }),
+              chew: function(value, data, callback) {
+                return callback(void 0, "BLA" + data.realm.user + value);
+              }
+            })
+          ]
+        }
+      });
+      x = new model();
+      realm = {
+        user: 'bob'
+      };
+      attribute = 'xxx';
+      return x.applyPermission(attribute, 'LALA', realm, function(err, data) {
+        test.equals(data, 'BLAbobLALA');
+        return test.done();
+      });
+    },
+    applyPermissions: function(test) {
+      var data, model, realm, x;
+      model = this.c.defineModel('bla', {
+        permissions: {
+          xxx: [
+            new this.remotemodel.Permission({
+              v: 'bobby',
+              match: v({
+                user: 'bobby'
+              }),
+              chew: function(value, data, callback) {
+                return callback(void 0, "BLA" + data.realm.user + value);
+              }
+            }), new this.remotemodel.Permission({
+              v: 'bob',
+              match: v({
+                user: 'bob'
+              }),
+              chew: function(value, data, callback) {
+                return callback(void 0, "BLA" + data.realm.user + value);
+              }
+            }), new this.remotemodel.Permission({
+              v: 'bob2',
+              match: v({
+                user: 'bob'
+              }),
+              chew: function(value, data, callback) {
+                return callback(void 0, "BLA" + data.realm.user + value);
+              }
+            })
+          ],
+          yyy: [
+            new this.remotemodel.Permission({
+              match: v({
+                user: 'bob'
+              }),
+              chew: function(value, data, callback) {
+                return callback(void 0, "yyy" + data.realm.user + "NOBLA");
+              }
+            }), new this.remotemodel.Permission({
+              match: v({
+                user: 'bob',
+                bla: true
+              }),
+              chew: function(value, data, callback) {
+                return callback(void 0, "yyy" + data.realm.user + data.realm.bla);
+              }
+            })
+          ]
+        }
+      });
+      x = new model();
+      realm = {
+        user: 'bob',
+        bla: 3
+      };
+      data = {
+        xxx: "set_to_something",
+        yyy: "set_to_something_else"
+      };
+      return x.applyPermissions({
+        xxx: "set_to_something",
+        yyy: "set_to_something_else"
+      }, realm, function(err, data) {
+        test.equal(err, void 0);
+        test.deepEqual(data, {
+          xxx: 'BLAbobset_to_something',
+          yyy: 'yyybobNOBLA'
+        });
+        return x.applyPermissions({
+          xxx: "k",
+          yyy: "set_to_something_else"
+        }, {
+          user: 'bob'
+        }, function(err, data) {
+          test.equal(err, void 0);
+          test.deepEqual(data, {
+            xxx: 'BLAbobk',
+            yyy: 'yyybobNOBLA'
+          });
+          return x.applyPermissions({
+            xxx: "k",
+            yyy: "set_to_something_else",
+            zzz: "fail?"
+          }, {
+            user: 'bob'
+          }, function(err, data) {
+            test.equal(err, "permission denied for attribute zzz");
+            test.equal(data, void 0);
+            return x.applyPermissions({
+              xxx: "k",
+              yyy: "set_to_something_else",
+              zzz: "fail?",
+              bbb: "fail2!"
+            }, {
+              user: 'bob'
+            }, function(err, data) {
+              return test.done();
+            });
+          });
+        });
+      });
     }
   };
   exports.EverythingTogether = {

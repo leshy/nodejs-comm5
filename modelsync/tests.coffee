@@ -337,6 +337,58 @@ exports.Permissions =
                 test.equals data, 'BLAbobLALA'
                 test.done()
 
+    applyPermission: (test) ->
+        model = @c.defineModel 'bla',
+            permissions: { xxx: [
+                new @remotemodel.Permission( v: 'bobby', match: v(user: 'bobby'), chew: (value,data,callback) -> ( callback undefined, "BLA" + data.realm.user + value ) )
+                new @remotemodel.Permission( v: 'bob', match: v(user: 'bob'), chew: (value,data,callback) -> ( callback undefined, "BLA" + data.realm.user + value ) )
+                new @remotemodel.Permission( v: 'bob2', match: v(user: 'bob'), chew: (value,data,callback) -> ( callback undefined, "BLA" + data.realm.user + value  ) )
+            ]}
+        
+        x = new model()
+        realm =  { user: 'bob'}
+        attribute = 'xxx'
+        x.applyPermission attribute,'LALA',realm, (err,data) ->
+            test.equals data, 'BLAbobLALA'
+            test.done()
+
+
+    applyPermissions: (test) -> 
+        model = @c.defineModel 'bla',
+            permissions: {
+                xxx: [
+                    new @remotemodel.Permission( v: 'bobby', match: v(user: 'bobby'), chew: (value,data,callback) -> ( callback undefined, "BLA" + data.realm.user + value ) )
+                    new @remotemodel.Permission( v: 'bob', match: v(user: 'bob'), chew: (value,data,callback) -> ( callback undefined, "BLA" + data.realm.user + value ) )
+                    new @remotemodel.Permission( v: 'bob2', match: v(user: 'bob'), chew: (value,data,callback) -> ( callback undefined, "BLA" + data.realm.user + value  ) )
+                ],
+                
+                yyy: [
+                    new @remotemodel.Permission( match: v(user: 'bob'), chew: (value,data,callback) -> ( callback undefined, "yyy" + data.realm.user + "NOBLA" ) )
+                    new @remotemodel.Permission( match: v(user: 'bob', bla: true), chew: (value,data,callback) -> ( callback undefined, "yyy" + data.realm.user + data.realm.bla ) )
+                ]
+            }
+
+            
+        x = new model()
+        realm = { user: 'bob', bla: 3 }
+        data = { xxx: "set_to_something", yyy: "set_to_something_else" }
+
+        x.applyPermissions { xxx: "set_to_something", yyy: "set_to_something_else" }, realm, (err,data) ->
+            test.equal err, undefined
+            test.deepEqual data, { xxx: 'BLAbobset_to_something', yyy: 'yyybobNOBLA' }
+
+            x.applyPermissions { xxx: "k", yyy: "set_to_something_else" }, { user: 'bob' }, (err,data) ->
+                test.equal err, undefined
+                test.deepEqual data, { xxx: 'BLAbobk', yyy: 'yyybobNOBLA' }
+
+                x.applyPermissions { xxx: "k", yyy: "set_to_something_else", zzz: "fail?" }, { user: 'bob' }, (err,data) ->
+                    test.equal err, "permission denied for attribute zzz"
+                    test.equal data, undefined
+                    x.applyPermissions { xxx: "k", yyy: "set_to_something_else", zzz: "fail?", bbb: "fail2!" }, { user: 'bob' }, (err,data) ->
+                        #console.log err,data
+                        # it will return only zzz as I'm using async.parallel.. don't care to fix atm.
+                        test.done()
+
 
 
 exports.EverythingTogether =

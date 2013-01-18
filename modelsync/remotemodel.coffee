@@ -112,8 +112,9 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
         else @applyPermissions data, realm, (err,data) -> if not err then @set(data)
 
     applyPermissions: (data,realm,callback) ->
-        callback()
-        #bucket = new helpers.parallelBucket()        
+        async.parallel helpers.hashmap(data, (value,attribute) => (callback) => @getPermission(attribute,realm,callback)), (err,permissions) ->
+            if err then callback "permission denied for attribute" + (if err.constructor is Object then "s " + _.keys(err).join(', ') else " " + err); return
+            async.parallel helpers.hashmap(permissions, (permission,attribute) -> (callback) -> permission.chew(data[attribute], { realm: realm, attribute: attribute }, callback)), callback
 
     applyPermission: (attribute,value,realm,callback) ->
         @getPermission attribute, realm, (err,permission) ->
@@ -123,7 +124,7 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
     # will find a first permission that matches this realm for this attribute and return it
     getPermission: (attribute,realm,callback) ->
         async.series _.map(@permissions[attribute], (permission) -> (callback) -> permission.match(realm, (err,data) -> if not err then callback(permission) else callback() )), (err,data) ->
-            if err then callback(undefined,err) else callback('permission denied')
+            if err then callback(undefined,err) else callback(attribute)
             
             
             

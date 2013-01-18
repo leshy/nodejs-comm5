@@ -173,7 +173,24 @@
       }
     },
     applyPermissions: function(data, realm, callback) {
-      return callback();
+      return async.parallel(helpers.hashmap(data, __bind(function(value, attribute) {
+        return __bind(function(callback) {
+          return this.getPermission(attribute, realm, callback);
+        }, this);
+      }, this)), function(err, permissions) {
+        if (err) {
+          callback("permission denied for attribute" + (err.constructor === Object ? "s " + _.keys(err).join(', ') : " " + err));
+          return;
+        }
+        return async.parallel(helpers.hashmap(permissions, function(permission, attribute) {
+          return function(callback) {
+            return permission.chew(data[attribute], {
+              realm: realm,
+              attribute: attribute
+            }, callback);
+          };
+        }), callback);
+      });
     },
     applyPermission: function(attribute, value, realm, callback) {
       return this.getPermission(attribute, realm, function(err, permission) {
@@ -202,7 +219,7 @@
         if (err) {
           return callback(void 0, err);
         } else {
-          return callback('permission denied');
+          return callback(attribute);
         }
       });
     },
