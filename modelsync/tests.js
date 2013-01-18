@@ -1,10 +1,13 @@
 (function() {
-  var wait, _;
+  var Select, Validator, v, wait, _;
   var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; }, __slice = Array.prototype.slice;
   _ = require('underscore');
   wait = function(time, f) {
     return setTimeout(f, time);
   };
+  Validator = require('validator2-extras');
+  v = Validator.v;
+  Select = Validator.Select;
   exports.mongo = {
     setUp: function(callback) {
       this.mongoC = require('./serverside/mongodb');
@@ -626,6 +629,72 @@
           }, this));
         }, this));
       }, this));
+    }
+  };
+  exports.Permissions = {
+    setUp: function(callback) {
+      var realcollection;
+      this.remotemodel = require('./remotemodel');
+      this.mongoC = require('./serverside/mongodb');
+      this.collections = require('./collections');
+      this.mongo = require('mongodb');
+      this.db = new this.mongo.Db('testdb', new this.mongo.Server('localhost', 27017), {
+        safe: true
+      });
+      this.c = realcollection = new this.mongoC.MongoCollectionNode({
+        db: this.db,
+        collection: 'test'
+      });
+      return this.db.open(callback);
+    },
+    tearDown: function(callback) {
+      this.db.close();
+      return callback();
+    },
+    getPermission: function(test) {
+      var model, realm, x;
+      model = this.c.defineModel('bla', {
+        permissions: {
+          xxx: [
+            new this.remotemodel.Permission({
+              v: 'bobby',
+              match: v({
+                user: 'bobby'
+              }),
+              chew: function(value, realm, callback) {
+                return callback(void 0, "BLA" + realm.user + value);
+              }
+            }), new this.remotemodel.Permission({
+              v: 'bob',
+              match: v({
+                user: 'bob'
+              }),
+              chew: function(value, realm, callback) {
+                return callback(void 0, "BLA" + realm.user + value);
+              }
+            }), new this.remotemodel.Permission({
+              v: 'bob2',
+              match: v({
+                user: 'bob'
+              }),
+              chew: function(value, realm, callback) {
+                return callback(void 0, "BLA" + realm.user + value);
+              }
+            })
+          ]
+        }
+      });
+      x = new model();
+      realm = {
+        user: 'bob'
+      };
+      return x.getPermission('xxx', realm, function(err, permission) {
+        test.equals(permission.get('v'), 'bob');
+        return permission.chew("LALA", realm, function(err, data) {
+          test.equals(data, 'BLAbobLALA');
+          return test.done();
+        });
+      });
     }
   };
   exports.EverythingTogether = {

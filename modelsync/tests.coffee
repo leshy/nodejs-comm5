@@ -1,5 +1,7 @@
 _ = require 'underscore'
 wait = (time,f) -> setTimeout(f,time)
+Validator = require 'validator2-extras'; v = Validator.v; Select = Validator.Select
+
 
 exports.mongo =
     setUp: (callback) ->
@@ -297,6 +299,44 @@ exports.References =
                                 child1.del ->
                                     child2.del -> 
                                         test.done()
+
+
+
+exports.Permissions =
+    setUp: (callback) ->
+        @remotemodel = require './remotemodel'
+        @mongoC = require './serverside/mongodb'
+        @collections = require './collections'
+        @mongo = require 'mongodb'
+        @db = new @mongo.Db('testdb',new @mongo.Server('localhost',27017), {safe: true });
+        
+        @c = realcollection = new @mongoC.MongoCollectionNode { db: @db, collection: 'test' }
+        
+        @db.open callback
+
+    tearDown: (callback) ->
+        @db.close()
+        callback()
+
+
+    getPermission: (test) ->
+
+        model = @c.defineModel 'bla',
+            permissions: { xxx: [
+                new @remotemodel.Permission( v: 'bobby', match: v(user: 'bobby'), chew: (value,realm,callback) -> ( callback undefined, "BLA" + realm.user + value ) )
+                new @remotemodel.Permission( v: 'bob', match: v(user: 'bob'), chew: (value,realm,callback) -> ( callback undefined, "BLA" + realm.user + value ) )
+                new @remotemodel.Permission( v: 'bob2', match: v(user: 'bob'), chew: (value,realm,callback) -> ( callback undefined, "BLA" + realm.user + value  ) )
+            ]}
+        
+    
+        x = new model()
+        realm =  { user: 'bob'}
+        x.getPermission 'xxx', realm, (err,permission) ->
+            test.equals permission.get('v'), 'bob'
+            permission.chew "LALA", realm, (err,data) ->
+                test.equals data, 'BLAbobLALA'
+                test.done()
+
 
 
 exports.EverythingTogether =

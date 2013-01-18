@@ -1,5 +1,5 @@
 (function() {
-  var Backbone, Permission, RemoteModel, Select, Validator, decorate, decorators, helpers, v, _;
+  var Backbone, Permission, RemoteModel, Select, Validator, async, decorate, decorators, helpers, v, _;
   var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
   Backbone = require('backbone4000');
   _ = require('underscore');
@@ -9,6 +9,7 @@
   Select = Validator.Select;
   decorators = require('decorators');
   decorate = decorators.decorate;
+  async = require('async');
   /*
   definePermissions = (f) ->
       p = 
@@ -21,11 +22,15 @@
   */
   Permission = exports.Permission = Validator.ValidatedModel.extend4000({
     validator: v({
-      match: 'Object',
+      match: 'Instance',
       chew: 'Function'
     }),
     initialize: function() {
-      return this.match = this.get('match' && (this.chew = this.get('chew')));
+      this.matchvalidator = this.get('match');
+      return this.chew = this.get('chew');
+    },
+    match: function(realm, callback) {
+      return this.matchvalidator.feed(realm, callback);
     }
   });
   RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000({
@@ -174,20 +179,23 @@
       return true;
     },
     getPermission: function(attribute, realm, callback) {
-      /*
-              perms = _.clone @permissions[attribute]
-              _next = ->
-                  if not perms.length then callback('access denied'); return
-      
-                  perm = perms.pop()
-                  perm.match realm, (err,data) -> if data then callback(undefined,data) else _next()
-                  
-              _next()
-              */      return async.series(_.map(this.permissions[attribute], function(permission) {
+      return async.series(_.map(this.permissions[attribute], function(permission) {
         return function(callback) {
-          return permission.match(realm, helpers.reverseCb(callback));
+          return permission.match(realm, function(err, data) {
+            if (!err) {
+              return callback(permission);
+            } else {
+              return callback();
+            }
+          });
         };
-      }), function(err, data) {});
+      }), function(err, data) {
+        if (err) {
+          return callback(void 0, err);
+        } else {
+          return callback('permission denied');
+        }
+      });
     },
     exportReferences: function(data, callback) {
       var _matchf;

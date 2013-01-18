@@ -3,6 +3,7 @@ _ = require 'underscore'
 helpers = require 'helpers'
 Validator = require 'validator2-extras'; v = Validator.v; Select = Validator.Select
 decorators = require 'decorators'; decorate = decorators.decorate;
+async = require 'async'
 
 ###
 definePermissions = (f) ->
@@ -16,9 +17,9 @@ definePermissions = (f) ->
 ###
 
 Permission = exports.Permission = Validator.ValidatedModel.extend4000
-    validator: v { match: 'Object', chew: 'Function' }
-    initialize: -> @match = @get 'match' and @chew = @get 'chew'    
-
+    validator: v { match: 'Instance', chew: 'Function' }
+    initialize: -> @matchvalidator = @get 'match'; @chew = @get 'chew'
+    match: (realm,callback) -> @matchvalidator.feed realm, callback
 
 # knows about its collection, knows how to store/create itself and defines the permissions
 #
@@ -112,26 +113,15 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
 
     applyPermissions: (data,realm,callback) ->
         callback()
-        #bucket = new helpers.parallelBucket()
-        
+        #bucket = new helpers.parallelBucket()        
 
     applyPermission: (attribute,value,realm,callback) ->
         true
 
+    # will find a first permission that matches this realm for this attribute and return it
     getPermission: (attribute,realm,callback) ->
-
-        ###
-        perms = _.clone @permissions[attribute]
-        _next = ->
-            if not perms.length then callback('access denied'); return
-
-            perm = perms.pop()
-            perm.match realm, (err,data) -> if data then callback(undefined,data) else _next()
-            
-        _next()
-        ###
-            
-        async.series _.map(@permissions[attribute], (permission) -> (callback) -> permission.match(realm,helpers.reverseCb(callback))), (err,data) ->
+        async.series _.map(@permissions[attribute], (permission) -> (callback) -> permission.match(realm, (err,data) -> if not err then callback(permission) else callback() )), (err,data) ->
+            if err then callback(undefined,err) else callback('permission denied')
             
             
             
@@ -175,7 +165,6 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
         @asyncDepthfirst _matchf, callback, false, true, data
         
         
-
     # simplified for now, will reintroduce when done with model syncing
     # throttle decorator makes sure that we can apply bunch of changes in a series to an object, but the system requests a sync only once.
     #flush: decorate( decorators.MakeDecorator_Throttle({ throttletime: 1 }), (callback) -> @flushnow(callback) )
