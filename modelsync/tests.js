@@ -652,7 +652,7 @@
       return callback();
     },
     getPermission: function(test) {
-      var model, realm, x;
+      var attribute, model, realm, x;
       model = this.c.defineModel('bla', {
         permissions: {
           xxx: [
@@ -661,24 +661,24 @@
               match: v({
                 user: 'bobby'
               }),
-              chew: function(value, realm, callback) {
-                return callback(void 0, "BLA" + realm.user + value);
+              chew: function(value, data, callback) {
+                return callback(void 0, "BLA" + data.realm.user + value);
               }
             }), new this.remotemodel.Permission({
               v: 'bob',
               match: v({
                 user: 'bob'
               }),
-              chew: function(value, realm, callback) {
-                return callback(void 0, "BLA" + realm.user + value);
+              chew: function(value, data, callback) {
+                return callback(void 0, "BLA" + data.realm.user + value);
               }
             }), new this.remotemodel.Permission({
               v: 'bob2',
               match: v({
                 user: 'bob'
               }),
-              chew: function(value, realm, callback) {
-                return callback(void 0, "BLA" + realm.user + value);
+              chew: function(value, data, callback) {
+                return callback(void 0, "BLA" + data.realm.user + value);
               }
             })
           ]
@@ -688,9 +688,13 @@
       realm = {
         user: 'bob'
       };
-      return x.getPermission('xxx', realm, function(err, permission) {
+      attribute = 'xxx';
+      return x.getPermission(attribute, realm, function(err, permission) {
         test.equals(permission.get('v'), 'bob');
-        return permission.chew("LALA", realm, function(err, data) {
+        return permission.chew("LALA", {
+          realm: realm,
+          attribute: attribute
+        }, function(err, data) {
           test.equals(data, 'BLAbobLALA');
           return test.done();
         });

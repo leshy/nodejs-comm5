@@ -116,7 +116,9 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
         #bucket = new helpers.parallelBucket()        
 
     applyPermission: (attribute,value,realm,callback) ->
-        true
+        @getPermission attribute, realm, (err,permission) ->
+            if err then callback(err); return
+            permission.chew value, { realm: realm, attribute: attribute }, callback
 
     # will find a first permission that matches this realm for this attribute and return it
     getPermission: (attribute,realm,callback) ->

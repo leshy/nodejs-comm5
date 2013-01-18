@@ -176,7 +176,16 @@
       return callback();
     },
     applyPermission: function(attribute, value, realm, callback) {
-      return true;
+      return this.getPermission(attribute, realm, function(err, permission) {
+        if (err) {
+          callback(err);
+          return;
+        }
+        return permission.chew(value, {
+          realm: realm,
+          attribute: attribute
+        }, callback);
+      });
     },
     getPermission: function(attribute, realm, callback) {
       return async.series(_.map(this.permissions[attribute], function(permission) {

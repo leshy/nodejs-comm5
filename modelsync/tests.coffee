@@ -323,17 +323,17 @@ exports.Permissions =
 
         model = @c.defineModel 'bla',
             permissions: { xxx: [
-                new @remotemodel.Permission( v: 'bobby', match: v(user: 'bobby'), chew: (value,realm,callback) -> ( callback undefined, "BLA" + realm.user + value ) )
-                new @remotemodel.Permission( v: 'bob', match: v(user: 'bob'), chew: (value,realm,callback) -> ( callback undefined, "BLA" + realm.user + value ) )
-                new @remotemodel.Permission( v: 'bob2', match: v(user: 'bob'), chew: (value,realm,callback) -> ( callback undefined, "BLA" + realm.user + value  ) )
+                new @remotemodel.Permission( v: 'bobby', match: v(user: 'bobby'), chew: (value,data,callback) -> ( callback undefined, "BLA" + data.realm.user + value ) )
+                new @remotemodel.Permission( v: 'bob', match: v(user: 'bob'), chew: (value,data,callback) -> ( callback undefined, "BLA" + data.realm.user + value ) )
+                new @remotemodel.Permission( v: 'bob2', match: v(user: 'bob'), chew: (value,data,callback) -> ( callback undefined, "BLA" + data.realm.user + value  ) )
             ]}
         
-    
         x = new model()
         realm =  { user: 'bob'}
-        x.getPermission 'xxx', realm, (err,permission) ->
+        attribute = 'xxx'
+        x.getPermission attribute, realm, (err,permission) ->
             test.equals permission.get('v'), 'bob'
-            permission.chew "LALA", realm, (err,data) ->
+            permission.chew "LALA", {realm: realm, attribute: attribute}, (err,data) ->
                 test.equals data, 'BLAbobLALA'
                 test.done()
 
