@@ -323,9 +323,9 @@ exports.Permissions =
 
         model = @c.defineModel 'bla',
             permissions: { xxx: [
-                new @remotemodel.Permission( v: 'bobby', match: v(user: 'bobby'), chew: (value,data,callback) -> ( callback undefined, "BLA" + data.realm.user + value ) )
-                new @remotemodel.Permission( v: 'bob', match: v(user: 'bob'), chew: (value,data,callback) -> ( callback undefined, "BLA" + data.realm.user + value ) )
-                new @remotemodel.Permission( v: 'bob2', match: v(user: 'bob'), chew: (value,data,callback) -> ( callback undefined, "BLA" + data.realm.user + value  ) )
+                new @remotemodel.Permission( v: 'bobby', matchRealm: v(user: 'bobby'), chew: (value,data,callback) -> ( callback undefined, "BLA" + data.realm.user + value ) )
+                new @remotemodel.Permission( v: 'bob', matchRealm: v(user: 'bob'), chew: (value,data,callback) -> ( callback undefined, "BLA" + data.realm.user + value ) )
+                new @remotemodel.Permission( v: 'bob2', matchRealm: v(user: 'bob'), chew: (value,data,callback) -> ( callback undefined, "BLA" + data.realm.user + value  ) )
             ]}
         
         x = new model()
@@ -340,9 +340,9 @@ exports.Permissions =
     applyPermission: (test) ->
         model = @c.defineModel 'bla',
             permissions: { xxx: [
-                new @remotemodel.Permission( v: 'bobby', match: v(user: 'bobby'), chew: (value,data,callback) -> ( callback undefined, "BLA" + data.realm.user + value ) )
-                new @remotemodel.Permission( v: 'bob', match: v(user: 'bob'), chew: (value,data,callback) -> ( callback undefined, "BLA" + data.realm.user + value ) )
-                new @remotemodel.Permission( v: 'bob2', match: v(user: 'bob'), chew: (value,data,callback) -> ( callback undefined, "BLA" + data.realm.user + value  ) )
+                new @remotemodel.Permission( v: 'bobby', matchRealm: v(user: 'bobby'), chew: (value,data,callback) -> ( callback undefined, "BLA" + data.realm.user + value ) )
+                new @remotemodel.Permission( v: 'bob', matchRealm: v(user: 'bob'), chew: (value,data,callback) -> ( callback undefined, "BLA" + data.realm.user + value ) )
+                new @remotemodel.Permission( v: 'bob2', matchRealm: v(user: 'bob'), chew: (value,data,callback) -> ( callback undefined, "BLA" + data.realm.user + value  ) )
             ]}
         
         x = new model()

@@ -11,26 +11,46 @@
   decorate = decorators.decorate;
   async = require('async');
   /*
+  exports.standardPermissions =
+      custom: (match,chew) -> new Permission match: match, chew: chew
+      user: new Permission: 
+  
   definePermissions = (f) ->
-      p = 
+      p = _.clone { standard:'permissions' }
   
       permissions = {}
-      def = (name, permission)
+      def = (name, permission) ->
+          if not permissions[name] then permissions[name] = []
+          permissions[name] = permission
       
-      
-      f def, _.clone(some_standard_permissions_set)
+      f def, p
+  
   */
   Permission = exports.Permission = Validator.ValidatedModel.extend4000({
     validator: v({
-      match: 'Instance',
       chew: 'Function'
     }),
     initialize: function() {
-      this.matchvalidator = this.get('match');
       return this.chew = this.get('chew');
     },
-    match: function(realm, callback) {
-      return this.matchvalidator.feed(realm, callback);
+    match: function(model, realm, callback) {
+      return async.series([
+        __bind(function(callback) {
+          var validator;
+          if (!(validator = this.get('matchModel'))) {
+            return callback();
+          } else {
+            return validator.feed(model, callback);
+          }
+        }, this), __bind(function(callback) {
+          var validator;
+          if (!(validator = this.get('matchRealm'))) {
+            return callback();
+          } else {
+            return validator.feed(realm, callback);
+          }
+        }, this)
+      ], callback);
     }
   });
   RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000({
@@ -207,7 +227,7 @@
     getPermission: function(attribute, realm, callback) {
       return async.series(_.map(this.permissions[attribute], function(permission) {
         return function(callback) {
-          return permission.match(realm, function(err, data) {
+          return permission.match(this, realm, function(err, data) {
             if (!err) {
               return callback(permission);
             } else {

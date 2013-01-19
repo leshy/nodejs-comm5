@@ -6,21 +6,40 @@ decorators = require 'decorators'; decorate = decorators.decorate;
 async = require 'async'
 
 ###
+exports.standardPermissions =
+    custom: (match,chew) -> new Permission match: match, chew: chew
+    user: new Permission: 
+
 definePermissions = (f) ->
-    p = 
+    p = _.clone { standard:'permissions' }
 
     permissions = {}
-    def = (name, permission)
+    def = (name, permission) ->
+        if not permissions[name] then permissions[name] = []
+        permissions[name] = permission
     
-    
-    f def, _.clone(some_standard_permissions_set)
+    f def, p
+
 ###
 
+# defines which writes/fcalls to a model are allowed
+# and optionally parses the input data somehow (chew function)
+# permission can behave differently depending on a particular state of a model
+# (optional matchModel validator)
 Permission = exports.Permission = Validator.ValidatedModel.extend4000
-    validator: v { match: 'Instance', chew: 'Function' }
-    initialize: -> @matchvalidator = @get 'match'; @chew = @get 'chew'
-    match: (realm,callback) -> @matchvalidator.feed realm, callback
-
+    validator: v { chew: 'Function' }
+    initialize: -> @chew = @get 'chew'
+    match: (model,realm,callback) ->
+        async.series [
+            (callback) =>
+                if not (validator = @get 'matchModel') then callback()
+                else validator.feed model, callback
+            (callback) =>
+                if not (validator = @get 'matchRealm') then callback()
+                else validator.feed realm, callback
+        ], callback
+                
+        
 # knows about its collection, knows how to store/create itself and defines the permissions
 #
 # it logs changes of its attributes (localCallPropagade) 
@@ -123,15 +142,9 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
 
     # will find a first permission that matches this realm for this attribute and return it
     getPermission: (attribute,realm,callback) ->
-        async.series _.map(@permissions[attribute], (permission) -> (callback) -> permission.match(realm, (err,data) -> if not err then callback(permission) else callback() )), (err,data) ->
+        async.series _.map(@permissions[attribute], (permission) -> (callback) -> permission.match(@,realm, (err,data) -> if not err then callback(permission) else callback() )), (err,data) ->
             if err then callback(undefined,err) else callback(attribute)
-            
-            
-            
-            
-            
-
-    
+                
         
     # looks for references to remote models and replaces them with object ids
     # what do we do if a reference object is not flushed? propagade flush call for now

@@ -658,7 +658,7 @@
           xxx: [
             new this.remotemodel.Permission({
               v: 'bobby',
-              match: v({
+              matchRealm: v({
                 user: 'bobby'
               }),
               chew: function(value, data, callback) {
@@ -666,7 +666,7 @@
               }
             }), new this.remotemodel.Permission({
               v: 'bob',
-              match: v({
+              matchRealm: v({
                 user: 'bob'
               }),
               chew: function(value, data, callback) {
@@ -674,7 +674,7 @@
               }
             }), new this.remotemodel.Permission({
               v: 'bob2',
-              match: v({
+              matchRealm: v({
                 user: 'bob'
               }),
               chew: function(value, data, callback) {
@@ -707,7 +707,7 @@
           xxx: [
             new this.remotemodel.Permission({
               v: 'bobby',
-              match: v({
+              matchRealm: v({
                 user: 'bobby'
               }),
               chew: function(value, data, callback) {
@@ -715,7 +715,7 @@
               }
             }), new this.remotemodel.Permission({
               v: 'bob',
-              match: v({
+              matchRealm: v({
                 user: 'bob'
               }),
               chew: function(value, data, callback) {
@@ -723,7 +723,7 @@
               }
             }), new this.remotemodel.Permission({
               v: 'bob2',
-              match: v({
+              matchRealm: v({
                 user: 'bob'
               }),
               chew: function(value, data, callback) {
