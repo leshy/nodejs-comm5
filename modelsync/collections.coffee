@@ -46,7 +46,7 @@ CollectionExposer = exports.CollectionExposer = MsgNode.extend4000
 
         # findOne
         @subscribe { collection: name, findOne: "Object" },
-            (msg,reply,next,transmit) => @findOne msg.findOne, (entry) =>
+            (msg,reply,next,transmit) => @findOne msg.findOne, (err, entry) =>
                 if entry? then reply.write ({ data: entry, err: undefined }) else reply.end()
                 
         # subscribe to specific model changes/broadcasts
@@ -97,7 +97,7 @@ UnresolvedRemoteModel = Backbone.Model.extend4000
     
     resolve: (callback) ->
         collection = @get 'collection'
-        collection.findOne {id: @get 'id'}, (entry) =>
+        collection.findOne {id: @get 'id'}, (err,entry) =>
             if not entry then callback('unable to resolve reference to ' + @get('id') + ' at ' + collection.name())
             else 
                 @morph collection.resolveModel(entry), entry
@@ -141,8 +141,8 @@ ModelMixin = exports.ModelMixin = Backbone.Model.extend4000
             if not entry? then callback() else callback(new (@resolveModel(entry))(entry))
 
     findModel: (pattern,callback) ->
-        @findOne pattern,(entry) =>
-            if not entry? then callback() else callback(new (@resolveModel(entry))(entry))
+        @findOne pattern, (err,entry) =>
+            if (not entry? or err) then callback() else callback(undefined,new (@resolveModel(entry))(entry))
 
     fcall: (name,args,pattern,realm,callback) ->
         @findModels pattern, {}, (model) ->
@@ -165,7 +165,7 @@ RemoteCollection = exports.RemoteCollection = Backbone.Model.extend4000 ModelMix
 
     findOne: (pattern,callback) ->
         reply = @send( collection: @get('name'), findOne: pattern )
-        reply.read (msg) -> if msg then callback(msg.data) else callback()
+        reply.read (msg) -> if msg then callback(undefined,msg.data) else callback("not found")
 
     fcall: (name, args, pattern, callback) ->
         reply = @send( collection: @get('name'), call: name, args: args, data: pattern )

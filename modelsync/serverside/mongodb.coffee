@@ -38,7 +38,7 @@ MongoCollection = exports.MongoCollection = Backbone.Model.extend4000
 
     findOne: (pattern,callback) ->
         @collection.findOne @patternIn(pattern), (err,entry) =>
-            callback @patternOut(entry)
+            callback undefined, @patternOut(entry)
 
     remove: (pattern,callback) ->
         @collection.remove @patternIn(pattern), callback

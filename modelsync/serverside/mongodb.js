@@ -69,7 +69,7 @@
     },
     findOne: function(pattern, callback) {
       return this.collection.findOne(this.patternIn(pattern), __bind(function(err, entry) {
-        return callback(this.patternOut(entry));
+        return callback(void 0, this.patternOut(entry));
       }, this));
     },
     remove: function(pattern, callback) {

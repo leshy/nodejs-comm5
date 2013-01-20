@@ -186,8 +186,7 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
             return undefined
                 
         @asyncDepthfirst _matchf, callback, false, true, data
-        
-        
+                
     # simplified for now, will reintroduce when done with model syncing
     # throttle decorator makes sure that we can apply bunch of changes in a series to an object, but the system requests a sync only once.
     #flush: decorate( decorators.MakeDecorator_Throttle({ throttletime: 1 }), (callback) -> @flushnow(callback) )
@@ -201,7 +200,14 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
             if helpers.isEmpty(changes) then helpers.cbc(callback)
             if not id = @get 'id' then @collection.create changes, (err,id) => @set 'id', id; helpers.cbc callback, err, id
             else @collection.update {id: id}, changes, callback
-        
+
+
+    # this will have to go through some kind of READ permissions in the future..
+    render: (realm, callback) ->
+        @exportReferneces @attributes, (err,data) ->
+            callback(err,data)
+
+                        
     del: (callback) ->
         @trigger 'del', @
         if id = @get 'id' then @collection.remove {id: id}, callback else callback()

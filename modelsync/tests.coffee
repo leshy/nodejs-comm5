@@ -292,7 +292,7 @@ exports.References =
             child2.flush =>                
                 parent = new parentmodel( { testdict: { bla: child1, bla2: 3 }, child2: child2, ar: [ child1, 3 ,4, 'ggg' ] })
                 parent.flush (err,id) =>
-                    @c1.findModel { id: id }, (model) ->
+                    @c1.findModel { id: id }, (err,model) ->
                         model.get('child2').resolve (myclass) ->
                             test.equals model.get('child2').get('some_value'), 6
                             parent.del ->
@@ -444,18 +444,18 @@ exports.EverythingTogether =
         instance1.flush =>
             instance2.flush =>
 
-                test.equals Boolean(instance1.get 'id'), true
-                test.equals Boolean(instance2.get 'id'), true
+                test.equals Boolean(instance1.get 'id'), true, "instance1 didn't get an id"
+                test.equals Boolean(instance2.get 'id'), true, "instance2 didn't get an id"
 
                 test.notEqual instance1.get 'id', instance2.get 'id'
 
-                @c.findModel { id: instance1.get 'id' }, (model) =>
-                    test.equals Boolean(model), true
+                @c.findModel { id: instance1.get 'id' }, (err, model) =>
+                    test.equals Boolean(model), true, "didn't get instance1 model"
 
                     found = false
                     
-                    @c.findModel { blabla: 3 }, (model) =>
-                        test.equals Boolean(model), true
+                    @c.findModel { blabla: 3 }, (err, model) =>
+                        test.equals Boolean(model), true, "didn't get findOne model"
                         
                         if found then test.fail 'findmodel returned two results'
                         found = true

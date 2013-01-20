@@ -614,7 +614,7 @@
           return parent.flush(__bind(function(err, id) {
             return this.c1.findModel({
               id: id
-            }, function(model) {
+            }, function(err, model) {
               return model.get('child2').resolve(function(myclass) {
                 test.equals(model.get('child2').get('some_value'), 6);
                 return parent.del(function() {
@@ -931,19 +931,19 @@
       });
       return instance1.flush(__bind(function() {
         return instance2.flush(__bind(function() {
-          test.equals(Boolean(instance1.get('id')), true);
-          test.equals(Boolean(instance2.get('id')), true);
+          test.equals(Boolean(instance1.get('id')), true, "instance1 didn't get an id");
+          test.equals(Boolean(instance2.get('id')), true, "instance2 didn't get an id");
           test.notEqual(instance1.get('id', instance2.get('id')));
           return this.c.findModel({
             id: instance1.get('id')
-          }, __bind(function(model) {
+          }, __bind(function(err, model) {
             var found;
-            test.equals(Boolean(model), true);
+            test.equals(Boolean(model), true, "didn't get instance1 model");
             found = false;
             return this.c.findModel({
               blabla: 3
-            }, __bind(function(model) {
-              test.equals(Boolean(model), true);
+            }, __bind(function(err, model) {
+              test.equals(Boolean(model), true, "didn't get findOne model");
               if (found) {
                 test.fail('findmodel returned two results');
               }

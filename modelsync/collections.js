@@ -88,7 +88,7 @@
         collection: name,
         findOne: "Object"
       }, __bind(function(msg, reply, next, transmit) {
-        return this.findOne(msg.findOne, __bind(function(entry) {
+        return this.findOne(msg.findOne, __bind(function(err, entry) {
           if (entry != null) {
             return reply.write({
               data: entry,
@@ -188,7 +188,7 @@
       collection = this.get('collection');
       return collection.findOne({
         id: this.get('id')
-      }, __bind(function(entry) {
+      }, __bind(function(err, entry) {
         if (!entry) {
           return callback('unable to resolve reference to ' + this.get('id') + ' at ' + collection.name());
         } else {
@@ -257,11 +257,11 @@
       }, this));
     },
     findModel: function(pattern, callback) {
-      return this.findOne(pattern, __bind(function(entry) {
-        if (!(entry != null)) {
+      return this.findOne(pattern, __bind(function(err, entry) {
+        if (!(entry != null) || err) {
           return callback();
         } else {
-          return callback(new (this.resolveModel(entry))(entry));
+          return callback(void 0, new (this.resolveModel(entry))(entry));
         }
       }, this));
     },
@@ -325,9 +325,9 @@
       });
       return reply.read(function(msg) {
         if (msg) {
-          return callback(msg.data);
+          return callback(void 0, msg.data);
         } else {
-          return callback();
+          return callback("not found");
         }
       });
     },
