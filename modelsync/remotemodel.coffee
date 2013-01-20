@@ -5,7 +5,6 @@ Validator = require 'validator2-extras'; v = Validator.v; Select = Validator.Sel
 decorators = require 'decorators'; decorate = decorators.decorate;
 async = require 'async'
 
-###
 exports.standardPermissions =
     custom: (match,chew) -> new Permission match: match, chew: chew
     user: new Permission: 
@@ -14,13 +13,16 @@ definePermissions = (f) ->
     p = _.clone { standard:'permissions' }
 
     permissions = {}
-    def = (name, permission) ->
+    
+    defattr = (name, permission) ->
         if not permissions[name] then permissions[name] = []
         permissions[name] = permission
-    
-    f def, p
 
-###
+    deffun = defattr
+            
+    f(defattr, deffun)
+
+    permissions
 
 # defines which writes/fcalls to a model are allowed
 # and optionally parses the input data somehow (chew function)
@@ -123,26 +125,31 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
         @collection.fcall name, args, { id: @id }, callback
         
     remoteCallReceive: (name,args,realm,callback) ->
-#        if realm then @applyPermissions
-        @[name].apply @, args.concat(callback)
+        if realm then @applyPermission name, args, realm, (err,args) =>
+            if err then callback(err); return
+            @[name].apply @, args.concat(callback)
+        else
+            @[name].apply @, args.concat(callback)
 
     update: (data,realm) ->
         if not realm then @set(data)
         else @applyPermissions data, realm, (err,data) -> if not err then @set(data)
 
     applyPermissions: (data,realm,callback) ->
-        async.parallel helpers.hashmap(data, (value,attribute) => (callback) => @getPermission(attribute,realm,callback)), (err,permissions) ->
+        self = @
+        async.parallel helpers.hashmap(data, (value,attribute) => (callback) => @getPermission(attribute,realm,callback)), (err,permissions) -> 
             if err then callback "permission denied for attribute" + (if err.constructor is Object then "s " + _.keys(err).join(', ') else " " + err); return
-            async.parallel helpers.hashmap(permissions, (permission,attribute) -> (callback) -> permission.chew(data[attribute], { realm: realm, attribute: attribute }, callback)), callback
+            async.parallel helpers.hashmap(permissions, (permission,attribute) -> (callback) -> permission.chew(data[attribute], { model: self, realm: realm, attribute: attribute }, callback)), callback
+
 
     applyPermission: (attribute,value,realm,callback) ->
-        @getPermission attribute, realm, (err,permission) ->
+        @getPermission attribute, realm, (err,permission) =>
             if err then callback(err); return
-            permission.chew value, { realm: realm, attribute: attribute }, callback
+            permission.chew value, { model: @, realm: realm, attribute: attribute }, callback
 
     # will find a first permission that matches this realm for this attribute and return it
     getPermission: (attribute,realm,callback) ->
-        async.series _.map(@permissions[attribute], (permission) -> (callback) -> permission.match(@,realm, (err,data) -> if not err then callback(permission) else callback() )), (err,data) ->
+        async.series _.map(@permissions[attribute], (permission) -> (callback) -> permission.match(@, realm, (err,data) -> if not err then callback(permission) else callback() )), (err,data) ->
             if err then callback(undefined,err) else callback(attribute)
                 
         

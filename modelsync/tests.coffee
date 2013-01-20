@@ -333,7 +333,7 @@ exports.Permissions =
         attribute = 'xxx'
         x.getPermission attribute, realm, (err,permission) ->
             test.equals permission.get('v'), 'bob'
-            permission.chew "LALA", {realm: realm, attribute: attribute}, (err,data) ->
+            permission.chew "LALA", { realm: realm, attribute: attribute }, (err,data) ->
                 test.equals data, 'BLAbobLALA'
                 test.done()
 
