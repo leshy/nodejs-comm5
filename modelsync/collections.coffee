@@ -60,10 +60,8 @@ CollectionExposer = exports.CollectionExposer = MsgNode.extend4000
 
         # call
         @subscribe { collection: name, call: "String", data: "Object" },
-            (msg,reply,next,transmit) =>
-                console.log("RECEIVED CALL REQ".red, msg.call, msg.realm.user.id)
-                @fcall msg.call, msg.args or [], msg.data, msg.realm, (err,data) ->
-                    if err or data then reply.write { err: err, data: data } else reply.end()
+            (msg,reply,next,transmit) => @fcall msg.call, msg.args or [], msg.data, msg.realm, (err,data) ->
+                if err or data then reply.write { err: err, data: data } else reply.end()
 
 # this can be mixed into a RemoteCollection or Collection itself.
 # it provides subscribe and unsubscribe methods for collection events (remove/update/create)

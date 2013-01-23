@@ -115,7 +115,6 @@
         call: "String",
         data: "Object"
       }, __bind(function(msg, reply, next, transmit) {
-        console.log("RECEIVED CALL REQ".red, msg.call, msg.realm.user.id);
         return this.fcall(msg.call, msg.args || [], msg.data, msg.realm, function(err, data) {
           if (err || data) {
             return reply.write({
