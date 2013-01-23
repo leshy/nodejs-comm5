@@ -488,6 +488,30 @@
         return test.done();
       });
     },
+    asyncDepthFirst_async_wat: function(test) {
+      var cb, f, newmodel1, x;
+      newmodel1 = this.c1.defineModel('bla1', {
+        hi: 3
+      });
+      x = new newmodel1({
+        property1: 4
+      });
+      f = function(val, callback) {
+        if (val === 3) {
+          return callback(void 0, 'replaced');
+        } else {
+          return callback(void 0, val);
+        }
+      };
+      cb = function(err, data) {
+        test.deepEqual({
+          property1: 4,
+          _t: 'bla1'
+        }, data);
+        return test.done();
+      };
+      return x.asyncDepthfirst(f, cb, true, false);
+    },
     asyncDepthFirst_async: function(test) {
       var f, newmodel1, x;
       newmodel1 = this.c1.defineModel('bla1', {

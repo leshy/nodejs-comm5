@@ -104,17 +104,19 @@
         subscribe: "Object",
         tags: "Array"
       }, __bind(function(msg, reply, next, transmit) {
-        return this.subscribe(msg.subscribe, __bind(function(event) {
-          return reply.write(event);
+        return this.subscribe(msg.subscribe, __bind(function(event, eventreply, eventnext) {
+          reply.write(event);
+          eventreply.end();
+          return eventnext();
         }, this));
       }, this));
       return this.subscribe({
         collection: name,
         call: "String",
-        args: "Array",
         data: "Object"
       }, __bind(function(msg, reply, next, transmit) {
-        return this.fcall(msg.call, msg.args, msg.data, msg.realm, function(err, data) {
+        console.log("RECEIVED CALL REQ".red, msg.call, msg.realm.user.id);
+        return this.fcall(msg.call, msg.args || [], msg.data, msg.realm, function(err, data) {
           if (err || data) {
             return reply.write({
               err: err,
@@ -341,7 +343,7 @@
       });
       return reply.read(function(msg) {
         if (msg) {
-          return callback(msg.err, msg.data);
+          return helpers.cbc(callback, msg.err, msg.data);
         }
       });
     }

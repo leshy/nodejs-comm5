@@ -1,5 +1,5 @@
 (function() {
-  var Backbone, Permission, RemoteModel, Select, Validator, async, decorate, decorators, helpers, v, _;
+  var Backbone, Permission, RemoteModel, Select, Validator, async, decorate, decorators, definePermissions, helpers, v, _;
   var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
   Backbone = require('backbone4000');
   _ = require('underscore');
@@ -10,22 +10,22 @@
   decorators = require('decorators');
   decorate = decorators.decorate;
   async = require('async');
-  /*
-  exports.standardPermissions =
-      custom: (match,chew) -> new Permission match: match, chew: chew
-      user: new Permission: 
-  
-  definePermissions = (f) ->
-      p = _.clone { standard:'permissions' }
-  
-      permissions = {}
-      def = (name, permission) ->
-          if not permissions[name] then permissions[name] = []
-          permissions[name] = permission
-      
-      f def, p
-  
-  */
+  exports.definePermissions = definePermissions = function(f) {
+    var defattr, deffun, p, permissions;
+    p = _.clone({
+      standard: 'permissions'
+    });
+    permissions = {};
+    defattr = function(name, permission) {
+      if (!permissions[name]) {
+        permissions[name] = [];
+      }
+      return permissions[name].push(permission);
+    };
+    deffun = defattr;
+    f(defattr, deffun);
+    return permissions;
+  };
   Permission = exports.Permission = Validator.ValidatedModel.extend4000({
     validator: v({
       chew: 'Function'
@@ -40,7 +40,7 @@
           if (!(validator = this.get('matchModel'))) {
             return callback();
           } else {
-            return validator.feed(model, callback);
+            return validator.feed(model.attributes, callback);
           }
         }, this), __bind(function(callback) {
           var validator;
@@ -106,7 +106,7 @@
         return target;
       }
     },
-    asyncDepthfirst: function(changef, callback, clone, all, target) {
+    asyncDepthfirst: function(changef, callback, clone, all, target, depth) {
       var _check, _digtarget;
       if (clone == null) {
         clone = false;
@@ -116,6 +116,9 @@
       }
       if (target == null) {
         target = this.attributes;
+      }
+      if (depth == null) {
+        depth = 0;
       }
       _check = function(target, callback) {
         return helpers.forceCallback(changef, target, callback);
@@ -129,7 +132,7 @@
             target[key] = data;
             return cb(err, data);
           };
-          this.asyncDepthfirst(changef, result, clone, all, target[key]);
+          this.asyncDepthfirst(changef, result, clone, all, target[key], depth + 1);
         }
         return bucket.done(function(err, data) {
           return callback(err, target);
@@ -179,7 +182,17 @@
       }, callback);
     },
     remoteCallReceive: function(name, args, realm, callback) {
-      return this[name].apply(this, args.concat(callback));
+      if (realm) {
+        return this.applyPermission(name, args, realm, __bind(function(err, args) {
+          if (err) {
+            callback(err);
+            return;
+          }
+          return this[name].apply(this, args.concat(callback));
+        }, this));
+      } else {
+        return this[name].apply(this, args.concat(callback));
+      }
     },
     update: function(data, realm) {
       if (!realm) {
@@ -193,6 +206,8 @@
       }
     },
     applyPermissions: function(data, realm, callback) {
+      var self;
+      self = this;
       return async.parallel(helpers.hashmap(data, __bind(function(value, attribute) {
         return __bind(function(callback) {
           return this.getPermission(attribute, realm, callback);
@@ -205,6 +220,7 @@
         return async.parallel(helpers.hashmap(permissions, function(permission, attribute) {
           return function(callback) {
             return permission.chew(data[attribute], {
+              model: self,
               realm: realm,
               attribute: attribute
             }, callback);
@@ -213,21 +229,24 @@
       });
     },
     applyPermission: function(attribute, value, realm, callback) {
-      return this.getPermission(attribute, realm, function(err, permission) {
+      return this.getPermission(attribute, realm, __bind(function(err, permission) {
         if (err) {
           callback(err);
           return;
         }
         return permission.chew(value, {
+          model: this,
           realm: realm,
           attribute: attribute
         }, callback);
-      });
+      }, this));
     },
     getPermission: function(attribute, realm, callback) {
+      var model;
+      model = this;
       return async.series(_.map(this.permissions[attribute], function(permission) {
         return function(callback) {
-          return permission.match(this, realm, function(err, data) {
+          return permission.match(model, realm, function(err, data) {
             if (!err) {
               return callback(permission);
             } else {
@@ -235,11 +254,11 @@
             }
           });
         };
-      }), function(err, data) {
-        if (err) {
-          return callback(void 0, err);
+      }), function(permission) {
+        if (permission) {
+          return callback(void 0, permission);
         } else {
-          return callback(attribute);
+          return callback('access denied');
         }
       });
     },
@@ -304,6 +323,7 @@
         var id;
         if (helpers.isEmpty(changes)) {
           helpers.cbc(callback);
+          return;
         }
         if (!(id = this.get('id'))) {
           return this.collection.create(changes, __bind(function(err, id) {
@@ -316,6 +336,11 @@
           }, changes, callback);
         }
       }, this));
+    },
+    render: function(realm, callback) {
+      return this.exportReferences(this.attributes, function(err, data) {
+        return callback(err, data);
+      });
     },
     del: function(callback) {
       var id;

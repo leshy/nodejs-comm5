@@ -1,4 +1,8 @@
 # warning, need collection level permissions for raw update calls...
+#
+# also, I need to propperly propagade findOne errors, not emulate them on RemoteCollection side..
+# 
+
 
 Backbone = require 'backbone4000'
 _ = require 'underscore'
@@ -51,13 +55,15 @@ CollectionExposer = exports.CollectionExposer = MsgNode.extend4000
                 
         # subscribe to specific model changes/broadcasts
         @subscribe { collection: name, subscribe: "Object", tags: "Array" },
-            (msg,reply,next,transmit) => @subscribe msg.subscribe, (event) => reply.write(event)
+            (msg,reply,next,transmit) => @subscribe msg.subscribe, (event,eventreply,eventnext) => reply.write(event); eventreply.end(); eventnext()
             # this wont work for remote collections?
 
         # call
-        @subscribe { collection: name, call: "String", args: "Array", data: "Object" },
-            (msg,reply,next,transmit) => @fcall msg.call, msg.args, msg.data, msg.realm, (err,data) ->
-                if err or data then reply.write { err: err, data: data } else reply.end()
+        @subscribe { collection: name, call: "String", data: "Object" },
+            (msg,reply,next,transmit) =>
+                console.log("RECEIVED CALL REQ".red, msg.call, msg.realm.user.id)
+                @fcall msg.call, msg.args or [], msg.data, msg.realm, (err,data) ->
+                    if err or data then reply.write { err: err, data: data } else reply.end()
 
 # this can be mixed into a RemoteCollection or Collection itself.
 # it provides subscribe and unsubscribe methods for collection events (remove/update/create)
@@ -169,5 +175,5 @@ RemoteCollection = exports.RemoteCollection = Backbone.Model.extend4000 ModelMix
 
     fcall: (name, args, pattern, callback) ->
         reply = @send( collection: @get('name'), call: name, args: args, data: pattern )
-        reply.read (msg) -> if msg then callback msg.err, msg.data;
+        reply.read (msg) -> if msg then helpers.cbc callback, msg.err, msg.data;
 

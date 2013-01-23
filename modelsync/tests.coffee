@@ -235,6 +235,24 @@ exports.References =
                 test.done()
 
 
+    asyncDepthFirst_async_wat: (test) ->
+        newmodel1 = @c1.defineModel 'bla1', { hi: 3 }
+
+        x = new newmodel1
+            property1: 4
+
+        f = (val,callback) ->
+            if val is 3 then callback(undefined,'replaced') else callback(undefined,val)
+                
+        cb = (err,data) ->
+                test.deepEqual { property1: 4, _t: 'bla1' }, data
+                test.done()
+
+
+        x.asyncDepthfirst f, cb, true, false
+
+
+
     asyncDepthFirst_async: (test) ->
         newmodel1 = @c1.defineModel 'bla1', { hi: 3 }
 

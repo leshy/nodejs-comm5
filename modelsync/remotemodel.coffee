@@ -5,18 +5,14 @@ Validator = require 'validator2-extras'; v = Validator.v; Select = Validator.Sel
 decorators = require 'decorators'; decorate = decorators.decorate;
 async = require 'async'
 
-exports.standardPermissions =
-    custom: (match,chew) -> new Permission match: match, chew: chew
-    user: new Permission: 
-
-definePermissions = (f) ->
+exports.definePermissions = definePermissions = (f) ->
     p = _.clone { standard:'permissions' }
 
     permissions = {}
     
     defattr = (name, permission) ->
         if not permissions[name] then permissions[name] = []
-        permissions[name] = permission
+        permissions[name].push permission
 
     deffun = defattr
             
@@ -35,12 +31,12 @@ Permission = exports.Permission = Validator.ValidatedModel.extend4000
         async.series [
             (callback) =>
                 if not (validator = @get 'matchModel') then callback()
-                else validator.feed model, callback
+                else validator.feed model.attributes, callback
             (callback) =>
                 if not (validator = @get 'matchRealm') then callback()
-                else validator.feed realm, callback
-        ], callback
-                
+                else
+                    validator.feed realm, callback
+        ], callback     
         
 # knows about its collection, knows how to store/create itself and defines the permissions
 #
@@ -81,7 +77,11 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
             target
         else if response = callback(target) then response else target
 
-    asyncDepthfirst: (changef, callback, clone=false, all=false, target=@attributes) ->
+    # clone - do I change the original object or do I create one of my own?
+    # all - do I call your changef for each object/array or only for attributes?
+    asyncDepthfirst: (changef, callback, clone=false, all=false, target=@attributes,depth=0) ->
+        #spaces = ""
+        #_.times depth, -> spaces+= " "
         # call changef on the target, return results
         _check = (target,callback) -> helpers.forceCallback changef, target, callback
         # recursively search through an iterable target
@@ -91,7 +91,7 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
             for key of target
                 cb = bucket.cb()
                 result = (err,data) -> target[key] = data; cb(err,data)
-                @asyncDepthfirst changef, result, clone, all, target[key]
+                @asyncDepthfirst changef, result, clone, all, target[key], depth + 1
                 
             bucket.done (err,data) -> callback(err,target)
     
@@ -149,8 +149,9 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
 
     # will find a first permission that matches this realm for this attribute and return it
     getPermission: (attribute,realm,callback) ->
-        async.series _.map(@permissions[attribute], (permission) -> (callback) -> permission.match(@, realm, (err,data) -> if not err then callback(permission) else callback() )), (err,data) ->
-            if err then callback(undefined,err) else callback(attribute)
+        model = @
+        async.series _.map(@permissions[attribute], (permission) -> (callback) -> permission.match(model, realm, (err,data) -> if not err then callback(permission) else callback() )), (permission) ->
+            if permission then callback(undefined,permission) else callback('access denied')
                 
         
     # looks for references to remote models and replaces them with object ids
@@ -167,7 +168,6 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
                     else callback undefined, value.reference(id)
                 return undefined
             else value # we can also return a value, and not call the callback, as this function gets wrapped into helpers.forceCallback
-
         @asyncDepthfirst _matchf, callback, true, false, data
 
     importReferences: (data,callback) ->
@@ -195,16 +195,15 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
     flushnow: (callback) ->
         changes = helpers.hashfilter @changes, (value,property) => @attributes[property]
         #@applyPermissions changes, StoreRealm, (err,data) -> if not err then @set(data)
-
         @exportReferences changes, (err, changes) =>
-            if helpers.isEmpty(changes) then helpers.cbc(callback)
+            if helpers.isEmpty(changes) then helpers.cbc(callback); return
             if not id = @get 'id' then @collection.create changes, (err,id) => @set 'id', id; helpers.cbc callback, err, id
             else @collection.update {id: id}, changes, callback
 
 
     # this will have to go through some kind of READ permissions in the future..
     render: (realm, callback) ->
-        @exportReferneces @attributes, (err,data) ->
+        @exportReferences @attributes, (err,data) ->
             callback(err,data)
 
                         
@@ -212,4 +211,3 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
         @trigger 'del', @
         if id = @get 'id' then @collection.remove {id: id}, callback else callback()
     
-
