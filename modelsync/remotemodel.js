@@ -127,12 +127,14 @@
         var bucket, cb, key, result;
         bucket = new helpers.parallelBucket();
         for (key in target) {
-          cb = bucket.cb();
-          result = function(err, data) {
-            target[key] = data;
-            return cb(err, data);
-          };
-          this.asyncDepthfirst(changef, result, clone, all, target[key], depth + 1);
+          if (target[key]) {
+            cb = bucket.cb();
+            result = function(err, data) {
+              target[key] = data;
+              return cb(err, data);
+            };
+            this.asyncDepthfirst(changef, result, clone, all, target[key], depth + 1);
+          }
         }
         return bucket.done(function(err, data) {
           return callback(err, target);
@@ -258,7 +260,7 @@
         if (permission) {
           return callback(void 0, permission);
         } else {
-          return callback('access denied');
+          return callback(attibute);
         }
       });
     },
@@ -297,6 +299,7 @@
         if (!(targetcollection = this.collection.getcollection(ref._c))) {
           throw 'unknown collection "' + ref._c + '"';
         } else {
+          console.log('spawning unresolved', ref._r);
           return targetcollection.unresolved(ref._r);
         }
       }, this);

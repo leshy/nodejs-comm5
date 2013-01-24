@@ -80,6 +80,7 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
     # clone - do I change the original object or do I create one of my own?
     # all - do I call your changef for each object/array or only for attributes?
     asyncDepthfirst: (changef, callback, clone=false, all=false, target=@attributes,depth=0) ->
+#        if target is @attributes then console.log 'DF',JSON.stringify(@attributes)
         #spaces = ""
         #_.times depth, -> spaces+= " "
         # call changef on the target, return results
@@ -89,9 +90,10 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
             bucket = new helpers.parallelBucket()
             
             for key of target
-                cb = bucket.cb()
-                result = (err,data) -> target[key] = data; cb(err,data)
-                @asyncDepthfirst changef, result, clone, all, target[key], depth + 1
+                if target[key]
+                    cb = bucket.cb()
+                    result = (err,data) -> target[key] = data; cb(err,data)
+                    @asyncDepthfirst changef, result, clone, all, target[key], depth + 1
                 
             bucket.done (err,data) -> callback(err,target)
     
@@ -151,8 +153,7 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
     getPermission: (attribute,realm,callback) ->
         model = @
         async.series _.map(@permissions[attribute], (permission) -> (callback) -> permission.match(model, realm, (err,data) -> if not err then callback(permission) else callback() )), (permission) ->
-            if permission then callback(undefined,permission) else callback('access denied')
-                
+            if permission then callback(undefined,permission) else callback(attibute)
         
     # looks for references to remote models and replaces them with object ids
     # what do we do if a reference object is not flushed? propagade flush call for now
@@ -177,14 +178,14 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
         
         _resolve_reference = (ref) =>
             if not targetcollection = @collection.getcollection(ref._c) then throw 'unknown collection "' + ref._c + '"'
-            else targetcollection.unresolved(ref._r)
+            else console.log 'spawning unresolved', ref._r; targetcollection.unresolved(ref._r)
 
         _matchf = (value,callback) ->
             refcheck.feed value, (err,data) ->
                 if err then callback undefined, value
                 else callback undefined, _resolve_reference(value)
             return undefined
-                
+
         @asyncDepthfirst _matchf, callback, false, true, data
                 
     # simplified for now, will reintroduce when done with model syncing
