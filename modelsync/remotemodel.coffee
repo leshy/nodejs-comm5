@@ -59,8 +59,10 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
         @when 'id', (id) =>
             @id = id
             @collection.subscribechanges { id: id }, @remoteChangeReceive.bind(@)
-            @on 'change', @localChangePropagade.bind(@)
-
+            @on 'change', (model,data) =>
+                @localChangePropagade(model,data)
+                @trigger 'anychange'
+            
         @importReferences @attributes, (err,data) => @attributes = data
 
         # if we haven't been saved yet, we want to flush all our attributes when flush is called..
@@ -107,7 +109,14 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
 
     remoteChangeReceive: (change) ->
         switch change.action
-            when 'update' then @set change.update, { silent: true }
+            
+            when 'update' then @importReferences change.update, (err,data) =>
+                @set data, { silent: true }
+                @trigger 'remotechange'
+                @trigger 'anychange'
+
+            #when 'update' then @set change.update, { silent: true }
+            
             #when 'remove' then @del()
             
     # I need to find nested models here and replace them with their ids
@@ -153,7 +162,7 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
     getPermission: (attribute,realm,callback) ->
         model = @
         async.series _.map(@permissions[attribute], (permission) -> (callback) -> permission.match(model, realm, (err,data) -> if not err then callback(permission) else callback() )), (permission) ->
-            if permission then callback(undefined,permission) else callback(attibute)
+            if permission then callback(undefined,permission) else callback(attribute)
         
     # looks for references to remote models and replaces them with object ids
     # what do we do if a reference object is not flushed? propagade flush call for now
@@ -186,7 +195,7 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
                 else callback undefined, _resolve_reference(value)
             return undefined
 
-        @asyncDepthfirst _matchf, callback, false, true, data
+        @asyncDepthfirst _matchf, callback, true, true, data
                 
     # simplified for now, will reintroduce when done with model syncing
     # throttle decorator makes sure that we can apply bunch of changes in a series to an object, but the system requests a sync only once.

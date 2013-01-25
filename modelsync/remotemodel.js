@@ -67,7 +67,10 @@
         this.collection.subscribechanges({
           id: id
         }, this.remoteChangeReceive.bind(this));
-        return this.on('change', this.localChangePropagade.bind(this));
+        return this.on('change', __bind(function(model, data) {
+          this.localChangePropagade(model, data);
+          return this.trigger('anychange');
+        }, this));
       }, this));
       this.importReferences(this.attributes, __bind(function(err, data) {
         return this.attributes = data;
@@ -162,9 +165,13 @@
     remoteChangeReceive: function(change) {
       switch (change.action) {
         case 'update':
-          return this.set(change.update, {
-            silent: true
-          });
+          return this.importReferences(change.update, __bind(function(err, data) {
+            this.set(data, {
+              silent: true
+            });
+            this.trigger('remotechange');
+            return this.trigger('anychange');
+          }, this));
       }
     },
     localChangePropagade: function(model, data) {
@@ -260,7 +267,7 @@
         if (permission) {
           return callback(void 0, permission);
         } else {
-          return callback(attibute);
+          return callback(attribute);
         }
       });
     },
@@ -312,7 +319,7 @@
           }
         });
       };
-      return this.asyncDepthfirst(_matchf, callback, false, true, data);
+      return this.asyncDepthfirst(_matchf, callback, true, true, data);
     },
     flush: function(callback) {
       return this.flushnow(callback);

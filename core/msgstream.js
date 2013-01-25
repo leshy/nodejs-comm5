@@ -56,7 +56,7 @@ var Stream = exports.Stream = Backbone.Model.extend4000(
         write: function (msg) {
             if (!msg) { return }
             this._untouched = false
-            if (this._ended) { throw "you tryed to write to an ended stream" }
+            if (this._ended) { throw "you tryed to write to an ended stream (" + JSON.stringify(msg.render()) + ")" }
             if (msg && (msg.constructor != Msg)) { msg = new Msg.Msg(msg) }
             this.msg(msg)
         },
