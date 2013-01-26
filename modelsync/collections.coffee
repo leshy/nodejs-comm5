@@ -93,7 +93,7 @@ SubscriptionMixin = exports.SubscriptionMixin = Backbone.Model.extend4000
 # global dict holding all collections
 exports.collectionDict = {}
 
-UnresolvedRemoteModel = Backbone.Model.extend4000
+UnresolvedRemoteModel = exports.UnresolvedRemoteModel = Backbone.Model.extend4000
     collection: undefined
     id: undefined
     
@@ -103,13 +103,16 @@ UnresolvedRemoteModel = Backbone.Model.extend4000
         collection = @get 'collection'
         collection.findOne {id: @get 'id'}, (err,entry) =>
             if not entry then callback('unable to resolve reference to ' + @get('id') + ' at ' + collection.name())
-            else 
+            else
                 @morph collection.resolveModel(entry), entry
-                callback @
-        
+                helpers.cbc callback, undefined, @
+                
     morph: (myclass,mydata) ->
         @attributes = mydata
         @__proto__ = myclass::
+
+    reference: -> { _r: @get('id'), _c: @get('collection').name() }
+
 
 ReferenceMixin = exports.ReferenceMixin = Backbone.Model.extend4000
     initialize: ->

@@ -4,6 +4,7 @@ helpers = require 'helpers'
 Validator = require 'validator2-extras'; v = Validator.v; Select = Validator.Select
 decorators = require 'decorators'; decorate = decorators.decorate;
 async = require 'async'
+collections = require './collections'
 
 exports.definePermissions = definePermissions = (f) ->
     p = _.clone { standard:'permissions' }
@@ -167,6 +168,7 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
     # looks for references to remote models and replaces them with object ids
     # what do we do if a reference object is not flushed? propagade flush call for now
     exportReferences: (data,callback) ->
+        console.log 'exportreferences'.red
         # finds a reference to remotemodel, and converts it to saveable reference in a form of a small json that points to the correct collection and id
         _matchf = (value,callback) ->
             if value instanceof RemoteModel
@@ -177,7 +179,12 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
                     if err then callback(err,id)
                     else callback undefined, value.reference(id)
                 return undefined
-            else value # we can also return a value, and not call the callback, as this function gets wrapped into helpers.forceCallback
+            else if value instanceof collections.UnresolvedRemoteModel
+                value.reference()
+            else
+                if typeof value is 'object' and value.constructor isnt Object
+                    throw "model has instance in attributes, can't serialize this", value
+                value # we can also return a value, and not call the callback, as this function gets wrapped into helpers.forceCallback
         @asyncDepthfirst _matchf, callback, true, false, data
 
     importReferences: (data,callback) ->
@@ -187,7 +194,7 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
         
         _resolve_reference = (ref) =>
             if not targetcollection = @collection.getcollection(ref._c) then throw 'unknown collection "' + ref._c + '"'
-            else console.log 'spawning unresolved', ref._r; targetcollection.unresolved(ref._r)
+            else targetcollection.unresolved(ref._r)
 
         _matchf = (value,callback) ->
             refcheck.feed value, (err,data) ->

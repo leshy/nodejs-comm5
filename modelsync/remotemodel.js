@@ -1,5 +1,5 @@
 (function() {
-  var Backbone, Permission, RemoteModel, Select, Validator, async, decorate, decorators, definePermissions, helpers, v, _;
+  var Backbone, Permission, RemoteModel, Select, Validator, async, collections, decorate, decorators, definePermissions, helpers, v, _;
   var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
   Backbone = require('backbone4000');
   _ = require('underscore');
@@ -10,6 +10,7 @@
   decorators = require('decorators');
   decorate = decorators.decorate;
   async = require('async');
+  collections = require('./collections');
   exports.definePermissions = definePermissions = function(f) {
     var defattr, deffun, p, permissions;
     p = _.clone({
@@ -273,6 +274,7 @@
     },
     exportReferences: function(data, callback) {
       var _matchf;
+      console.log('exportreferences'.red);
       _matchf = function(value, callback) {
         var id;
         if (value instanceof RemoteModel) {
@@ -286,7 +288,12 @@
               callback(void 0, value.reference(id));
             }
           }
+        } else if (value instanceof collections.UnresolvedRemoteModel) {
+          return value.reference();
         } else {
+          if (typeof value === 'object' && value.constructor !== Object) {
+            throw "model has instance in attributes, can't serialize this " + value;
+          }
           return value;
         }
       };
@@ -306,7 +313,7 @@
         if (!(targetcollection = this.collection.getcollection(ref._c))) {
           throw 'unknown collection "' + ref._c + '"';
         } else {
-          console.log('spawning unresolved', ref._r);
+          console.log('spawning unresolved', ref._c, ref._r);
           return targetcollection.unresolved(ref._r);
         }
       }, this);

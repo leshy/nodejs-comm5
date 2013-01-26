@@ -178,7 +178,7 @@
     }
   });
   exports.collectionDict = {};
-  UnresolvedRemoteModel = Backbone.Model.extend4000({
+  UnresolvedRemoteModel = exports.UnresolvedRemoteModel = Backbone.Model.extend4000({
     collection: void 0,
     id: void 0,
     toString: function() {
@@ -194,13 +194,19 @@
           return callback('unable to resolve reference to ' + this.get('id') + ' at ' + collection.name());
         } else {
           this.morph(collection.resolveModel(entry), entry);
-          return callback(this);
+          return helpers.cbc(callback, void 0, this);
         }
       }, this));
     },
     morph: function(myclass, mydata) {
       this.attributes = mydata;
       return this.__proto__ = myclass.prototype;
+    },
+    reference: function() {
+      return {
+        _r: this.get('id'),
+        _c: this.get('collection').name()
+      };
     }
   });
   ReferenceMixin = exports.ReferenceMixin = Backbone.Model.extend4000({
