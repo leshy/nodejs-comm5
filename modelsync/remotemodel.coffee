@@ -168,7 +168,6 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
     # looks for references to remote models and replaces them with object ids
     # what do we do if a reference object is not flushed? propagade flush call for now
     exportReferences: (data,callback) ->
-        console.log 'exportreferences'.red
         # finds a reference to remotemodel, and converts it to saveable reference in a form of a small json that points to the correct collection and id
         _matchf = (value,callback) ->
             if value instanceof RemoteModel
