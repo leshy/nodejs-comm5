@@ -9,6 +9,12 @@ WebsocketWrapper = exports.WebsocketWrapper = core.ConnectionMan.extend4000
 
     initialize: -> @get('socket').on 'disconnect', => @trigger 'disconnect'
 
-    tx: (msgstring) -> @get('socket').emit 'msg', msgstring
+    tx: (msgstring) ->
+#        try
+#            JSON.stringify(msgstring)
+#        catch error
+#            console.log "CAN'T STRINGIFY".red, msgstring
+            
+        @get('socket').emit 'msg', msgstring
     rx: (callback) -> @get('socket').on 'msg', callback
 

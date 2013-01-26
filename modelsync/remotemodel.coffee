@@ -181,8 +181,7 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
             else if value instanceof collections.UnresolvedRemoteModel
                 value.reference()
             else
-                if typeof value is 'object' and value.constructor isnt Object
-                    throw "model has instance in attributes, can't serialize this", value
+                if typeof value is 'object' and value.constructor isnt Object then throw "something weird is in my attributes"
                 value # we can also return a value, and not call the callback, as this function gets wrapped into helpers.forceCallback
         @asyncDepthfirst _matchf, callback, true, false, data
 

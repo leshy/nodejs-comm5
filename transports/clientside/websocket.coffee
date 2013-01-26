@@ -22,4 +22,3 @@ WebsocketClient = exports.WebsocketClient = Backbone.Model.extend4000 MsgNode, V
 
     end: -> @del()
 
-

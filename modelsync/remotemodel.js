@@ -274,7 +274,6 @@
     },
     exportReferences: function(data, callback) {
       var _matchf;
-      console.log('exportreferences'.red);
       _matchf = function(value, callback) {
         var id;
         if (value instanceof RemoteModel) {
@@ -292,7 +291,7 @@
           return value.reference();
         } else {
           if (typeof value === 'object' && value.constructor !== Object) {
-            throw "model has instance in attributes, can't serialize this " + value;
+            throw "something weird is in my attributes";
           }
           return value;
         }
@@ -313,7 +312,6 @@
         if (!(targetcollection = this.collection.getcollection(ref._c))) {
           throw 'unknown collection "' + ref._c + '"';
         } else {
-          console.log('spawning unresolved', ref._c, ref._r);
           return targetcollection.unresolved(ref._r);
         }
       }, this);
