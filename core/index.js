@@ -65,6 +65,7 @@ var ConnectionMan = exports.ConnectionMan = Backbone.Model.extend4000(
                 }
                 var txmsg = msg.render()
                 txmsg.meta = { id: msg.meta.id }
+                delete txmsg.realm
                 streams[msg.meta.id] = reply // when I receive replies write them here
                 self.tx(txmsg) // send the message
             })

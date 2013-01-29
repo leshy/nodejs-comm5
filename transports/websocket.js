@@ -21,6 +21,11 @@
       }, this));
     },
     tx: function(msgstring) {
+      try {
+        JSON.stringify(msgstring);
+      } catch (error) {
+        console.log("CAN'T STRINGIFY".red, msgstring);
+      }
       return this.get('socket').emit('msg', msgstring);
     },
     rx: function(callback) {
