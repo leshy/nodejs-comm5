@@ -63,6 +63,7 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
             @on 'change', (model,data) =>
                 @localChangePropagade(model,data)
                 @trigger 'anychange'
+                #@trigger 'anychange:... '
             
         @importReferences @attributes, (err,data) => @attributes = data
 
@@ -113,6 +114,11 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
             
             when 'update' then @importReferences change.update, (err,data) =>
                 @set data, { silent: true }
+
+                helpers.hashmap change.update, (value,key) =>
+                    @trigger 'remotechange:' + key, value
+                    @trigger 'anychange:' + key, value
+                    
                 @trigger 'remotechange'
                 @trigger 'anychange'
 

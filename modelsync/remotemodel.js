@@ -170,6 +170,10 @@
             this.set(data, {
               silent: true
             });
+            helpers.hashmap(change.update, __bind(function(value, key) {
+              this.trigger('remotechange:' + key, value);
+              return this.trigger('anychange:' + key, value);
+            }, this));
             this.trigger('remotechange');
             return this.trigger('anychange');
           }, this));
