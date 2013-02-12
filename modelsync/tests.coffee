@@ -180,15 +180,15 @@ exports.AutoModelSync =
 
     remoteModelUpdates: (test) ->
         newmodel1 = @c.defineModel 'bla2',{ hi: -> 'bla2' }
-        instance1 = new newmodel1 { something: 999 }
+        instance1 = new newmodel1 { something: 999, bla: 2 }
         instance1.flush (err,id) =>
             @c.findModels {id: id },{},(instance2) =>
                 if instance2
                     instance1.set { bla: 3 }
                     instance1.flush (err,id) =>
+                        test.equals instance2.get('bla'), 3
                         instance1.del(test.done)
-                        #console.log(instance2.get 'bla');
-                        #test.done()
+                        
 
 exports.References =
     setUp: (callback) ->

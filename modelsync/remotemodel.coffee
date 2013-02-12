@@ -100,10 +100,12 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
                     @asyncDepthfirst changef, result, clone, all, target[key], depth + 1
                 
             bucket.done (err,data) -> callback(err,target)
-    
+            
+        prevtarget = target
+        
         if target.constructor is Object or target.constructor is Array
             if clone then target = _.clone target
-            if all then _check target, (err,target) ->
+            if all then _check target, (err,target) =>
                 if target.constructor is Object or target.constructor is Array then _digtarget(target,callback) else callback(undefined,target)
             else _digtarget(target,callback)
         else
@@ -202,10 +204,9 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
 
         _matchf = (value,callback) ->
             refcheck.feed value, (err,data) ->
-                if err then callback undefined, value
-                else callback undefined, _resolve_reference(value)
+                if err then return callback undefined, value
+                else return callback undefined, _resolve_reference(value)
             return undefined
-
         @asyncDepthfirst _matchf, callback, true, true, data
                 
     # simplified for now, will reintroduce when done with model syncing

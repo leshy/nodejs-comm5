@@ -380,7 +380,8 @@
         }
       });
       instance1 = new newmodel1({
-        something: 999
+        something: 999,
+        bla: 2
       });
       return instance1.flush(__bind(function(err, id) {
         return this.c.findModels({
@@ -391,6 +392,7 @@
               bla: 3
             });
             return instance1.flush(__bind(function(err, id) {
+              test.equals(instance2.get('bla'), 3);
               return instance1.del(test.done);
             }, this));
           }

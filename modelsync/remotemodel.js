@@ -111,7 +111,7 @@
       }
     },
     asyncDepthfirst: function(changef, callback, clone, all, target, depth) {
-      var _check, _digtarget;
+      var prevtarget, _check, _digtarget;
       if (clone == null) {
         clone = false;
       }
@@ -144,18 +144,19 @@
           return callback(err, target);
         });
       }, this);
+      prevtarget = target;
       if (target.constructor === Object || target.constructor === Array) {
         if (clone) {
           target = _.clone(target);
         }
         if (all) {
-          return _check(target, function(err, target) {
+          return _check(target, __bind(function(err, target) {
             if (target.constructor === Object || target.constructor === Array) {
               return _digtarget(target, callback);
             } else {
               return callback(void 0, target);
             }
-          });
+          }, this));
         } else {
           return _digtarget(target, callback);
         }
