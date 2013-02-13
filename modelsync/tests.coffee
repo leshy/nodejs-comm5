@@ -188,8 +188,8 @@ exports.AutoModelSync =
                     instance1.flush (err,id) =>
                         test.equals instance2.get('bla'), 3
                         instance1.del(test.done)
-                        
 
+                        
 exports.References =
     setUp: (callback) ->
         @remotemodel = require './remotemodel'
