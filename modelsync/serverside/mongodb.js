@@ -1,5 +1,5 @@
 (function() {
-  var BSON, Backbone, MongoCollection, MongoCollectionNode, Select, Validator, collections, v, _;
+  var BSON, Backbone, MongoCollection, MongoCollectionNode, Select, Validator, collections, helpers, v, _;
   var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
   BSON = require('mongodb').BSONPure;
   Validator = require('validator2-extras');
@@ -7,6 +7,7 @@
   Select = Validator.Select;
   collections = require('../collections');
   Backbone = require('backbone4000');
+  helpers = require('helpers');
   _ = require('underscore');
   MongoCollection = exports.MongoCollection = Backbone.Model.extend4000({
     validator: v({
@@ -76,9 +77,24 @@
       return this.collection.remove(this.patternIn(pattern), callback);
     },
     update: function(pattern, update, callback) {
-      return this.collection.update(this.patternIn(pattern), {
-        '$set': update
-      }, callback);
+      var set, unset;
+      set = {};
+      unset = {};
+      _.map(update, function(value, key) {
+        if (value === void 0 || null) {
+          return unset[key] = true;
+        } else {
+          return set[key] = value;
+        }
+      });
+      update = {};
+      if (!helpers.isEmpty(set)) {
+        update['$set'] = set;
+      }
+      if (!helpers.isEmpty(unset)) {
+        update['$unset'] = unset;
+      }
+      return this.collection.update(this.patternIn(pattern), update, callback);
     }
   });
   MongoCollectionNode = exports.MongoCollectionNode = MongoCollection.extend4000(collections.ModelMixin, collections.SubscriptionMixin, collections.ReferenceMixin, collections.CollectionExposer);

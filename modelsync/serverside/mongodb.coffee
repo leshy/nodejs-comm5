@@ -2,6 +2,7 @@ BSON = require('mongodb').BSONPure
 Validator = require 'validator2-extras'; v = Validator.v; Select = Validator.Select
 collections = require '../collections'
 Backbone = require 'backbone4000'
+helpers = require 'helpers'
 _ = require 'underscore'
 
 MongoCollection = exports.MongoCollection = Backbone.Model.extend4000
@@ -44,7 +45,16 @@ MongoCollection = exports.MongoCollection = Backbone.Model.extend4000
         @collection.remove @patternIn(pattern), callback
 
     update: (pattern,update,callback) ->
-        @collection.update @patternIn(pattern), { '$set': update }, callback
+        set = {}
+        unset = {}
+        _.map update, (value,key) -> if value is undefined or null then unset[key] = true else set[key] = value
+        
+        update = {}
+        
+        if not helpers.isEmpty(set) then update['$set'] = set
+        if not helpers.isEmpty(unset) then update['$unset'] = unset
+        
+        @collection.update @patternIn(pattern), update, callback
 
 MongoCollectionNode = exports.MongoCollectionNode = MongoCollection.extend4000 collections.ModelMixin, collections.SubscriptionMixin, collections.ReferenceMixin, collections.CollectionExposer
 
