@@ -151,6 +151,9 @@
         }
         if (all) {
           return _check(target, __bind(function(err, target) {
+            if (err) {
+              target = prevtarget;
+            }
             if (target.constructor === Object || target.constructor === Array) {
               return _digtarget(target, callback);
             } else {
@@ -321,13 +324,18 @@
         }
       }, this);
       _matchf = function(value, callback) {
-        refcheck.feed(value, function(err, data) {
-          if (err) {
-            return callback(void 0, value);
-          } else {
-            return callback(void 0, _resolve_reference(value));
-          }
-        });
+        try {
+          refcheck.feed(value, function(err, data) {
+            if (err) {
+              return callback(void 0, value);
+            } else {
+              return callback(void 0, _resolve_reference(value));
+            }
+          });
+        } catch (error) {
+          console.log("CATCH ERR", error, value);
+          callback(void 0, value);
+        }
       };
       return this.asyncDepthfirst(_matchf, callback, true, true, data);
     },

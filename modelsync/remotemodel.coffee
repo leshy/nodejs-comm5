@@ -106,6 +106,7 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
         if target.constructor is Object or target.constructor is Array
             if clone then target = _.clone target
             if all then _check target, (err,target) =>
+                if err then target = prevtarget # check function can throw
                 if target.constructor is Object or target.constructor is Array then _digtarget(target,callback) else callback(undefined,target)
             else _digtarget(target,callback)
         else
@@ -203,9 +204,14 @@ RemoteModel = exports.RemoteModel = Validator.ValidatedModel.extend4000
             else targetcollection.unresolved(ref._r)
 
         _matchf = (value,callback) ->
-            refcheck.feed value, (err,data) ->
-                if err then return callback undefined, value
-                else return callback undefined, _resolve_reference(value)
+            try 
+                refcheck.feed value, (err,data) ->
+                    if err then return callback undefined, value
+                    else return callback undefined, _resolve_reference(value)
+            catch error
+                console.log "CATCH ERR",error, value # investigate this, validator shouldn't throw
+                callback undefined, value
+                
             return undefined
         @asyncDepthfirst _matchf, callback, true, true, data
                 
